@@ -1,0 +1,115 @@
+@startuml diagrama
+
+top to bottom direction
+
+abstract class Usuario{
+
+}
+
+class Administrador extends Usuario{
+
+}
+
+class Professor extends Usuario{
+    
+}
+
+class Aluno extends Usuario{
+    
+}
+
+class Curso{
+    -long idCurso
+    -string nomeCurso
+    -string descicaoCurso
+}
+
+class Disciplina{
+    -long idDisciplina
+    -string nomeDisciplina
+    -string descricaoDisciplina
+}
+
+class Turma{
+    -long idTurma
+    -int periodo   
+}
+
+class Matricula {
+    - long idMatricula
+    - Status statusMatricula
+}
+
+enum Status {
+    ATIVA
+    PENDENTE
+    REPROVADA
+}
+
+class Topicos{
+    -long idTopicos
+    -String tituloTopico
+}
+
+class MaterialDeAula{
+    -long idMaterialDeAula
+    -String arquivoDeTexto
+    -String tipoArquivo
+}
+
+class Atividades{
+    -long idAtividades
+    -String tituloAtividade
+    -String descricao
+    -LocalDate dataInicio
+    -localDate dataFechamento   
+}
+
+class Questionario extends Atividades{
+    -long idQuestionario
+    -long duracaoQuestionario
+    -int tentativasPermitidas
+}
+
+class Questoes{
+    -long idQuestoes
+    -String enunciado
+}
+
+class Alternativas{
+    -long idAlternativas
+    -String Alternativas
+    -boolean alternativaCorreta
+}
+
+class tentativasQuestionario{
+    -long idtentativasQuestionario
+    -Double nota
+    -int numeroDaTentativa
+}
+
+class tentativaAtividade{
+    -long idtentativaAtividade
+    -String feedback
+    -Double nota
+}
+
+
+
+
+Curso -- Turma
+Disciplina -- Turma
+Professor -- Turma
+Aluno -- Matricula
+Matricula -- Turma
+Matricula --> Status
+Turma -- Topicos
+Topicos -- MaterialDeAula
+Topicos -- Atividades
+Questionario -- Questoes
+Questoes -- Alternativas
+Questionario -- tentativasQuestionario
+Atividades -- tentativaAtividade
+
+
+@enduml
