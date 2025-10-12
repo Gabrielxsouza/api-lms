@@ -3,11 +3,15 @@
 top to bottom direction
 
 abstract class Usuario{
-
+    -long idUsuario
+    -String nome
+    -String email
+    -String senha
+    -String cpf
 }
 
 class Administrador extends Usuario{
-
+    
 }
 
 class Professor extends Usuario{
@@ -110,6 +114,7 @@ Questionario -- Questoes
 Questoes -- Alternativas
 Questionario -- tentativasQuestionario
 Atividades -- tentativaAtividade
-
+tentativasQuestionario -- Aluno
+tentativaAtividade -- Aluno
 
 @enduml
