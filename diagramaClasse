@@ -61,7 +61,7 @@ class MaterialDeAula{
     -String tipoArquivo
 }
 
-class Atividades{
+class Atividade{
     -long idAtividades
     -String tituloAtividade
     -String descricao
@@ -69,7 +69,7 @@ class Atividades{
     -localDate dataFechamento   
 }
 
-class Questionario extends Atividades{
+class Questionario extends Atividade{
     -long idQuestionario
     -long duracaoQuestionario
     -int tentativasPermitidas
@@ -109,11 +109,11 @@ Matricula -- Turma
 Matricula --> Status
 Turma -- Topicos
 Topicos -- MaterialDeAula
-Topicos -- Atividades
+Topicos -- Atividade
 Questionario -- Questoes
 Questoes -- Alternativas
 Questionario -- tentativasQuestionario
-Atividades -- tentativaAtividade
+Atividade -- tentativaAtividade
 tentativasQuestionario -- Aluno
 tentativaAtividade -- Aluno
 
