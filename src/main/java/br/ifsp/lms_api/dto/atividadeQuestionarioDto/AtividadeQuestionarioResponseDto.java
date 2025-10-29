@@ -1,4 +1,4 @@
-package br.ifsp.lms_api.dto.questionarioDto;
+package br.ifsp.lms_api.dto.atividadeQuestionarioDto;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @AllArgsConstructor
-public class QuestionarioResponseDto extends AtividadesResponseDto {
+public class AtividadeQuestionarioResponseDto extends AtividadesResponseDto {
 
 
     private long duracaoQuestionario;
@@ -24,7 +24,7 @@ public class QuestionarioResponseDto extends AtividadesResponseDto {
 
     private List<QuestoesResponseDto> questionario;
 
-    // getters e setters
+    //setters
 
    
 
@@ -32,23 +32,13 @@ public class QuestionarioResponseDto extends AtividadesResponseDto {
         return duracaoQuestionario;
     }
 
-    public void setDuracaoQuestionario(long duracaoQuestionario) {
-        this.duracaoQuestionario = duracaoQuestionario;
-    }
 
     public int getNumeroTentativas() {
         return numeroTentativas;
-    }
-
-    public void setNumeroTentativas(int numeroTentativas) {
-        this.numeroTentativas = numeroTentativas;
     }
 
     public List<QuestoesResponseDto> getQuestionario() {
         return questionario;
     }
 
-    public void setQuestionario(List<QuestoesResponseDto> questionario) {
-        this.questionario = questionario;
-    }
 }

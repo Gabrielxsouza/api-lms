@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AtividadesUpdateDto {
+public abstract class AtividadesUpdateDto {
     private Optional<String> tituloAtividade = Optional.empty();
     private Optional<String> descricaoAtividade = Optional.empty();
     private Optional<LocalDate> dataInicioAtividade = Optional.empty();

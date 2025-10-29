@@ -2,7 +2,6 @@ package br.ifsp.lms_api.dto.atividadesDto;
 
 import java.time.LocalDate;
 
-import org.springframework.format.annotation.DateTimeFormat;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,10 +11,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AtividadesRequestDto {
+public abstract class AtividadesRequestDto {
 
 
     @NotBlank(message = "O título da atividade é obrigatório")
@@ -25,11 +26,11 @@ public class AtividadesRequestDto {
     private String descricaoAtividade;
 
     @NotNull(message = "A data de início da atividade é obrigatória")
-    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dataInicioAtividade;
 
     @NotNull(message = "A data de fechamento da atividade é obrigatória")
-    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dataFechamentoAtividade;
 
     private Boolean statusAtividade;

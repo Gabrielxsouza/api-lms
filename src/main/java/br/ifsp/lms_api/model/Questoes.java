@@ -7,12 +7,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.ManyToMany; 
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -37,11 +35,11 @@ public class Questoes {
     @Size(min = 5, max = 100, message = "O enunciado da questão deve conter entre 5 e 100 caracteres")
     private String enunciado;
 
-    @ManyToOne
-    @JoinColumn(name = "idQuestionario", nullable = false)
-    @JsonBackReference
-    @NotNull(message = "A questão deve pertencer a um questionário")
-    private Questionario questionario;
+
+    @ManyToMany(mappedBy = "questoes")
+    @JsonBackReference 
+    private List<AtividadeQuestionario> questionarios = new ArrayList<>();
+
 
     @OneToMany(mappedBy = "questoes", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

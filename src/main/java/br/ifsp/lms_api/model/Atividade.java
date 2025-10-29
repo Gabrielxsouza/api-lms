@@ -23,7 +23,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE) // Define a estratégia de herança
-public class Atividades {
+public abstract class Atividade {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

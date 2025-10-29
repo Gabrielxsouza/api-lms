@@ -1,4 +1,4 @@
-package br.ifsp.lms_api.dto.questionarioDto;
+package br.ifsp.lms_api.dto.atividadeQuestionarioDto;
 
 
 import java.util.List;
@@ -7,7 +7,7 @@ import br.ifsp.lms_api.dto.atividadesDto.AtividadesRequestDto;
 import br.ifsp.lms_api.dto.questoesDto.QuestoesRequestDto;
 
 
-public class QuestionarioRequestDto extends AtividadesRequestDto {
+public class AtividadeQuestionarioRequestDto extends AtividadesRequestDto {
     
     private long duracaoQuestionario;
 

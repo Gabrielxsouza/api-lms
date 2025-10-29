@@ -1,4 +1,4 @@
-package br.ifsp.lms_api.dto.questionarioDto;
+package br.ifsp.lms_api.dto.atividadeQuestionarioDto;
 
 
 import java.util.Optional;
@@ -7,7 +7,7 @@ import br.ifsp.lms_api.dto.atividadesDto.AtividadesUpdateDto;
 
 
 
-public class QuestionarioUpdateDto extends AtividadesUpdateDto {
+public class AtividadeQuestionarioUpdateDto extends AtividadesUpdateDto {
     
     private Optional<Long> duracaoQuestionario = Optional.empty();
     private Optional<Integer> numeroTentativas = Optional.empty();
