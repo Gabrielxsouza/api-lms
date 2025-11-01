@@ -1,4 +1,4 @@
-@startuml diagrama
+@startuml diagrama_lms_atualizado
 
 top to bottom direction
 
@@ -10,16 +10,13 @@ abstract class Usuario{
     -String cpf
 }
 
-class Administrador extends Usuario{
-    
+class Administrador extends Usuario {
 }
 
-class Professor extends Usuario{
-    
+class Professor extends Usuario {
 }
 
-class Aluno extends Usuario{
-    
+class Aluno extends Usuario {
 }
 
 class Curso{
@@ -36,12 +33,12 @@ class Disciplina{
 
 class Turma{
     -long idTurma
-    -int periodo   
+    -int periodo
 }
 
 class Matricula {
-    - long idMatricula
-    - Status statusMatricula
+    -long idMatricula
+    -Status statusMatricula
 }
 
 enum Status {
@@ -61,18 +58,27 @@ class MaterialDeAula{
     -String tipoArquivo
 }
 
-class Atividade{
-    -long idAtividades
+
+abstract class Atividade{
+    -long idAtividade
     -String tituloAtividade
-    -String descricao
-    -LocalDate dataInicio
-    -localDate dataFechamento   
+    -String descricaoAtividade
+    -LocalDate dataInicioAtividade
+    -LocalDate dataFechamentoAtividade
+    -Boolean statusAtividade
+}
+
+class AtividadeTexto extends Atividade {
+    -long numeroMaximoCaracteres
+}
+
+class AtividadeArquivos extends Atividade {
+    -List<String> arquivosPermitidos
 }
 
 class Questionario extends Atividade{
-    -long idQuestionario
     -long duracaoQuestionario
-    -int tentativasPermitidas
+    -int numeroTentativas
 }
 
 class Questoes{
@@ -86,6 +92,7 @@ class Alternativas{
     -boolean alternativaCorreta
 }
 
+
 class tentativasQuestionario{
     -long idtentativasQuestionario
     -Double nota
@@ -98,8 +105,13 @@ class tentativaAtividade{
     -Double nota
 }
 
+Usuario <|-- Administrador
+Usuario <|-- Professor
+Usuario <|-- Aluno
 
-
+Atividade <|-- Questionario
+Atividade <|-- AtividadeTexto
+Atividade <|-- AtividadeArquivos
 
 Curso -- Turma
 Disciplina -- Turma
@@ -110,11 +122,13 @@ Matricula --> Status
 Turma -- Topicos
 Topicos -- MaterialDeAula
 Topicos -- Atividade
+
 Questionario -- Questoes
 Questoes -- Alternativas
 Questionario -- tentativasQuestionario
-Atividade -- tentativaAtividade
 tentativasQuestionario -- Aluno
+
+Atividade -- tentativaAtividade
 tentativaAtividade -- Aluno
 
 @enduml

@@ -33,6 +33,7 @@ public abstract class AtividadesRequestDto {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dataFechamentoAtividade;
 
+    @NotNull(message = "O status da atividade (aberto ou fechado) é obrigatório")
     private Boolean statusAtividade;
 
 }

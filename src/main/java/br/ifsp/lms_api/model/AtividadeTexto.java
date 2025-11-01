@@ -12,5 +12,5 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AtividadeTexto extends Atividade {
-    private long numeroMaximoPalavras;
+    private long numeroMaximoCaracteres;
 }
