@@ -2,43 +2,44 @@ package br.ifsp.lms_api.dto.atividadeQuestionarioDto;
 
 import java.util.List;
 
-
-
 import br.ifsp.lms_api.dto.atividadesDto.AtividadesResponseDto;
 import br.ifsp.lms_api.dto.questoesDto.QuestoesResponseDto;
 
-
-
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-
 
 @NoArgsConstructor
 @AllArgsConstructor
 public class AtividadeQuestionarioResponseDto extends AtividadesResponseDto {
 
+    // Usando wrapper para evitar valores default 0
+    private Long duracaoQuestionario;
+    private Integer numeroTentativas;
 
-    private long duracaoQuestionario;
+    private List<QuestoesResponseDto> questoesQuestionario;
 
-    private int numeroTentativas;
-
-    private List<QuestoesResponseDto> questionario;
-
-    //setters
-
-   
-
-    public long getDuracaoQuestionario() {
+    // Getters e Setters
+    public Long getDuracaoQuestionario() {
         return duracaoQuestionario;
     }
 
+    public void setDuracaoQuestionario(Long duracaoQuestionario) {
+        this.duracaoQuestionario = duracaoQuestionario;
+    }
 
-    public int getNumeroTentativas() {
+    public Integer getNumeroTentativas() {
         return numeroTentativas;
     }
 
-    public List<QuestoesResponseDto> getQuestionario() {
-        return questionario;
+    public void setNumeroTentativas(Integer numeroTentativas) {
+        this.numeroTentativas = numeroTentativas;
     }
 
+    public List<QuestoesResponseDto> getQuestoesQuestionario() {
+        return questoesQuestionario;
+    }
+
+    public void setQuestoesQuestionario(List<QuestoesResponseDto> questoesQuestionario) {
+        this.questoesQuestionario = questoesQuestionario;
+    }
 }
