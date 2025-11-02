@@ -34,7 +34,6 @@ public class AtividadeQuestionario extends Atividade {
         inverseJoinColumns = @JoinColumn(name = "id_questao") // Coluna que referencia a outra entidade (Questoes)
     )
     @JsonManagedReference
-    @NotEmpty(message = "O questionário deve ter pelo menos uma questão")
     private List<Questoes> questoes = new ArrayList<>();
 
 }
