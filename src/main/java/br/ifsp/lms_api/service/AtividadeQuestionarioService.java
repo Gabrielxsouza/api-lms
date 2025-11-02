@@ -2,25 +2,25 @@ package br.ifsp.lms_api.service;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.data.domain.Page;
+
 import org.hibernate.Hibernate;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.ifsp.lms_api.repository.AtividadeQuestionarioRepository;
-import br.ifsp.lms_api.repository.QuestoesRepository;
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioRequestDto;
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioResponseDto;
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioUpdateDto;
-import br.ifsp.lms_api.mapper.PagedResponseMapper;
-import br.ifsp.lms_api.model.AtividadeQuestionario;
-import br.ifsp.lms_api.model.Questoes;
 import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.dto.questoesDto.QuestoesResponseDto;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
-
-import org.springframework.data.domain.Pageable;
+import br.ifsp.lms_api.mapper.PagedResponseMapper;
+import br.ifsp.lms_api.model.AtividadeQuestionario;
+import br.ifsp.lms_api.model.Questoes;
+import br.ifsp.lms_api.repository.AtividadeQuestionarioRepository;
+import br.ifsp.lms_api.repository.QuestoesRepository;
 
 
 @Service
@@ -70,7 +70,11 @@ public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestiona
 
     @Transactional(readOnly = true)
     public AtividadeQuestionarioResponseDto getAtividadeQuestionarioById(Long id) {
-        return modelMapper.map(atividadeQuestionarioRepository.findById(id), AtividadeQuestionarioResponseDto.class);
+        // 1. Busca a entidade usando o seu helper que já lança 404
+        AtividadeQuestionario atividade = findEntityById(id);
+        
+        // 2. Se chegou aqui, é porque encontrou. Agora pode mapear.
+        return modelMapper.map(atividade, AtividadeQuestionarioResponseDto.class);
     }
 
     @Transactional
