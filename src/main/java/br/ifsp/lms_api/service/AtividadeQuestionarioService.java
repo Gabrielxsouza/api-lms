@@ -14,7 +14,6 @@ import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioRequest
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioResponseDto;
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioUpdateDto;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
-import br.ifsp.lms_api.model.Atividade;
 import br.ifsp.lms_api.model.AtividadeQuestionario;
 import br.ifsp.lms_api.model.Questoes;
 import br.ifsp.lms_api.dto.page.PagedResponse;
