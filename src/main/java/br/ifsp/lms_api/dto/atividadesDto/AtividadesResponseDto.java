@@ -1,10 +1,9 @@
 package br.ifsp.lms_api.dto.atividadesDto;
 
 import java.time.LocalDate;
-// Removidas importações de validation e persistence
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
-import lombok.Data; // Ou @Getter @Setter
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data

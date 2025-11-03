@@ -1,6 +1,8 @@
 package br.ifsp.lms_api.dto.TurmaDto;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,6 +19,7 @@ public class TurmaResponseDto {
 
     private String semestre;
 
+    @JsonBackReference
     private DisciplinaResponseDto disciplina;
 
 }

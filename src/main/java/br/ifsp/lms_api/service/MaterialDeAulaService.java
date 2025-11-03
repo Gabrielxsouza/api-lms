@@ -94,25 +94,20 @@ public class MaterialDeAulaService {
 
     @Transactional
     public MaterialDeAulaResponseDto updateMaterial(Long id, MultipartFile novoArquivo) { // <-- MUDANÇA: Recebe MultipartFile
-        // 1. Encontra o material existente
+
         MaterialDeAula materialToUpdate = materialRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Material com ID " + id + " nao encontrado")); // <-- CORRIGIDO
 
-        // 2. Guarda a referência do arquivo antigo para deletar DEPOIS
         String urlArquivoAntigo = materialToUpdate.getUrlArquivo();
 
-        // 3. Salva o NOVO arquivo primeiro (retorna a nova URL)
         String urlNovoArquivo = storageService.createArquivo(novoArquivo);
 
-        // 4. Atualiza a entidade com os dados do NOVO arquivo
         materialToUpdate.setNomeArquivo(novoArquivo.getOriginalFilename());
         materialToUpdate.setTipoArquivo(novoArquivo.getContentType());
         materialToUpdate.setUrlArquivo(urlNovoArquivo); 
         
-        // 5. Salva as atualizações no banco
         materialToUpdate = materialRepository.save(materialToUpdate);
 
-        // 6. DELETA o ARQUIVO ANTIGO (Apenas se o novo foi salvo com sucesso)
         try {
             if (urlArquivoAntigo != null && !urlArquivoAntigo.isEmpty()) {
                 String nomeArquivoAntigo = urlArquivoAntigo.substring(urlArquivoAntigo.lastIndexOf('/') + 1);

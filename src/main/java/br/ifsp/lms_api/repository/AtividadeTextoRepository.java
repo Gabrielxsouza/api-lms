@@ -6,8 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AtividadeTextoRepository extends JpaRepository<AtividadeTexto, Long> {
-    
-    // Você pode adicionar buscas específicas para este tipo, se necessário.
-    // Ex:
-    // List<AtividadeTexto> findByNumeroMaximoCaracteresGreaterThan(long max);
+
 }

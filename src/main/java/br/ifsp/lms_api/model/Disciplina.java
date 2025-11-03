@@ -2,6 +2,9 @@ package br.ifsp.lms_api.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,6 +36,9 @@ public class Disciplina {
     @NotBlank(message = "A descricao da disciplina é obrigatório")
     private String descricaoDisciplina;
 
-    @OneToMany(mappedBy = "disciplina")
-   private List<Turma> turmas;
+    @OneToMany(mappedBy = "disciplina", 
+    cascade = CascadeType.ALL, 
+    orphanRemoval = true)
+    @JsonManagedReference
+    private List<Turma> turmas;
 }

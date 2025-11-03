@@ -22,7 +22,7 @@ import java.time.LocalDate;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE) // Define a estratégia de herança
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class Atividade {
 
     @Id

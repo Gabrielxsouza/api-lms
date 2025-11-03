@@ -12,13 +12,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AtividadeQuestionarioResponseDto extends AtividadesResponseDto {
 
-    // Usando wrapper para evitar valores default 0
     private Long duracaoQuestionario;
     private Integer numeroTentativas;
 
     private List<QuestoesResponseDto> questoesQuestionario;
 
-    // Getters e Setters
     public Long getDuracaoQuestionario() {
         return duracaoQuestionario;
     }

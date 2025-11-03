@@ -73,9 +73,8 @@ public class MaterialDeAulaController {
  @PutMapping("/{id}")
     public ResponseEntity<MaterialDeAulaResponseDto> updateMaterial(
             @PathVariable Long id, 
-            @Valid @RequestParam("arquivo") MultipartFile arquivo) { // <-- MUDANÇA: de @RequestBody para @RequestParam
+            @Valid @RequestParam("arquivo") MultipartFile arquivo) { 
 
-        // Agora o serviço recebe o ID e o novo arquivo
         return ResponseEntity.ok(materialService.updateMaterial(id, arquivo));
     }
 }

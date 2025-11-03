@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class TurmaUpdateDto {
     private Optional<String> semestre = Optional.empty();
     private Optional<String> nomeTurma = Optional.empty();
-    private Optional<Long> idDisciplina = Optional.empty(); // acredito que nem pode mudar isso
-    private Optional<Long> idTurma = Optional.empty(); // acredito que nem pode mudar isso
+
+    //removi os de id pq na atualização não faz sentido atualizar o id da disciplina vinculada e nem o id da turma
 }

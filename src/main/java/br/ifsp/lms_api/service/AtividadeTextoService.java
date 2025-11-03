@@ -32,69 +32,54 @@ public class AtividadeTextoService {
         this.pagedResponseMapper = pagedResponseMapper;
     }
 
-    // --- 2. Métodos Públicos (retornam DTOs) ---
 
     @Transactional
     public AtividadeTextoResponseDto createAtividadeTexto(AtividadeTextoRequestDto dto) {
-        // Converte DTO -> Entidade
+
         AtividadeTexto atividade = modelMapper.map(dto, AtividadeTexto.class);
-        // Salva
+
         AtividadeTexto savedAtividade = atividadeTextoRepository.save(atividade);
-        // Converte Entidade Salva -> Response DTO
+
         return modelMapper.map(savedAtividade, AtividadeTextoResponseDto.class);
     }
 
-    @Transactional(readOnly = true) // Boa prática para métodos de leitura
+    @Transactional(readOnly = true)
     public PagedResponse<AtividadeTextoResponseDto> getAllAtividadesTexto(Pageable pageable) {
-        // Busca a Página de Entidades
+
         Page<AtividadeTexto> atividadePage = atividadeTextoRepository.findAll(pageable);
-        
-        // Usa seu mapper para converter Page<Entidade> -> PagedResponse<DTO>
+
         return pagedResponseMapper.toPagedResponse(atividadePage, AtividadeTextoResponseDto.class);
     }
 
     @Transactional(readOnly = true)
     public AtividadeTextoResponseDto getAtividadeTextoById(Long id) {
-        // Busca a entidade (usando helper)
         AtividadeTexto atividade = findEntityById(id);
-        // Converte Entidade -> Response DTO
         return modelMapper.map(atividade, AtividadeTextoResponseDto.class);
     }
 
     @Transactional
     public AtividadeTextoResponseDto updateAtividadeTexto(Long id, AtividadeTextoUpdateDto dto) {
-        // Busca a entidade
+
         AtividadeTexto atividade = findEntityById(id);
-        // Aplica atualizações parciais
+
         applyUpdateFromDto(atividade, dto);
-        // Salva
+
         AtividadeTexto updatedAtividade = atividadeTextoRepository.save(atividade);
-        // Converte Entidade Atualizada -> Response DTO
+
         return modelMapper.map(updatedAtividade, AtividadeTextoResponseDto.class);
     }
 
     @Transactional
     public void deleteAtividadeTexto(Long id) {
-        // Busca a entidade (ou lança exceção)
         AtividadeTexto atividade = findEntityById(id);
-        // Deleta
         atividadeTextoRepository.delete(atividade);
     }
 
-    // --- 3. Métodos Auxiliares (privados) ---
-
-    /**
-     * Busca a ENTIDADE no repositório. Lança exceção se não encontrar.
-     * Usado internamente pelos métodos de update, delete e get.
-     */
     private AtividadeTexto findEntityById(Long id) {
         return atividadeTextoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(NOT_FOUND_MSG, id)));
     }
 
-    /**
-     * Aplica as atualizações parciais do DTO de Update na Entidade.
-     */
     private void applyUpdateFromDto(AtividadeTexto atividade, AtividadeTextoUpdateDto dto) {
         dto.getTituloAtividade().ifPresent(atividade::setTituloAtividade);
         dto.getDescricaoAtividade().ifPresent(atividade::setDescricaoAtividade);

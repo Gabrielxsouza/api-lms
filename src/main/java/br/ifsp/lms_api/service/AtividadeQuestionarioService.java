@@ -50,7 +50,6 @@ public class AtividadeQuestionarioService {
 public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestionario(Pageable pageable) {
     Page<AtividadeQuestionario> atividadesPage = atividadeQuestionarioRepository.findAll(pageable);
 
-    // Map do Page direto para DTO, mantém a paginação
     Page<AtividadeQuestionarioResponseDto> dtoPage = atividadesPage.map(atividade -> {
         AtividadeQuestionarioResponseDto dto = modelMapper.map(atividade, AtividadeQuestionarioResponseDto.class);
 
@@ -70,10 +69,9 @@ public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestiona
 
     @Transactional(readOnly = true)
     public AtividadeQuestionarioResponseDto getAtividadeQuestionarioById(Long id) {
-        // 1. Busca a entidade usando o seu helper que já lança 404
+
         AtividadeQuestionario atividade = findEntityById(id);
-        
-        // 2. Se chegou aqui, é porque encontrou. Agora pode mapear.
+
         return modelMapper.map(atividade, AtividadeQuestionarioResponseDto.class);
     }
 

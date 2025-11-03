@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AtividadeArquivosService {
 
-    // --- 1. Dependências Injetadas via Construtor ---
     private final AtividadeArquivosRepository atividadeArquivosRepository;
     private final ModelMapper modelMapper;
     private final PagedResponseMapper pagedResponseMapper;
@@ -32,8 +31,6 @@ public class AtividadeArquivosService {
         this.modelMapper = modelMapper;
         this.pagedResponseMapper = pagedResponseMapper;
     }
-
-    // --- 2. Métodos Públicos (retornam DTOs) ---
 
     @Transactional
     public AtividadeArquivosResponseDto createAtividadeArquivos(AtividadeArquivosRequestDto dto) {
@@ -67,8 +64,6 @@ public class AtividadeArquivosService {
         AtividadeArquivos atividade = findEntityById(id);
         atividadeArquivosRepository.delete(atividade);
     }
-
-    // --- 3. Métodos Auxiliares (privados) ---
 
     private AtividadeArquivos findEntityById(Long id) {
         return atividadeArquivosRepository.findById(id)

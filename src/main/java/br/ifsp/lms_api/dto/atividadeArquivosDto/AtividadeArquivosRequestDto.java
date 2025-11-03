@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data 
 @NoArgsConstructor 
 @AllArgsConstructor 
-@EqualsAndHashCode(callSuper = true) // Importante para herança com @Data
+@EqualsAndHashCode(callSuper = true) // off importante para herança com @Data
 public class AtividadeArquivosRequestDto extends AtividadesRequestDto {
 
     @NotNull(message = "A lista de arquivos permitidos é obrigatória (pode ser vazia)")
