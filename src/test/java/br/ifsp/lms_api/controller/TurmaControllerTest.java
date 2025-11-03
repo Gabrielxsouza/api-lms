@@ -47,7 +47,6 @@ public class TurmaControllerTest {
     void setUp() {
         requestDto = new TurmaRequestDto("Turma A", "2025/2", 1L);
         
-        // No teste de unidade, o DTO da disciplina pode ser nulo ou simplificado
         responseDto = new TurmaResponseDto(1L, "Turma A", "2025/2", null); 
 
         updateDto = new TurmaUpdateDto(
@@ -60,11 +59,9 @@ public class TurmaControllerTest {
 
     @Test
     void testCreateTurma_Success() throws Exception {
-        // Arrange
         when(turmaService.createTurma(any(TurmaRequestDto.class)))
             .thenReturn(responseDto);
 
-        // Act & Assert
         mockMvc.perform(post("/turmas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
@@ -77,28 +74,23 @@ public class TurmaControllerTest {
 
     @Test
     void testCreateTurma_DisciplinaNotFound() throws Exception {
-        // Arrange
-        // Simula o Service falhando ao não encontrar a disciplina
         when(turmaService.createTurma(any(TurmaRequestDto.class)))
             .thenThrow(new ResourceNotFoundException("Disciplina não encontrada"));
 
-        // Act & Assert
         mockMvc.perform(post("/turmas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isNotFound()); // Espera 404
+                .andExpect(status().isNotFound()); 
     }
 
     @Test
     void testGetAllTurmas_Success() throws Exception {
-        // Arrange
         PagedResponse<TurmaResponseDto> pagedResponse = new PagedResponse<>(
             List.of(responseDto), 0, 10, 1L, 1, true
         );
         when(turmaService.getAllTurmas(any(Pageable.class)))
             .thenReturn(pagedResponse);
 
-        // Act & Assert
         mockMvc.perform(get("/turmas"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
@@ -109,7 +101,6 @@ public class TurmaControllerTest {
 
     @Test
     void testUpdateTurma_Success() throws Exception {
-        // Arrange
         TurmaResponseDto updatedResponse = new TurmaResponseDto(
             1L, "Turma A", "Novo Semestre", null
         );
@@ -117,7 +108,6 @@ public class TurmaControllerTest {
         when(turmaService.updateTurma(eq(1L), any(TurmaUpdateDto.class)))
             .thenReturn(updatedResponse);
 
-        // Act & Assert
         mockMvc.perform(patch("/turmas/{id}", 1L)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
@@ -130,10 +120,8 @@ public class TurmaControllerTest {
 
     @Test
     void testDeleteTurma_Success() throws Exception {
-        // Arrange
         doNothing().when(turmaService).deleteTurma(1L);
 
-        // Act & Assert
         mockMvc.perform(delete("/turmas/{id}", 1L))
                 .andExpect(status().isNoContent());
 

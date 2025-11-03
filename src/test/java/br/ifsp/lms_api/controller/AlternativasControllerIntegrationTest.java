@@ -208,25 +208,23 @@ public class AlternativasControllerIntegrationTest {
         assertTrue(alternativasRepository.findById(id).isPresent(),
                 "Alternativa não foi encontrada no banco ANTES do delete");
 
-        // ACT
         mockMvc.perform(delete("/alternativas/{id}", id))
-                // ASSERT (HTTP)
+             
                 .andExpect(status().isNoContent());
 
-        // ASSERT (BANCO DE DADOS)
-        // Confirma que o item REALMENTE foi deletado
+      
         assertFalse(alternativasRepository.findById(id).isPresent(),
                 "Alternativa AINDA foi encontrada no banco APÓS o delete");
     }
 
     @Test
     void testDelete_NotFound() throws Exception {
-        // ARRANGE
+      
         Long idQueNaoExiste = 999L;
 
-        // ACT
+
         mockMvc.perform(delete("/alternativas/{id}", idQueNaoExiste))
-                // ASSERT (HTTP)
+              
                 .andExpect(status().isNotFound());
     }
 }

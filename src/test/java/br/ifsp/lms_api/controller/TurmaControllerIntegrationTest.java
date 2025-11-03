@@ -52,14 +52,12 @@ public class TurmaControllerIntegrationTest {
         turmaRepository.deleteAll();
         disciplinaRepository.deleteAll();
 
-        // Precisamos de uma disciplina PAI para vincular a turma
         Disciplina disciplina = new Disciplina();
         disciplina.setNomeDisciplina("Disciplina Pai");
         disciplina.setCodigoDisciplina("PAI-101");
         disciplina.setDescricaoDisciplina("Base");
         disciplinaExistente = disciplinaRepository.save(disciplina);
 
-        // Criamos uma turma base
         Turma turma = new Turma();
         turma.setNomeTurma("Turma Base");
         turma.setSemestre("2025/1");
@@ -72,15 +70,12 @@ public class TurmaControllerIntegrationTest {
 
     @Test
     void testCreateTurma_Success() throws Exception {
-        // Arrange
-        // DTO para criar uma turma avulsa, vinculando ao ID da disciplina pai
         TurmaRequestDto requestDto = new TurmaRequestDto(
             "Turma Nova Avulsa",
             "2025/2",
             disciplinaExistente.getIdDisciplina()
         );
 
-        // Act & Assert
         mockMvc.perform(post("/turmas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
@@ -88,33 +83,27 @@ public class TurmaControllerIntegrationTest {
                 .andExpect(jsonPath("$.idTurma").exists())
                 .andExpect(jsonPath("$.nomeTurma", is("Turma Nova Avulsa")));
 
-        // Assert (Banco de Dados)
-        // Devemos ter 2 turmas (Base + Nova)
         assertEquals(2, turmaRepository.count());
     }
 
     @Test
     void testCreateTurma_DisciplinaNotFound() throws Exception {
-        // Arrange
         TurmaRequestDto requestDto = new TurmaRequestDto(
             "Turma Fantasma",
             "2025/2",
-            999L // ID de disciplina que não existe
+            999L 
         );
 
-        // Act & Assert
         mockMvc.perform(post("/turmas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isNotFound()); // Service deve retornar 404
+                .andExpect(status().isNotFound()); 
 
-        // Assert (Banco de Dados)
-        assertEquals(1, turmaRepository.count()); // Nenhuma turma nova foi criada
+        assertEquals(1, turmaRepository.count()); 
     }
     
     @Test
     void testGetAllTurmas_Success() throws Exception {
-        // Act & Assert
         mockMvc.perform(get("/turmas")
                 .param("page", "0")
                 .param("size", "10"))
@@ -126,7 +115,6 @@ public class TurmaControllerIntegrationTest {
 
     @Test
     void testUpdateTurma_Success() throws Exception {
-        // Arrange
         Long id = turmaExistente.getIdTurma();
         String updateJson = """
         {
@@ -134,7 +122,6 @@ public class TurmaControllerIntegrationTest {
         }
         """;
 
-        // Act & Assert
         mockMvc.perform(patch("/turmas/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(updateJson))
@@ -145,16 +132,13 @@ public class TurmaControllerIntegrationTest {
 
     @Test
     void testDeleteTurma_Success() throws Exception {
-        // Arrange
         Long id = turmaExistente.getIdTurma();
         
-        // Act
         mockMvc.perform(delete("/turmas/{id}", id))
                 .andExpect(status().isNoContent());
 
-        // Assert (Banco de Dados)
         assertFalse(turmaRepository.findById(id).isPresent());
         assertEquals(0, turmaRepository.count());
-        assertEquals(1, disciplinaRepository.count()); // A disciplina PAI não deve ser deletada
+        assertEquals(1, disciplinaRepository.count()); 
     }
 }

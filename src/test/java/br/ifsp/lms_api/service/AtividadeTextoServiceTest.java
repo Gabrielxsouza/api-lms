@@ -1,6 +1,3 @@
-// Salve este arquivo em:
-// src/test/java/br/ifsp/lms_api/service/AtividadeTextoServiceTest.java
-
 package br.ifsp.lms_api.service;
 
 import java.util.List;
@@ -39,7 +36,6 @@ import br.ifsp.lms_api.repository.AtividadeTextoRepository;
 @ExtendWith(MockitoExtension.class)
 class AtividadeTextoServiceTest {
 
-    // 1. Crie mocks para TODAS as dependências do Service
     @Mock
     private AtividadeTextoRepository atividadeTextoRepository;
 
@@ -49,36 +45,31 @@ class AtividadeTextoServiceTest {
     @Mock
     private PagedResponseMapper pagedResponseMapper;
 
-    // 2. Injete os mocks na classe que estamos testando
     @InjectMocks
     private AtividadeTextoService atividadeTextoService;
 
     @Test
     void testCreateAtividadeTexto_Success() {
-        // --- 1. Arrange (Arrumar) ---
         AtividadeTextoRequestDto requestDto = new AtividadeTextoRequestDto();
         requestDto.setTituloAtividade("Nova Atividade");
 
-        AtividadeTexto atividadeEntity = new AtividadeTexto(); // O que o mapper(dto) retorna
+        AtividadeTexto atividadeEntity = new AtividadeTexto(); 
         atividadeEntity.setTituloAtividade("Nova Atividade");
 
-        AtividadeTexto savedEntity = new AtividadeTexto(); // O que o repository.save() retorna
+        AtividadeTexto savedEntity = new AtividadeTexto(); 
         savedEntity.setIdAtividade(1L);
         savedEntity.setTituloAtividade("Nova Atividade");
 
-        AtividadeTextoResponseDto responseDto = new AtividadeTextoResponseDto(); // O que o mapper(entity) retorna
+        AtividadeTextoResponseDto responseDto = new AtividadeTextoResponseDto(); 
         responseDto.setIdAtividade(1L);
         responseDto.setTituloAtividade("Nova Atividade");
 
-        // Configura os mocks
         when(modelMapper.map(requestDto, AtividadeTexto.class)).thenReturn(atividadeEntity);
         when(atividadeTextoRepository.save(atividadeEntity)).thenReturn(savedEntity);
         when(modelMapper.map(savedEntity, AtividadeTextoResponseDto.class)).thenReturn(responseDto);
 
-        // --- 2. Act (Agir) ---
         AtividadeTextoResponseDto result = atividadeTextoService.createAtividadeTexto(requestDto);
 
-        // --- 3. Assert (Verificar) ---
         assertNotNull(result);
         assertEquals(1L, result.getIdAtividade());
         assertEquals("Nova Atividade", result.getTituloAtividade());
@@ -90,28 +81,21 @@ class AtividadeTextoServiceTest {
 
     @Test
     void testGetAllAtividadesTexto_Success() {
-        // --- 1. Arrange (Arrumar) ---
         Pageable pageable = Pageable.unpaged();
 
-        // 1. O que o repositório retorna
         AtividadeTexto atividade = new AtividadeTexto();
         atividade.setIdAtividade(1L);
         Page<AtividadeTexto> atividadePage = new PageImpl<>(List.of(atividade), pageable, 1);
         
-        // 2. O que o pagedResponseMapper deve retornar (o MOCK 100% FALSO)
         PagedResponse<AtividadeTextoResponseDto> pagedResponseMock = mock(PagedResponse.class);
 
-        // Configura os mocks
         when(atividadeTextoRepository.findAll(pageable)).thenReturn(atividadePage);
         when(pagedResponseMapper.toPagedResponse(atividadePage, AtividadeTextoResponseDto.class))
             .thenReturn(pagedResponseMock);
 
-        // --- 2. Act (Agir) ---
         PagedResponse<AtividadeTextoResponseDto> result = atividadeTextoService.getAllAtividadesTexto(pageable);
 
-        // --- 3. Assert (Verificar) ---
         assertNotNull(result);
-        // Verifica se o resultado é exatamente o objeto mockado que o mapper "retornou"
         assertEquals(pagedResponseMock, result); 
         
         verify(atividadeTextoRepository).findAll(pageable);
@@ -120,7 +104,6 @@ class AtividadeTextoServiceTest {
 
     @Test
     void testGetAtividadeTextoById_Success() {
-        // --- 1. Arrange (Arrumar) ---
         Long id = 1L;
         AtividadeTexto atividadeEntity = new AtividadeTexto();
         atividadeEntity.setIdAtividade(id);
@@ -131,10 +114,8 @@ class AtividadeTextoServiceTest {
         when(atividadeTextoRepository.findById(id)).thenReturn(Optional.of(atividadeEntity));
         when(modelMapper.map(atividadeEntity, AtividadeTextoResponseDto.class)).thenReturn(responseDto);
 
-        // --- 2. Act (Agir) ---
         AtividadeTextoResponseDto result = atividadeTextoService.getAtividadeTextoById(id);
 
-        // --- 3. Assert (Verificar) ---
         assertNotNull(result);
         assertEquals(id, result.getIdAtividade());
         verify(atividadeTextoRepository).findById(id);
@@ -143,13 +124,11 @@ class AtividadeTextoServiceTest {
 
     @Test
     void testGetAtividadeTextoById_NotFound() {
-        // --- 1. Arrange (Arrumar) ---
         Long id = 99L;
         String expectedMessage = String.format("Atividade de Texto com ID %d não encontrada.", id);
         
         when(atividadeTextoRepository.findById(id)).thenReturn(Optional.empty());
 
-        // --- 2. Act & 3. Assert (Agir e Verificar) ---
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             atividadeTextoService.getAtividadeTextoById(id);
         });
@@ -161,81 +140,66 @@ class AtividadeTextoServiceTest {
 
     @Test
     void testUpdateAtividadeTexto_Success() {
-        // --- 1. Arrange (Arrumar) ---
         Long id = 1L;
         
-        // DTO de requisição (COM A CORREÇÃO)
 AtividadeTextoUpdateDto updateDto = new AtividadeTextoUpdateDto();
         updateDto.setTituloAtividade(Optional.of("Novo Título"));
-        updateDto.setNumeroMaximoCaracteres(Optional.of(1000L)); // <-- CORRIGIDO (de Optional.of(1000) para 1000L)
-        // updateDto.setDescricaoAtividade(null); // (não precisamos setar, pois o getter retornará Optional.empty())
+        updateDto.setNumeroMaximoCaracteres(Optional.of(1000L)); 
 
-        // Entidade que o findById() retorna
         AtividadeTexto existingAtividade = new AtividadeTexto();
         existingAtividade.setIdAtividade(id);
         existingAtividade.setTituloAtividade("Título Antigo");
-        existingAtividade.setNumeroMaximoCaracteres(500); // Vamos assumir que é Long ou Integer
+        existingAtividade.setNumeroMaximoCaracteres(500); 
         existingAtividade.setDescricaoAtividade("Descrição Antiga");
 
-        // DTO de resposta
         AtividadeTextoResponseDto responseDto = new AtividadeTextoResponseDto();
         responseDto.setIdAtividade(id);
         responseDto.setTituloAtividade("Novo Título");
 
-        // Simula o service retornando Optional.ofNullable(null) para os campos não preenchidos
         when(atividadeTextoRepository.findById(id)).thenReturn(Optional.of(existingAtividade));
-        when(atividadeTextoRepository.save(any(AtividadeTexto.class))).thenReturn(existingAtividade); // Retorna a entidade atualizada
+        when(atividadeTextoRepository.save(any(AtividadeTexto.class))).thenReturn(existingAtividade); 
         when(modelMapper.map(existingAtividade, AtividadeTextoResponseDto.class)).thenReturn(responseDto);
 
-        // --- 2. Act (Agir) ---
         AtividadeTextoResponseDto result = atividadeTextoService.updateAtividadeTexto(id, updateDto);
 
-        // --- 3. Assert (Verificar) ---
         assertNotNull(result);
         assertEquals("Novo Título", result.getTituloAtividade());
 
-        // Verifica se a lógica do 'applyUpdateFromDto' (método privado) funcionou:
         ArgumentCaptor<AtividadeTexto> atividadeCaptor = ArgumentCaptor.forClass(AtividadeTexto.class);
         verify(atividadeTextoRepository).save(atividadeCaptor.capture());
         
         AtividadeTexto capturedAtividade = atividadeCaptor.getValue();
-        assertEquals("Novo Título", capturedAtividade.getTituloAtividade()); // Mudou
-        assertEquals(1000L, capturedAtividade.getNumeroMaximoCaracteres()); // Mudou (use 1000L para ser Long)
-        assertEquals("Descrição Antiga", capturedAtividade.getDescricaoAtividade()); // Permaneceu
+        assertEquals("Novo Título", capturedAtividade.getTituloAtividade()); 
+        assertEquals(1000L, capturedAtividade.getNumeroMaximoCaracteres()); 
+        assertEquals("Descrição Antiga", capturedAtividade.getDescricaoAtividade()); 
         
         verify(atividadeTextoRepository).findById(id);
     }
     
     @Test
     void testDeleteAtividadeTexto_Success() {
-        // --- 1. Arrange (Arrumar) ---
         Long id = 1L;
         AtividadeTexto existingAtividade = new AtividadeTexto();
         existingAtividade.setIdAtividade(id);
         
         when(atividadeTextoRepository.findById(id)).thenReturn(Optional.of(existingAtividade));
-        doNothing().when(atividadeTextoRepository).delete(existingAtividade); // Para métodos 'void'
+        doNothing().when(atividadeTextoRepository).delete(existingAtividade); 
 
-        // --- 2. Act (Agir) ---
-        // Verifica se o método executa sem lançar exceções
         assertDoesNotThrow(() -> {
             atividadeTextoService.deleteAtividadeTexto(id);
         });
 
-        // --- 3. Assert (Verificar) ---
         verify(atividadeTextoRepository).findById(id);
         verify(atividadeTextoRepository).delete(existingAtividade);
     }
     
     @Test
     void testDeleteAtividadeTexto_NotFound() {
-        // --- 1. Arrange (Arrumar) ---
         Long id = 99L;
         String expectedMessage = String.format("Atividade de Texto com ID %d não encontrada.", id);
         
         when(atividadeTextoRepository.findById(id)).thenReturn(Optional.empty());
 
-        // --- 2. Act & 3. Assert (Agir e Verificar) ---
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             atividadeTextoService.deleteAtividadeTexto(id);
         });
