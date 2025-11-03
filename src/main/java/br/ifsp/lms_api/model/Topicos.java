@@ -4,6 +4,7 @@ package br.ifsp.lms_api.model;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -35,7 +36,7 @@ public class Topicos {
     @NotBlank(message = "O titulo do topico é obrigatorio")
     private String tituloTopico;
 
-    @Lob 
+    @Lob
     private String conteudoHtml;
 
     @JsonBackReference
@@ -44,10 +45,19 @@ public class Topicos {
     private Turma turma;
 
     @OneToMany(
-        mappedBy = "topico", 
-        cascade = CascadeType.ALL, 
+        mappedBy = "topico",
+        cascade = CascadeType.ALL,
         orphanRemoval = true,
         fetch = FetchType.LAZY
     )
     private List<MaterialDeAula> materiaisDeAula;
+
+    @JsonManagedReference
+    @OneToMany(
+        mappedBy = "topico", 
+        cascade = CascadeType.ALL,
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
+    private List<Atividade> atividades;
 }
