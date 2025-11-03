@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -54,6 +55,7 @@ public class TopicosService {
         this.pagedResponseMapper = pagedResponseMapper;
     }
 
+    @Transactional
     public TopicosResponseDto createTopico(TopicosRequestDto topicosRequest) {
         
         Turma turma = turmaRepository.findById(topicosRequest.getIdTurma())
@@ -72,23 +74,27 @@ public class TopicosService {
         return modelMapper.map(topico, TopicosResponseDto.class);
     }
 
+    @Transactional(readOnly = true)
     public PagedResponse<TopicosResponseDto> getAllTopicos(Pageable pageable) {
         Page<Topicos> topicos = topicosRepository.findAll(pageable);
         return pagedResponseMapper.toPagedResponse(topicos, TopicosResponseDto.class);
     }
 
 
+    @Transactional(readOnly = true)
     public TopicosResponseDto getTopicoById(Long id) {
         Topicos topico = topicosRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Topico com ID " + id + " nao encontrado"));
         return modelMapper.map(topico, TopicosResponseDto.class);
     }
 
+    @Transactional(readOnly = true)
     public PagedResponse<TopicosResponseDto> getTopicosByIdTurma(Long idTurma, Pageable pageable) {
         Page<Topicos> topicos = topicosRepository.findByTurmaIdTurma(idTurma, pageable);
         return pagedResponseMapper.toPagedResponse(topicos, TopicosResponseDto.class);
     }
 
+    @Transactional
     public TopicosResponseDto deleteTopico(Long id) {
         Topicos topico = topicosRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Topico com ID " + id + " nao encontrado"));
@@ -96,6 +102,7 @@ public class TopicosService {
         return modelMapper.map(topico, TopicosResponseDto.class);
     }
 
+    @Transactional
     public TopicosResponseDto updateTopico(Long id, TopicosUpdateDto topicosUpdate) {
         Topicos topicoExistente = topicosRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Topico com ID " + id + " nao encontrado"));

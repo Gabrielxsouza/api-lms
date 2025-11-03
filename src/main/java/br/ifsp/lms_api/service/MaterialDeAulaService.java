@@ -2,6 +2,7 @@ package br.ifsp.lms_api.service;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,22 +54,26 @@ public class MaterialDeAulaService {
         return modelMapper.map(novoMaterial, MaterialDeAulaResponseDto.class);
     }
 
+    @Transactional(readOnly = true)
     public MaterialDeAulaResponseDto getMaterialById(Long id) {
         MaterialDeAula material = materialRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Material com ID " + id + " nao encontrado"));
         return modelMapper.map(material, MaterialDeAulaResponseDto.class);
     }
 
+    @Transactional(readOnly = true)
     public PagedResponse<MaterialDeAulaResponseDto> getMaterialByTopico(Long idTopico, Pageable pageable) {
         Page<MaterialDeAula> materiais = materialRepository.findByTopicoIdTopico(idTopico, pageable);
         return pagedResponseMapper.toPagedResponse(materiais, MaterialDeAulaResponseDto.class);
     }
 
+    @Transactional(readOnly = true)
     public PagedResponse<MaterialDeAulaResponseDto> getAllMaterialDeAula(Pageable pageable) {
         Page<MaterialDeAula> materiais = materialRepository.findAll(pageable);
         return pagedResponseMapper.toPagedResponse(materiais, MaterialDeAulaResponseDto.class);
     }
 
+    @Transactional
     public MaterialDeAulaResponseDto deleteMaterial(Long id) {
         MaterialDeAula material = materialRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Material com ID " + id + " nao encontrado"));
@@ -76,6 +81,7 @@ public class MaterialDeAulaService {
         return modelMapper.map(material, MaterialDeAulaResponseDto.class);
     }
 
+    @Transactional
     public MaterialDeAulaResponseDto updateMaterial(Long id, MaterialDeAulaRequestDto material) {
         MaterialDeAula materialToUpdate = materialRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Material com ID " + id + " nao encontrado"));
