@@ -30,12 +30,12 @@ import br.ifsp.lms_api.service.AlternativasService;
 public class AlternativasControllerTest {
 
     @Autowired
-    private MockMvc mockMvc; // 2. Objeto para simular requisições HTTP
+    private MockMvc mockMvc; 
 
     @Autowired
-    private ObjectMapper objectMapper; // 3. Para converter objetos Java -> JSON e vice-versa
+    private ObjectMapper objectMapper; 
 
-    @MockBean // 4. Usa @MockBean (do Spring) para mockar o Service
+    @MockBean 
     private AlternativasService alternativasService;
 
     private AlternativasResponseDto responseDto;
@@ -43,7 +43,6 @@ public class AlternativasControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Objeto de resposta padrão para os testes
         responseDto = new AlternativasResponseDto();
         responseDto.setIdAlternativa(1L);
         responseDto.setAlternativa("Teste de Alternativa");
@@ -52,24 +51,20 @@ public class AlternativasControllerTest {
         requestDto = new AlternativasRequestDto();
         requestDto.setAlternativa("Teste de Alternativa");
         requestDto.setAlternativaCorreta(true);
-        requestDto.setIdQuestao(1L); // <-- ESTA É A CORREÇÃO
+        requestDto.setIdQuestao(1L); 
 
-        // Configura o ObjectMapper para lidar com LocalDate
         objectMapper.findAndRegisterModules();
     }
 
     @Test
     void testCreate_Success() throws Exception {
-        // O requestDto agora é criado no setUp()
-
         when(alternativasService.createAlternativa(any(AlternativasRequestDto.class)))
                 .thenReturn(responseDto);
 
         mockMvc.perform(post("/alternativas")
                 .contentType(MediaType.APPLICATION_JSON)
-                // Use o 'requestDto' da classe, que agora é válido
                 .content(objectMapper.writeValueAsString(this.requestDto)))
-                .andExpect(status().isCreated()) // Agora deve ser 201
+                .andExpect(status().isCreated()) 
                 .andExpect(jsonPath("$.idAlternativa").value(1L));
 
         verify(alternativasService, times(1)).createAlternativa(any(AlternativasRequestDto.class));
@@ -77,16 +72,15 @@ public class AlternativasControllerTest {
 
     @Test
     void testCreate_InvalidInput() throws Exception {
-        // Agora vamos testar um DTO inválido DE VERDADE
         AlternativasRequestDto invalidDto = new AlternativasRequestDto();
-        invalidDto.setAlternativa(null); // Campo @NotBlank faltando
+        invalidDto.setAlternativa(null); 
         invalidDto.setAlternativaCorreta(true);
-        invalidDto.setIdQuestao(1L); // O ID da questão está OK
+        invalidDto.setIdQuestao(1L); 
 
         mockMvc.perform(post("/alternativas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidDto)))
-                .andExpect(status().isBadRequest()); // Deve ser 400
+                .andExpect(status().isBadRequest()); 
 
         verify(alternativasService, times(0)).createAlternativa(any(AlternativasRequestDto.class));
     }
@@ -159,13 +153,11 @@ public class AlternativasControllerTest {
     void testUpdateAlternativa_Success() throws Exception {
         Long id = 1L;
 
-        // Crie o DTO de update APENAS para o mock do service
         AlternativasUpdateDto updateDto = new AlternativasUpdateDto(
             Optional.of("Nova Alternativa"),
-            Optional.of(true) // <-- Corrigi para true, baseado no seu teste original
+            Optional.of(true) 
         );
 
-        // Crie a String JSON que o cliente enviaria
         String updateJson = """
         {
             "alternativa": "Nova Alternativa",
@@ -173,26 +165,22 @@ public class AlternativasControllerTest {
         }
         """;
 
-        // Crie o DTO de resposta esperado
         AlternativasResponseDto updatedResponseDto = new AlternativasResponseDto();
         updatedResponseDto.setIdAlternativa(1L);
         updatedResponseDto.setAlternativa("Nova Alternativa");
         updatedResponseDto.setAlternativaCorreta(true);
 
-        // Configure o mock do service para esperar o DTO com Optional
         when(alternativasService.updateAlternativa(eq(id), any(AlternativasUpdateDto.class)))
                 .thenReturn(updatedResponseDto);
 
-        // Execute o perform usando a String JSON manual
         mockMvc.perform(patch("/alternativas/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(updateJson)) // <-- MUDANÇA PRINCIPAL AQUI
-                .andExpect(status().isOk()) // Agora deve ser 200
+                .content(updateJson)) 
+                .andExpect(status().isOk()) 
                 .andExpect(jsonPath("$.idAlternativa").value(1L))
                 .andExpect(jsonPath("$.alternativa").value("Nova Alternativa"))
                 .andExpect(jsonPath("$.alternativaCorreta").value(true));
 
-        // Verifique se o service foi chamado
         verify(alternativasService, times(1)).updateAlternativa(eq(id), any(AlternativasUpdateDto.class));
     }
 
@@ -200,13 +188,11 @@ public class AlternativasControllerTest {
     void testUpdateAlternativa_NotFound() throws Exception {
         Long id = 1L;
 
-        // Crie o DTO de update APENAS para o mock do service
         AlternativasUpdateDto updateDto = new AlternativasUpdateDto(
             Optional.of("Nova Alternativa"),
             Optional.of(true)
         );
 
-        // Crie a String JSON que o cliente enviaria
         String updateJson = """
         {
             "alternativa": "Nova Alternativa",
@@ -214,17 +200,14 @@ public class AlternativasControllerTest {
         }
         """;
 
-        // Configure o mock do service para lançar a exceção
         when(alternativasService.updateAlternativa(eq(id), any(AlternativasUpdateDto.class)))
                 .thenThrow(new ResourceNotFoundException("Alternativa not found with id: " + id));
 
-        // Execute o perform usando a String JSON manual
         mockMvc.perform(patch("/alternativas/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(updateJson)) // <-- MUDANÇA PRINCIPAL AQUI
-                .andExpect(status().isNotFound()); // Agora deve ser 404
+                .content(updateJson)) 
+                .andExpect(status().isNotFound()); 
 
-        // Verifique se o service foi chamado
         verify(alternativasService, times(1)).updateAlternativa(eq(id), any(AlternativasUpdateDto.class));
     }
 }

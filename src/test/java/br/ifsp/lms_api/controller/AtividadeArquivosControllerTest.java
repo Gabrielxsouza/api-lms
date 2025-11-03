@@ -15,13 +15,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule; // Para LocalDate
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule; 
 
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosRequestDto;
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosResponseDto;
@@ -49,14 +48,12 @@ public class AtividadeArquivosControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Configura o ObjectMapper para lidar com LocalDate
         objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.findAndRegisterModules(); // Para Optionals (embora não usemos no JSON)
+        objectMapper.findAndRegisterModules(); 
 
         dataInicio = LocalDate.of(2025, 11, 1);
         dataFechamento = LocalDate.of(2025, 11, 30);
 
-        // Objeto de resposta padrão
         responseDto = new AtividadeArquivosResponseDto();
         responseDto.setIdAtividade(1L);
         responseDto.setTituloAtividade("Trabalho de Java");
@@ -66,7 +63,6 @@ public class AtividadeArquivosControllerTest {
         responseDto.setStatusAtividade(true);
         responseDto.setArquivosPermitidos(List.of(".pdf", ".zip"));
 
-        // Objeto de requisição padrão
         requestDto = new AtividadeArquivosRequestDto();
         requestDto.setTituloAtividade("Trabalho de Java");
         requestDto.setDescricaoAtividade("Entregar um CRUD");
@@ -94,30 +90,37 @@ public class AtividadeArquivosControllerTest {
 
     @Test
     void testCreate_InvalidInput() throws Exception {
-        // Cria DTO inválido (título nulo)
         AtividadeArquivosRequestDto invalidDto = new AtividadeArquivosRequestDto();
-        invalidDto.setTituloAtividade(null); // Campo @NotBlank
+        invalidDto.setTituloAtividade(null); 
         invalidDto.setDataInicioAtividade(dataInicio);
         invalidDto.setDataFechamentoAtividade(dataFechamento);
         invalidDto.setStatusAtividade(true);
-        invalidDto.setArquivosPermitidos(List.of()); // Campo @NotNull
+        invalidDto.setArquivosPermitidos(List.of()); 
 
         mockMvc.perform(post("/atividades-arquivo")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidDto)))
-                .andExpect(status().isBadRequest()); // Espera 400 Bad Request
+                .andExpect(status().isBadRequest()); 
 
         verify(atividadeArquivosService, never()).createAtividadeArquivos(any());
     }
 
     @Test
     void testGetAll_Success() throws Exception {
-        Pageable pageable = PageRequest.of(0, 10);
         List<AtividadeArquivosResponseDto> dtoList = List.of(responseDto);
 
-        PagedResponse<AtividadeArquivosResponseDto> pagedResponse = new PagedResponse<>(
-            dtoList, 0, 10, 1L, 1, true
-        );
+        // --- CORREÇÃO AQUI ---
+        // 1. Cria o mock 100% falso
+        PagedResponse<AtividadeArquivosResponseDto> pagedResponse = mock(PagedResponse.class);
+
+        // 2. Configura os getters do mock
+        when(pagedResponse.getContent()).thenReturn(dtoList);
+        when(pagedResponse.getPage()).thenReturn(0);
+        when(pagedResponse.getSize()).thenReturn(10);
+        when(pagedResponse.getTotalElements()).thenReturn(1L);
+        when(pagedResponse.getTotalPages()).thenReturn(1);
+        when(pagedResponse.isLast()).thenReturn(true);
+        // --- FIM DA CORREÇÃO ---
 
         when(atividadeArquivosService.getAllAtividadesArquivos(any(Pageable.class)))
                 .thenReturn(pagedResponse);
@@ -137,32 +140,29 @@ public class AtividadeArquivosControllerTest {
     void testUpdate_Success() throws Exception {
         Long id = 1L;
 
-        // JSON que o frontend enviaria (sem 'Optional')
-        // Atualizando o título e a lista de arquivos
-        String updateJson = """
-        {
-            "tituloAtividade": "Trabalho de Java V2",
-            "arquivosPermitidos": [".pdf", ".docx", ".zip"]
-        }
-        """;
-
-        // DTO de resposta atualizado
+        // --- CORREÇÃO AQUI ---
+        // 1. Cria o DTO de Update real que o ObjectMapper vai criar a partir do JSON
+        AtividadeArquivosUpdateDto updateDto = new AtividadeArquivosUpdateDto();
+        updateDto.setTituloAtividade(Optional.of("Trabalho de Java V2"));
+        updateDto.setArquivosPermitidos(Optional.of(List.of(".pdf", ".docx", ".zip")));
+        // --- FIM DA CORREÇÃO ---
+        
         AtividadeArquivosResponseDto updatedResponse = new AtividadeArquivosResponseDto();
         updatedResponse.setIdAtividade(id);
-        updatedResponse.setTituloAtividade("Trabalho de Java V2"); // Título novo
-        updatedResponse.setDescricaoAtividade("Entregar um CRUD"); // Descrição antiga
+        updatedResponse.setTituloAtividade("Trabalho de Java V2"); 
+        updatedResponse.setDescricaoAtividade("Entregar um CRUD"); 
         updatedResponse.setDataInicioAtividade(dataInicio);
         updatedResponse.setDataFechamentoAtividade(dataFechamento);
         updatedResponse.setStatusAtividade(true);
-        updatedResponse.setArquivosPermitidos(List.of(".pdf", ".docx", ".zip")); // Lista nova
+        updatedResponse.setArquivosPermitidos(List.of(".pdf", ".docx", ".zip")); 
 
-        // Mock do serviço (assumindo que o service recebe AtividadeArquivosUpdateDto)
         when(atividadeArquivosService.updateAtividadeArquivos(eq(id), any(AtividadeArquivosUpdateDto.class)))
                 .thenReturn(updatedResponse);
 
-        mockMvc.perform(patch("/atividades-arquivo/{id}", id) // É PATCH
+        mockMvc.perform(patch("/atividades-arquivo/{id}", id) 
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(updateJson))
+                 // 2. Serializa o DTO de Update real, que contém Optionals
+                .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.idAtividade").value(id))
                 .andExpect(jsonPath("$.tituloAtividade").value("Trabalho de Java V2"))
@@ -175,19 +175,19 @@ public class AtividadeArquivosControllerTest {
     void testUpdate_NotFound() throws Exception {
         Long id = 1L;
 
-        String updateJson = """
-        {
-            "tituloAtividade": "Trabalho de Java V2"
-        }
-        """;
+        // --- CORREÇÃO AQUI ---
+        // 1. Cria o DTO de Update real
+        AtividadeArquivosUpdateDto updateDto = new AtividadeArquivosUpdateDto();
+        updateDto.setTituloAtividade(Optional.of("Trabalho de Java V2"));
+        // --- FIM DA CORREÇÃO ---
 
-        // Mock do serviço lançando a exceção
         when(atividadeArquivosService.updateAtividadeArquivos(eq(id), any(AtividadeArquivosUpdateDto.class)))
                 .thenThrow(new ResourceNotFoundException("Atividade não encontrada com id: " + id));
 
-        mockMvc.perform(patch("/atividades-arquivo/{id}", id) // É PATCH
+        mockMvc.perform(patch("/atividades-arquivo/{id}", id) 
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(updateJson))
+                // 2. Serializa o DTO de Update real
+                .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isNotFound());
 
         verify(atividadeArquivosService, times(1)).updateAtividadeArquivos(eq(id), any(AtividadeArquivosUpdateDto.class));
@@ -199,7 +199,7 @@ public class AtividadeArquivosControllerTest {
         doNothing().when(atividadeArquivosService).deleteAtividadeArquivos(id);
 
         mockMvc.perform(delete("/atividades-arquivo/{id}", id))
-                .andExpect(status().isNoContent()); // 204 No Content
+                .andExpect(status().isNoContent()); 
 
         verify(atividadeArquivosService, times(1)).deleteAtividadeArquivos(id);
     }

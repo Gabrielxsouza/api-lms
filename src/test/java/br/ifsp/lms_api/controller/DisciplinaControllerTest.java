@@ -38,7 +38,7 @@ public class DisciplinaControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean // Mocka o Service
+    @MockBean 
     private DisciplinaService disciplinaService;
 
     private DisciplinaRequestDto requestDto;
@@ -47,7 +47,6 @@ public class DisciplinaControllerTest {
 
     @BeforeEach
     void setUp() {
-        // DTOs para a criação aninhada
         TurmaParaDisciplinaDTO turmaDto = new TurmaParaDisciplinaDTO("Turma A", "2025/2");
         TurmaResponseDto turmaResponseDto = new TurmaResponseDto(1L, "Turma A", "2025/2", null);
 
@@ -77,11 +76,9 @@ public class DisciplinaControllerTest {
 
     @Test
     void testCreateDisciplina_Success() throws Exception {
-        // Arrange
         when(disciplinaService.createDisciplina(any(DisciplinaRequestDto.class)))
             .thenReturn(responseDto);
 
-        // Act & Assert
         mockMvc.perform(post("/disciplinas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
@@ -95,13 +92,11 @@ public class DisciplinaControllerTest {
 
     @Test
     void testCreateDisciplina_InvalidInput() throws Exception {
-        // Arrange
         DisciplinaRequestDto invalidDto = new DisciplinaRequestDto(
-            null, // Nome @NotBlank faltando
+            null, 
             "Testes", "ESL708", List.of()
         );
 
-        // Act & Assert
         mockMvc.perform(post("/disciplinas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidDto)))
@@ -112,14 +107,12 @@ public class DisciplinaControllerTest {
 
     @Test
     void testGetAllDisciplinas_Success() throws Exception {
-        // Arrange
         PagedResponse<DisciplinaResponseDto> pagedResponse = new PagedResponse<>(
             List.of(responseDto), 0, 10, 1L, 1, true
         );
         when(disciplinaService.getAllDisciplinas(any(Pageable.class)))
             .thenReturn(pagedResponse);
 
-        // Act & Assert
         mockMvc.perform(get("/disciplinas"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
@@ -130,7 +123,6 @@ public class DisciplinaControllerTest {
 
     @Test
     void testUpdateDisciplina_Success() throws Exception {
-        // Arrange
         DisciplinaResponseDto updatedResponse = new DisciplinaResponseDto(
             1L, "Novo Nome", "Testes", "ESL708", List.of()
         );
@@ -138,7 +130,6 @@ public class DisciplinaControllerTest {
         when(disciplinaService.updateDisciplina(eq(1L), any(DisciplinaUpdateDto.class)))
             .thenReturn(updatedResponse);
 
-        // Act & Assert
         mockMvc.perform(patch("/disciplinas/{id}", 1L)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
@@ -151,11 +142,9 @@ public class DisciplinaControllerTest {
 
     @Test
     void testUpdateDisciplina_NotFound() throws Exception {
-        // Arrange
         when(disciplinaService.updateDisciplina(eq(99L), any(DisciplinaUpdateDto.class)))
             .thenThrow(new ResourceNotFoundException("Disciplina não encontrada"));
 
-        // Act & Assert
         mockMvc.perform(patch("/disciplinas/{id}", 99L)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
@@ -164,10 +153,8 @@ public class DisciplinaControllerTest {
 
     @Test
     void testDeleteDisciplina_Success() throws Exception {
-        // Arrange
         doNothing().when(disciplinaService).deleteDisciplina(1L);
 
-        // Act & Assert
         mockMvc.perform(delete("/disciplinas/{id}", 1L))
                 .andExpect(status().isNoContent());
 

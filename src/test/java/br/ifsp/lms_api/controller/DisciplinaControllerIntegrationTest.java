@@ -28,7 +28,7 @@ import java.util.List;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional // Rola para trás as transações do banco após cada teste
+@Transactional 
 public class DisciplinaControllerIntegrationTest {
 
     @Autowired
@@ -51,11 +51,9 @@ public class DisciplinaControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Limpa o banco antes de cada teste
         turmaRepository.deleteAll();
         disciplinaRepository.deleteAll();
 
-        // Cria uma disciplina e turma "base"
         Disciplina disciplina = new Disciplina();
         disciplina.setNomeDisciplina("Disciplina Base");
         disciplina.setCodigoDisciplina("BASE-101");
@@ -65,24 +63,20 @@ public class DisciplinaControllerIntegrationTest {
         turma.setNomeTurma("Turma Base");
         turma.setSemestre("2025/1");
         
-        // Seta o relacionamento bidirecional
         disciplina.setTurmas(List.of(turma));
         turma.setDisciplina(disciplina);
 
-        // Salva (o cascade deve salvar a turma junto)
         disciplinaExistente = disciplinaRepository.save(disciplina);
         
         entityManager.flush();
         entityManager.clear();
         
-        // Recarrega do banco para garantir que os IDs estão corretos
         disciplinaExistente = disciplinaRepository.findAll().get(0);
         turmaExistente = turmaRepository.findAll().get(0);
     }
 
     @Test
     void testCreateDisciplina_Success_WithNestedTurmas() throws Exception {
-        // Arrange
         TurmaParaDisciplinaDTO novaTurmaDto = new TurmaParaDisciplinaDTO("Turma Aninhada", "2025/2");
         DisciplinaRequestDto requestDto = new DisciplinaRequestDto(
             "Engenharia de Software",
@@ -91,7 +85,6 @@ public class DisciplinaControllerIntegrationTest {
             List.of(novaTurmaDto)
         );
 
-        // Act & Assert
         mockMvc.perform(post("/disciplinas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
@@ -101,15 +94,12 @@ public class DisciplinaControllerIntegrationTest {
                 .andExpect(jsonPath("$.turmas", hasSize(1)))
                 .andExpect(jsonPath("$.turmas[0].nomeTurma", is("Turma Aninhada")));
 
-        // Assert (Banco de Dados)
-        // Devemos ter 2 disciplinas (Base + Nova) e 2 turmas (Base + Nova)
         assertEquals(2, disciplinaRepository.count());
         assertEquals(2, turmaRepository.count());
     }
 
     @Test
     void testGetAllDisciplinas_Success() throws Exception {
-        // Act & Assert
         mockMvc.perform(get("/disciplinas")
                 .param("page", "0")
                 .param("size", "10"))
@@ -121,7 +111,6 @@ public class DisciplinaControllerIntegrationTest {
 
     @Test
     void testUpdateDisciplina_Success() throws Exception {
-        // Arrange
         Long id = disciplinaExistente.getIdDisciplina();
         String updateJson = """
         {
@@ -129,7 +118,6 @@ public class DisciplinaControllerIntegrationTest {
         }
         """;
 
-        // Act & Assert
         mockMvc.perform(patch("/disciplinas/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(updateJson))
@@ -140,20 +128,15 @@ public class DisciplinaControllerIntegrationTest {
 
     @Test
     void testDeleteDisciplina_Success_WithCascade() throws Exception {
-        // Arrange
         Long disciplinaId = disciplinaExistente.getIdDisciplina();
         Long turmaId = turmaExistente.getIdTurma();
         
-        // Garante que ambos existem antes do teste
         assertEquals(1, disciplinaRepository.count());
         assertEquals(1, turmaRepository.count());
 
-        // Act
         mockMvc.perform(delete("/disciplinas/{id}", disciplinaId))
                 .andExpect(status().isNoContent());
 
-        // Assert (Banco de Dados)
-        // O `orphanRemoval` deve ter deletado a turma junto
         assertFalse(disciplinaRepository.findById(disciplinaId).isPresent());
         assertFalse(turmaRepository.findById(turmaId).isPresent(), "A turma não foi deletada em cascata!");
     }
