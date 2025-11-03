@@ -36,7 +36,8 @@ public class Turma {
     private String semestre;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idDisciplina") 
+    @JoinColumn(name = "idDisciplina")
+    @JsonManagedReference
     private Disciplina disciplina;
 
     @JsonManagedReference

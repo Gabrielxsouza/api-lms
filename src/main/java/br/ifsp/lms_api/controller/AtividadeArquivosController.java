@@ -27,7 +27,6 @@ public class AtividadeArquivosController {
 
     private final AtividadeArquivosService atividadeArquivosService;
 
-    // Injeção de dependência via construtor (como no exemplo)
     public AtividadeArquivosController(AtividadeArquivosService atividadeArquivosService) {
         this.atividadeArquivosService = atividadeArquivosService;
     }
@@ -37,18 +36,15 @@ public class AtividadeArquivosController {
             @Valid @RequestBody AtividadeArquivosRequestDto atividadeArquivosRequestDto) {
         
         AtividadeArquivosResponseDto responseDto = atividadeArquivosService.createAtividadeArquivos(atividadeArquivosRequestDto);
-        
-        // Retorno ajustado para status(HttpStatus.CREATED)
+
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
     @GetMapping
     public ResponseEntity<PagedResponse<AtividadeArquivosResponseDto>> getAll(Pageable pageable) {
-        // Removido @PageableDefault
         return ResponseEntity.ok(atividadeArquivosService.getAllAtividadesArquivos(pageable));
     }
 
-    // O método getById() foi removido para seguir o padrão do QuestoesController
 
     @PatchMapping("/{id}")
     public ResponseEntity<AtividadeArquivosResponseDto> update(

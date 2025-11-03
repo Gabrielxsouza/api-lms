@@ -29,8 +29,8 @@ public class AtividadeQuestionario extends Atividade {
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE }) 
     @JoinTable(
         name = "questionario_questoes", 
-        joinColumns = @JoinColumn(name = "id_questionario"), // Coluna que referencia esta entidade (AtividadeQuestionario)
-        inverseJoinColumns = @JoinColumn(name = "id_questao") // Coluna que referencia a outra entidade (Questoes)
+        joinColumns = @JoinColumn(name = "id_questionario"), // esta entidade (AtividadeQuestionario)
+        inverseJoinColumns = @JoinColumn(name = "id_questao") // outra entidade (Questoes)
     )
     @JsonManagedReference
     private List<Questoes> questoes = new ArrayList<>();

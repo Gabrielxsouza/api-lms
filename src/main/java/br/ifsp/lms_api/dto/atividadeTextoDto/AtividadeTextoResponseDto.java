@@ -1,14 +1,14 @@
 package br.ifsp.lms_api.dto.atividadeTextoDto;
 
 import br.ifsp.lms_api.dto.atividadesDto.AtividadesResponseDto;
-import lombok.AllArgsConstructor; // Importado
-import lombok.Data; // Importado
-import lombok.EqualsAndHashCode; // Importado
-import lombok.NoArgsConstructor; // Importado
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
-@Data // Adicionado
-@NoArgsConstructor // Adicionado
-@AllArgsConstructor // Adicionado
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class AtividadeTextoResponseDto extends AtividadesResponseDto {
 
