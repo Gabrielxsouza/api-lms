@@ -22,4 +22,8 @@ public class TopicosResponseDto {
  
     private List<MaterialDeAulaResponseDto> materiaisDeAula;
 
+    public void setConteudoHtml(String conteudoHtml) { 
+        this.conteudoHtml = conteudoHtml;
+    }
+
 }
