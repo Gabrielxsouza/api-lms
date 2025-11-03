@@ -44,9 +44,9 @@ class AtividadeQuestionarioControllerTest {
         responseDto.setIdAtividade(1L);
         responseDto.setTituloAtividade("Teste de Questionário");
         responseDto.setNumeroTentativas(3);
-        
+
         // Configura o ObjectMapper para lidar com LocalDate
-        objectMapper.findAndRegisterModules(); 
+        objectMapper.findAndRegisterModules();
     }
 
     @Test
@@ -72,10 +72,11 @@ class AtividadeQuestionarioControllerTest {
                 .andExpect(status().isCreated()) // Verifica o Status HTTP 201
                 .andExpect(jsonPath("$.idAtividade").value(1L)) // Verifica o JSON de resposta
                 .andExpect(jsonPath("$.tituloAtividade").value("Teste de Questionário"));
-        
+
         // Verifica se o método do service foi chamado 1 vez
         verify(atividadeQuestionarioService, times(1)).createAtividadeQuestionario(any(AtividadeQuestionarioRequestDto.class));
     }
+    
 
     @Test
     void testGetAtividadeQuestionarioById_Success() throws Exception {
@@ -89,16 +90,16 @@ class AtividadeQuestionarioControllerTest {
                 .andExpect(status().isOk()) // Verifica o Status HTTP 200
                 .andExpect(jsonPath("$.idAtividade").value(id))
                 .andExpect(jsonPath("$.numeroTentativas").value(3));
-        
+
         verify(atividadeQuestionarioService).getAtividadeQuestionarioById(id);
     }
-    
+
     @Test
     void testGetAtividadeQuestionarioById_NotFound() throws Exception {
         // --- 1. Arrange (Arrumar) ---
         Long idInexistente = 99L;
         String errorMessage = "Atividade não encontrada";
-        
+
         // Simula o Service: "Quando o service.getById(99L) for chamado, lance uma exceção"
         when(atividadeQuestionarioService.getAtividadeQuestionarioById(idInexistente))
             .thenThrow(new ResourceNotFoundException(errorMessage));
@@ -106,9 +107,9 @@ class AtividadeQuestionarioControllerTest {
         // --- 2. Act & 3. Assert (Agir e Verificar) ---
         mockMvc.perform(get("/atividades-questionario/{id}", idInexistente))
                 .andExpect(status().isNotFound()); // Verifica o Status HTTP 404
-        
+
         // (Isso assume que você tem um @ControllerAdvice para tratar ResourceNotFoundException)
-        
+
         verify(atividadeQuestionarioService).getAtividadeQuestionarioById(idInexistente);
     }
 
