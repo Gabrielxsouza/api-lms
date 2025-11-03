@@ -34,5 +34,5 @@ public class Disciplina {
     private String descricaoDisciplina;
 
     @OneToMany(mappedBy = "disciplina")
-    private List<Turma> turmas;
+   private List<Turma> turmas;
 }

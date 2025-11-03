@@ -1,7 +1,7 @@
 package br.ifsp.lms_api.model;
 
 import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,6 +39,7 @@ public class Turma {
     @JoinColumn(name = "idDisciplina") 
     private Disciplina disciplina;
 
+    @JsonManagedReference
     @OneToMany(
         mappedBy = "turma", 
         cascade = CascadeType.ALL, 

@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TopicosUpdateDto {
-    private Optional<String> conteudoHTML = Optional.empty();
+    private Optional<String> conteudoHtml = Optional.empty();
     private Optional<String> tituloTopico = Optional.empty();
-    private Optional<Long> idMaterialDeAula = Optional.empty(); //talvez seja lista pra facilitar
 }
