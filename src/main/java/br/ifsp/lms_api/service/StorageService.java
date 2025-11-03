@@ -51,4 +51,17 @@ public class StorageService {
             throw new RuntimeException("Falha ao salvar o arquivo.", e);
         }
     }
+public void deleteFile(String filename) throws IOException { // Este método pode lançar IOException
+        if (filename == null || filename.isEmpty()) {
+            return; 
+        }
+
+        Path fileToDelete = this.rootLocation.resolve(Paths.get(filename))
+                                .normalize().toAbsolutePath();
+
+        // --- MUDANÇA ---
+        // Trocado de deleteIfExists para delete.
+        // Agora, ele lançará NoSuchFileException se o arquivo não for encontrado.
+        Files.delete(fileToDelete); 
+    }
 }

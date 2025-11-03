@@ -1,26 +1,24 @@
 package br.ifsp.lms_api.service;
 
-import java.util.Optional;
-
 import org.modelmapper.ModelMapper;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.PolicyFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import org.owasp.html.PolicyFactory;
-import org.owasp.html.HtmlPolicyBuilder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import br.ifsp.lms_api.dto.TopicosDto.TopicosRequestDto;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosResponseDto;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosUpdateDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
+import br.ifsp.lms_api.exception.ResourceNotFoundException; 
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
 import br.ifsp.lms_api.model.Topicos;
 import br.ifsp.lms_api.model.Turma; 
 import br.ifsp.lms_api.repository.TopicosRepository;
 import br.ifsp.lms_api.repository.TurmaRepository;
-import jakarta.persistence.EntityNotFoundException; 
+
 
 @Service
 public class TopicosService {
@@ -59,16 +57,16 @@ public class TopicosService {
     public TopicosResponseDto createTopico(TopicosRequestDto topicosRequest) {
         
         Turma turma = turmaRepository.findById(topicosRequest.getIdTurma())
-            .orElseThrow(() -> new EntityNotFoundException("Turma com ID " + topicosRequest.getIdTurma() + " não encontrada"));
+                
+                .orElseThrow(() -> new ResourceNotFoundException("Turma com ID " + topicosRequest.getIdTurma() + " não encontrada"));
 
-        //String htmlLimpo = POLITICA_DE_CONTEUDO_SEGURO.sanitize(topicosRequest.getConteudoHtml());
         String htmlLimpo = segurancaConteudo(topicosRequest.getConteudoHtml());
 
         Topicos topico = modelMapper.map(topicosRequest, Topicos.class);
         
         topico.setConteudoHtml(htmlLimpo); 
         topico.setTurma(turma); 
-        topico.setIdTopico(null);  
+        topico.setIdTopico(null); 
 
         topico = topicosRepository.save(topico);
         return modelMapper.map(topico, TopicosResponseDto.class);
@@ -84,7 +82,8 @@ public class TopicosService {
     @Transactional(readOnly = true)
     public TopicosResponseDto getTopicoById(Long id) {
         Topicos topico = topicosRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Topico com ID " + id + " nao encontrado"));
+                
+                .orElseThrow(() -> new ResourceNotFoundException("Topico com ID " + id + " nao encontrado"));
         return modelMapper.map(topico, TopicosResponseDto.class);
     }
 
@@ -97,34 +96,37 @@ public class TopicosService {
     @Transactional
     public TopicosResponseDto deleteTopico(Long id) {
         Topicos topico = topicosRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Topico com ID " + id + " nao encontrado"));
+                
+                .orElseThrow(() -> new ResourceNotFoundException("Topico com ID " + id + " nao encontrado"));
         topicosRepository.delete(topico);
         return modelMapper.map(topico, TopicosResponseDto.class);
     }
 
     @Transactional
     public TopicosResponseDto updateTopico(Long id, TopicosUpdateDto topicosUpdate) {
+        
         Topicos topicoExistente = topicosRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Topico com ID " + id + " nao encontrado"));
+                
+                .orElseThrow(() -> new ResourceNotFoundException("Topico com ID " + id + " nao encontrado"));
 
-        String htmlLimpo = segurancaConteudo(topicosUpdate.getConteudoHtml().toString());
-
-        Optional<String> conteudoHtml = topicosUpdate.getConteudoHtml();
-        if (conteudoHtml.isPresent()) {
-            topicoExistente.setConteudoHtml(htmlLimpo);
-        }
-        topicosUpdate.getConteudoHtml().ifPresent(topicoExistente::setConteudoHtml);
+        
         topicosUpdate.getTituloTopico().ifPresent(topicoExistente::setTituloTopico);
 
+        
+        topicosUpdate.getConteudoHtml().ifPresent(htmlSuja -> {
+            
+            String htmlLimpo = segurancaConteudo(htmlSuja);
+            topicoExistente.setConteudoHtml(htmlLimpo);
+        });
+
+        
         Topicos topico = topicosRepository.save(topicoExistente);
+        
+        
         return modelMapper.map(topico, TopicosResponseDto.class);
     }
-
-
 
     public String segurancaConteudo(String conteudoHtml) {
         return POLITICA_DE_CONTEUDO_SEGURO.sanitize(conteudoHtml);
     }
-
-
 }
