@@ -3,26 +3,26 @@ package br.ifsp.lms_api.controller;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated; 
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import br.ifsp.lms_api.dto.MaterialDeAulaDto.MaterialDeAulaRequestDto;
 import br.ifsp.lms_api.dto.MaterialDeAulaDto.MaterialDeAulaResponseDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.service.MaterialDeAulaService;
 import jakarta.validation.Valid;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-
-
-
-
 @RestController
+@Validated 
 @RequestMapping("/materiais")
 public class MaterialDeAulaController {
 
@@ -51,15 +51,31 @@ public class MaterialDeAulaController {
         return ResponseEntity.ok(materialService.getMaterialById(id));
     }
 
-    @DeleteMapping("/{id}")
+   
+   @DeleteMapping("/{id}")
     public ResponseEntity<MaterialDeAulaResponseDto> deleteMaterial(@PathVariable Long id) {
-        materialService.deleteMaterial(id);
-        return ResponseEntity.noContent().build();
+        MaterialDeAulaResponseDto deletedMaterial = materialService.deleteMaterial(id);
+
+       
+        return ResponseEntity.ok(deletedMaterial); 
     }
 
-    @PutMapping("/{id}")
-    public PagedResponse<MaterialDeAulaResponseDto> getMaterialByTopico(@Valid @PathVariable Long idTopico, Pageable pageable) {
-        return materialService.getMaterialByTopico(idTopico, pageable);
+    
+    @GetMapping("/topico/{idTopico}") 
+    public ResponseEntity<PagedResponse<MaterialDeAulaResponseDto>> getMaterialByTopico(
+            @Valid @PathVariable Long idTopico, 
+            Pageable pageable) {
+        
+        
+        return ResponseEntity.ok(materialService.getMaterialByTopico(idTopico, pageable));
     }
     
+ @PutMapping("/{id}")
+    public ResponseEntity<MaterialDeAulaResponseDto> updateMaterial(
+            @PathVariable Long id, 
+            @Valid @RequestParam("arquivo") MultipartFile arquivo) { // <-- MUDANÇA: de @RequestBody para @RequestParam
+
+        // Agora o serviço recebe o ID e o novo arquivo
+        return ResponseEntity.ok(materialService.updateMaterial(id, arquivo));
+    }
 }
