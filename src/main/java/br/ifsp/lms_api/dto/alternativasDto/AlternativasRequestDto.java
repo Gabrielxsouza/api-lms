@@ -21,5 +21,7 @@ public class AlternativasRequestDto {
     @NotNull(message = "É obrigatório indicar se a alternativa é correta")
     private Boolean alternativaCorreta;
 
+    @NotNull(message = "O ID da Questão é obrigatório")
+    private Long idQuestao;
 
 }

@@ -10,6 +10,7 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.JoinColumn;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -21,5 +22,5 @@ import java.util.List;
 public class AtividadeArquivos extends Atividade {
     @ElementCollection
     @CollectionTable(name = "atividade_arquivos_permitidos", joinColumns = @JoinColumn(name = "idAtividade"))
-    private List<String> arquivosPermitidos;
+    private List<String> arquivosPermitidos = new ArrayList<>();
 }
