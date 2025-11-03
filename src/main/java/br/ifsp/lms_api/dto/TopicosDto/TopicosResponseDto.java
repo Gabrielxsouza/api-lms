@@ -14,9 +14,9 @@ import lombok.NoArgsConstructor;
 public class TopicosResponseDto {
     private Long idTopico;
 
-    private String nomeTopico;
+    private String tituloTopico;
 
-    private String conteudoHTML;
+    private String conteudoHtml;
 
     private TurmaResponseDto turma;
  

@@ -1,9 +1,7 @@
 package br.ifsp.lms_api.dto.TurmaDto;
 
-import java.util.List;
 
 import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaResponseDto;
-import br.ifsp.lms_api.dto.TopicosDto.TopicosResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,5 +19,4 @@ public class TurmaResponseDto {
 
     private DisciplinaResponseDto disciplina;
 
-    private List<TopicosResponseDto> topicos;
 }

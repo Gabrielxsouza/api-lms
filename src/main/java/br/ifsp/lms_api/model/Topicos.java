@@ -1,6 +1,11 @@
 package br.ifsp.lms_api.model;
 
 
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -9,7 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
-import jakarta.validation.constraints.Max;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,13 +33,21 @@ public class Topicos {
     private Long idTopico;
 
     @NotBlank(message = "O titulo do topico é obrigatorio")
-    @Max(value = 100, message = "O titulo do topico deve conter no maximo 100 caracteres")
     private String tituloTopico;
 
     @Lob 
-    private String conteudoHTML;
+    private String conteudoHtml;
 
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "idTurma")
     private Turma turma;
+
+    @OneToMany(
+        mappedBy = "topico", 
+        cascade = CascadeType.ALL, 
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
+    private List<MaterialDeAula> materiaisDeAula;
 }
