@@ -38,10 +38,16 @@ public class AlternativasController {
         AlternativasResponseDto createdAlternativa = alternativasService.createAlternativa(alternativas);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAlternativa);
     }
-    
+
     @GetMapping
     public ResponseEntity<PagedResponse<AlternativasResponseDto>> getAllAlternativas(Pageable pageable) {
         return ResponseEntity.ok(alternativasService.getAllAlternativas(pageable));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AlternativasResponseDto> getAlternativaById(@PathVariable Long id) {
+        AlternativasResponseDto alternativa = alternativasService.getAlternativaById(id);
+        return ResponseEntity.ok(alternativa);
     }
 
     @PatchMapping("/{id}")
@@ -55,5 +61,5 @@ public class AlternativasController {
         alternativasService.deleteAlternativa(id);
         return ResponseEntity.noContent().build();
     }
-    
+
 }
