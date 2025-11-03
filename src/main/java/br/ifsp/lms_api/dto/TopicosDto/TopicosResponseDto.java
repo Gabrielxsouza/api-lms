@@ -4,6 +4,7 @@ import java.util.List;
 
 import br.ifsp.lms_api.dto.MaterialDeAulaDto.MaterialDeAulaResponseDto;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaResponseDto;
+import br.ifsp.lms_api.dto.atividadesDto.AtividadesResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,10 +20,13 @@ public class TopicosResponseDto {
     private String conteudoHtml;
 
     private TurmaResponseDto turma;
- 
+
     private List<MaterialDeAulaResponseDto> materiaisDeAula;
 
-    public void setConteudoHtml(String conteudoHtml) { 
+    private List<AtividadesResponseDto> atividades;
+
+
+    public void setConteudoHtml(String conteudoHtml) {
         this.conteudoHtml = conteudoHtml;
     }
 

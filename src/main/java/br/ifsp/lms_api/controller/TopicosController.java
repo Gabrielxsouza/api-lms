@@ -64,8 +64,12 @@ public class TopicosController {
     public ResponseEntity<TopicosResponseDto> updateTopico(@PathVariable Long id, @Valid @RequestBody TopicosUpdateDto topicos) {
         return ResponseEntity.ok(topicosService.updateTopico(id, topicos));
     }
-    
-    
-    
+
+    @PostMapping("path")
+    public ResponseEntity<TopicosResponseDto> adicionarAtividadeAoTopico(@Valid @RequestBody TopicosRequestDto topicos) {
+        return ResponseEntity.ok(topicosService.createTopico(topicos));
+    }
+
+
 
 }

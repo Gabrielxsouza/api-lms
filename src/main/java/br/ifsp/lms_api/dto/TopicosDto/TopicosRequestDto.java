@@ -1,5 +1,7 @@
 package br.ifsp.lms_api.dto.TopicosDto;
 
+import java.util.List;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -17,5 +19,7 @@ public class TopicosRequestDto {
 
     @NotNull(message = "O id da turma é obrigatorio")
     private long idTurma;
+
+    private List<Long> idAtividade;
 
 }
