@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
     @JsonSubTypes.Type(value = AtividadeArquivosResponseDto.class, name = "ARQUIVOS"),
     @JsonSubTypes.Type(value = AtividadeQuestionarioResponseDto.class, name = "QUESTIONARIO")
 })
-public abstract class AtividadesResponseDto {
+public class AtividadesResponseDto {
 
     private Long idAtividade;
 
