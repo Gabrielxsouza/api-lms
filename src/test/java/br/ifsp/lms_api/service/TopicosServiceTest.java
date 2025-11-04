@@ -1,5 +1,7 @@
 package br.ifsp.lms_api.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -11,23 +13,35 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import br.ifsp.lms_api.dto.TopicosDto.TopicosRequestDto;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosResponseDto;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosUpdateDto;
+import br.ifsp.lms_api.dto.page.PagedResponse;
+import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
+import br.ifsp.lms_api.model.Atividade;
+import br.ifsp.lms_api.model.AtividadeTexto;
 import br.ifsp.lms_api.model.Topicos;
 import br.ifsp.lms_api.model.Turma;
+import br.ifsp.lms_api.repository.AtividadeRepository;
 import br.ifsp.lms_api.repository.TopicosRepository;
 import br.ifsp.lms_api.repository.TurmaRepository;
-import jakarta.persistence.EntityNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 class TopicosServiceTest {
@@ -37,6 +51,9 @@ class TopicosServiceTest {
 
     @Mock
     private TurmaRepository turmaRepository;
+
+    @Mock
+    private AtividadeRepository atividadeRepository;
 
     @Mock
     private PagedResponseMapper pagedResponseMapper;
@@ -64,45 +81,55 @@ class TopicosServiceTest {
         requestDto.setIdTurma(1L);
         requestDto.setTituloTopico("Teste de Tópico");
         requestDto.setConteudoHtml(htmlSuja);
+        requestDto.setIdAtividade(List.of(10L));
     }
 
     @Test
     void testCreateTopico_Success_And_SanitizeHtml() {
         Topicos topicoMapeado = new Topicos(); 
         Topicos topicoSalvo = new Topicos();   
-        topicoSalvo.setIdTopico(10L);
+        topicoSalvo.setIdTopico(1L);
         topicoSalvo.setConteudoHtml(htmlLimpa); 
+        topicoSalvo.setTurma(turmaPadrao);
+
+        Atividade atividadeMock = new AtividadeTexto();
+        atividadeMock.setIdAtividade(10L);
+        
+        List<Atividade> atividadesAssociadas = new ArrayList<>();
+        atividadesAssociadas.add(atividadeMock);
 
         TopicosResponseDto responseDto = new TopicosResponseDto(); 
-        responseDto.setIdTopico(10L);
+        responseDto.setIdTopico(1L);
 
         when(turmaRepository.findById(1L)).thenReturn(Optional.of(turmaPadrao));
         when(modelMapper.map(requestDto, Topicos.class)).thenReturn(topicoMapeado);
         when(topicosRepository.save(any(Topicos.class))).thenReturn(topicoSalvo);
+        
+        when(atividadeRepository.findById(10L)).thenReturn(Optional.of(atividadeMock));
+        when(atividadeRepository.saveAll(any(List.class))).thenReturn(atividadesAssociadas);
+
         when(modelMapper.map(topicoSalvo, TopicosResponseDto.class)).thenReturn(responseDto);
 
         TopicosResponseDto result = topicosService.createTopico(requestDto);
 
         assertNotNull(result);
-        assertEquals(10L, result.getIdTopico());
+        assertEquals(1L, result.getIdTopico());
 
         verify(turmaRepository).findById(1L);
         verify(topicosRepository).save(any(Topicos.class));
+        verify(atividadeRepository).findById(10L);
 
-        ArgumentCaptor<Topicos> captor = ArgumentCaptor.forClass(Topicos.class);
-        verify(topicosRepository).save(captor.capture());
+        ArgumentCaptor<List<Atividade>> captor = ArgumentCaptor.forClass(List.class);
+        verify(atividadeRepository).saveAll(captor.capture());
         
-        Topicos topicoCapturado = captor.getValue();
-        assertEquals(htmlLimpa, topicoCapturado.getConteudoHtml());
-        assertEquals(turmaPadrao, topicoCapturado.getTurma());
-        assertNull(topicoCapturado.getIdTopico()); 
+        assertEquals(topicoSalvo, captor.getValue().get(0).getTopico());
     }
-
+    
     @Test
     void testCreateTopico_TurmaNotFound_ShouldThrowException() {
         when(turmaRepository.findById(1L)).thenReturn(Optional.empty());
 
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             topicosService.createTopico(requestDto);
         });
 
@@ -111,16 +138,78 @@ class TopicosServiceTest {
     }
 
     @Test
+    void testCreateTopico_AtividadeNotFound_ShouldThrowException() {
+        when(turmaRepository.findById(1L)).thenReturn(Optional.of(turmaPadrao));
+        when(modelMapper.map(requestDto, Topicos.class)).thenReturn(new Topicos());
+        when(topicosRepository.save(any(Topicos.class))).thenReturn(new Topicos());
+
+        when(atividadeRepository.findById(10L)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            topicosService.createTopico(requestDto);
+        });
+        
+        assertEquals("Atividade com ID 10 nao encontrada", exception.getMessage());
+    }
+
+    @Test
     void testGetTopicoById_NotFound_ShouldThrowException() {
         when(topicosRepository.findById(99L)).thenReturn(Optional.empty());
 
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             topicosService.getTopicoById(99L);
         });
         
         assertEquals("Topico com ID 99 nao encontrado", exception.getMessage());
     }
 
+    @Test
+    void testGetAllTopicos() {
+        Pageable pageable = Pageable.unpaged();
+        Page<Topicos> page = new PageImpl<>(List.of(new Topicos()));
+        when(topicosRepository.findAll(pageable)).thenReturn(page);
+        
+        PagedResponse<TopicosResponseDto> pagedResponse = mock(PagedResponse.class);
+        when(pagedResponseMapper.toPagedResponse(page, TopicosResponseDto.class)).thenReturn(pagedResponse);
+
+        PagedResponse<TopicosResponseDto> result = topicosService.getAllTopicos(pageable);
+        
+        assertNotNull(result);
+        verify(topicosRepository).findAll(pageable);
+        verify(pagedResponseMapper).toPagedResponse(page, TopicosResponseDto.class);
+    }
+
+    @Test
+    void testGetTopicosByIdTurma() {
+        Pageable pageable = Pageable.unpaged();
+        Long idTurma = 1L;
+        Page<Topicos> page = new PageImpl<>(List.of(new Topicos()));
+        when(topicosRepository.findByTurmaIdTurma(idTurma, pageable)).thenReturn(page);
+        
+        PagedResponse<TopicosResponseDto> pagedResponse = mock(PagedResponse.class);
+        when(pagedResponseMapper.toPagedResponse(page, TopicosResponseDto.class)).thenReturn(pagedResponse);
+
+        PagedResponse<TopicosResponseDto> result = topicosService.getTopicosByIdTurma(idTurma, pageable);
+        
+        assertNotNull(result);
+        verify(topicosRepository).findByTurmaIdTurma(idTurma, pageable);
+        verify(pagedResponseMapper).toPagedResponse(page, TopicosResponseDto.class);
+    }
+
+    @Test
+    void testDeleteTopico() {
+        Topicos topico = new Topicos();
+        when(topicosRepository.findById(1L)).thenReturn(Optional.of(topico));
+        doNothing().when(topicosRepository).delete(topico);
+        when(modelMapper.map(topico, TopicosResponseDto.class)).thenReturn(new TopicosResponseDto());
+        
+        TopicosResponseDto result = topicosService.deleteTopico(1L);
+        
+        assertNotNull(result);
+        verify(topicosRepository).findById(1L);
+        verify(topicosRepository).delete(topico);
+    }
+    
     @Test
     void testUpdateTopico_Success_And_SanitizeHtml() {
         Long idTopico = 1L;
@@ -151,3 +240,4 @@ class TopicosServiceTest {
         assertEquals(htmlLimpa, topicoSalvo.getConteudoHtml());
     }
 }
+
