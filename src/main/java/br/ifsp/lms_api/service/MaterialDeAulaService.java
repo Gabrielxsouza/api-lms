@@ -7,10 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import br.ifsp.lms_api.dto.MaterialDeAulaDto.MaterialDeAulaRequestDto;
 import br.ifsp.lms_api.dto.MaterialDeAulaDto.MaterialDeAulaResponseDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
-import br.ifsp.lms_api.exception.ResourceNotFoundException;
-import br.ifsp.lms_api.mapper.PagedResponseMapper; // <-- CORRIGIDO
+import br.ifsp.lms_api.exception.ResourceNotFoundException; 
+import br.ifsp.lms_api.mapper.PagedResponseMapper;
 import br.ifsp.lms_api.model.MaterialDeAula;
 import br.ifsp.lms_api.model.Topicos;
 import br.ifsp.lms_api.repository.MaterialDeAulaRepository;
@@ -75,10 +76,11 @@ public class MaterialDeAulaService {
     @Transactional
     public MaterialDeAulaResponseDto deleteMaterial(Long id) {
         MaterialDeAula material = materialRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Material com ID " + id + " nao encontrado")); // <-- CORRIGIDO
+            .orElseThrow(() -> new ResourceNotFoundException("Material com ID " + id + " nao encontrado"));
 
         try {
             String urlArquivo = material.getUrlArquivo(); 
+
             if (urlArquivo != null && !urlArquivo.isEmpty()) {
                 String nomeArquivo = urlArquivo.substring(urlArquivo.lastIndexOf('/') + 1);
                 storageService.deleteFile(nomeArquivo);
@@ -89,14 +91,14 @@ public class MaterialDeAulaService {
         }
 
         materialRepository.delete(material);
+
         return modelMapper.map(material, MaterialDeAulaResponseDto.class);
     }
 
     @Transactional
-    public MaterialDeAulaResponseDto updateMaterial(Long id, MultipartFile novoArquivo) { // <-- MUDANÇA: Recebe MultipartFile
-
+    public MaterialDeAulaResponseDto updateMaterial(Long id, MultipartFile novoArquivo) {
         MaterialDeAula materialToUpdate = materialRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Material com ID " + id + " nao encontrado")); // <-- CORRIGIDO
+            .orElseThrow(() -> new ResourceNotFoundException("Material com ID " + id + " nao encontrado"));
 
         String urlArquivoAntigo = materialToUpdate.getUrlArquivo();
 
@@ -116,7 +118,6 @@ public class MaterialDeAulaService {
         } catch (Exception e) {
             System.err.println("Falha ao deletar arquivo fisico antigo: " + e.getMessage());
         }
-        
         return modelMapper.map(materialToUpdate, MaterialDeAulaResponseDto.class);
     }
 }

@@ -67,15 +67,15 @@ public class TopicosService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Turma com ID " + topicosRequest.getIdTurma() + " não encontrada"));
 
-
         String htmlLimpo = segurancaConteudo(topicosRequest.getConteudoHtml());
 
-        Topicos topico = modelMapper.map(topicosRequest, Topicos.class);
-
+        Topicos topico = new Topicos();
+        topico.setTituloTopico(topicosRequest.getTituloTopico());
         topico.setConteudoHtml(htmlLimpo);
         topico.setTurma(turma);
         topico.setIdTopico(null);
         topico.setAtividades(new ArrayList<>());
+        
         Topicos topicoSalvo = topicosRepository.save(topico);
 
         List<Long> idsAtividades = topicosRequest.getIdAtividade();
@@ -152,3 +152,4 @@ public class TopicosService {
         return POLITICA_DE_CONTEUDO_SEGURO.sanitize(conteudoHtml);
     }
 }
+

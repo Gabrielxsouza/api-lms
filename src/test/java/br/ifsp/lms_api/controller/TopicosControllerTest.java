@@ -21,10 +21,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosRequestDto;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosResponseDto;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosUpdateDto;
+import br.ifsp.lms_api.dto.atividadesDto.AtividadesResponseDto; 
 import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.service.TopicosService;
 import jakarta.persistence.EntityNotFoundException;
 
+import java.util.ArrayList; 
 import java.util.List;
 import java.util.Optional;
 
@@ -48,6 +50,7 @@ class TopicosControllerTest {
         responseDto.setIdTopico(1L);
         responseDto.setTituloTopico("Tópico de Teste");
         responseDto.setConteudoHtml("<p>Conteúdo</p>");
+        responseDto.setAtividades(new ArrayList<AtividadesResponseDto>());
         
         objectMapper.findAndRegisterModules(); 
     }
@@ -58,6 +61,7 @@ class TopicosControllerTest {
         requestDto.setTituloTopico("Novo Tópico");
         requestDto.setIdTurma(1L);
         requestDto.setConteudoHtml("<p>HTML</p>");
+        requestDto.setIdAtividade(List.of(10L, 11L)); 
 
         when(topicosService.createTopico(any(TopicosRequestDto.class)))
             .thenReturn(responseDto);
@@ -67,13 +71,15 @@ class TopicosControllerTest {
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isOk()) 
                 .andExpect(jsonPath("$.idTopico").value(1L))
-                .andExpect(jsonPath("$.tituloTopico").value("Tópico de Teste"));
+                .andExpect(jsonPath("$.tituloTopico").value("Tópico de Teste"))
+                .andExpect(jsonPath("$.atividades").exists());
         
         verify(topicosService, times(1)).createTopico(any(TopicosRequestDto.class));
     }
 
+
     @Test
-    void testGetAllQuestoes_Success() throws Exception {
+    void testGetAllTopicos_Success() throws Exception {
         PagedResponse<TopicosResponseDto> pagedResponse = mock(PagedResponse.class);
         List<TopicosResponseDto> content = List.of(responseDto);
 
@@ -88,7 +94,8 @@ class TopicosControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].idTopico").value(1L))
                 .andExpect(jsonPath("$.page").value(0))
-                .andExpect(jsonPath("$.totalElements").value(1));
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].atividades").exists());
     }
 
     @Test
@@ -97,7 +104,8 @@ class TopicosControllerTest {
 
         mockMvc.perform(get("/topicos/{id}", 1L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idTopico").value(1L));
+                .andExpect(jsonPath("$.idTopico").value(1L))
+                .andExpect(jsonPath("$.atividades").exists());
     }
 
     @Test
@@ -126,7 +134,8 @@ class TopicosControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.content[0].idTopico").value(1L));
+                .andExpect(jsonPath("$.content[0].idTopico").value(1L))
+                .andExpect(jsonPath("$.content[0].atividades").exists());
         
         verify(topicosService, times(1)).getTopicosByIdTurma(eq(idTurma), any(Pageable.class));
     }
@@ -158,4 +167,6 @@ class TopicosControllerTest {
         
         verify(topicosService, times(1)).updateTopico(eq(id), any(TopicosUpdateDto.class));
     }
+
 }
+

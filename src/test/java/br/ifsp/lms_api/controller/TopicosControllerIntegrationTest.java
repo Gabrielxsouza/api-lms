@@ -18,13 +18,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosRequestDto;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosUpdateDto;
+import br.ifsp.lms_api.model.AtividadeTexto;
 import br.ifsp.lms_api.model.Disciplina;
 import br.ifsp.lms_api.model.Topicos;
 import br.ifsp.lms_api.model.Turma;
+import br.ifsp.lms_api.repository.AtividadeRepository;
 import br.ifsp.lms_api.repository.DisciplinaRepository;
 import br.ifsp.lms_api.repository.TopicosRepository;
 import br.ifsp.lms_api.repository.TurmaRepository;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -49,12 +52,16 @@ class TopicosControllerIntegrationTest {
     @Autowired
     private DisciplinaRepository disciplinaRepository;
 
+    @Autowired
+    private AtividadeRepository atividadeRepository;
+
     private Turma turmaPadrao;
 
     @BeforeEach
     void setUp() {
         objectMapper.findAndRegisterModules();
         
+        atividadeRepository.deleteAll();
         topicosRepository.deleteAll();
         turmaRepository.deleteAll();
         disciplinaRepository.deleteAll();
@@ -78,22 +85,29 @@ class TopicosControllerIntegrationTest {
         String htmlSuja = "<b>Conteúdo</b><script>alert('XSS')</script>";
         String htmlLimpa = "<b>Conteúdo</b>";
 
+        AtividadeTexto atividade = createAndSaveAtividadeTexto("Atividade 1");
+        Long idAtividade = atividade.getIdAtividade();
+
         TopicosRequestDto requestDto = new TopicosRequestDto();
         requestDto.setTituloTopico("Novo Tópico");
         requestDto.setIdTurma(turmaPadrao.getIdTurma());
         requestDto.setConteudoHtml(htmlSuja);
+        requestDto.setIdAtividade(List.of(idAtividade));
 
         mockMvc.perform(post("/topicos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.idTopico").exists())
-                .andExpect(jsonPath("$.tituloTopico").value("Novo Tópico"));
+                .andExpect(jsonPath("$.tituloTopico").value("Novo Tópico"))
+                .andExpect(jsonPath("$.atividades[0].idAtividade").value(idAtividade));
 
         List<Topicos> topicosNoBanco = topicosRepository.findAll();
         assertEquals(1, topicosNoBanco.size());
         assertEquals(htmlLimpa, topicosNoBanco.get(0).getConteudoHtml());
         assertEquals(turmaPadrao.getIdTurma(), topicosNoBanco.get(0).getTurma().getIdTurma());
+        assertEquals(1, topicosNoBanco.get(0).getAtividades().size());
+        assertEquals(idAtividade, topicosNoBanco.get(0).getAtividades().get(0).getIdAtividade());
     }
 
     @Test
@@ -103,6 +117,7 @@ class TopicosControllerIntegrationTest {
         requestDto.setTituloTopico("Tópico com Turma Falsa");
         requestDto.setIdTurma(999L);
         requestDto.setConteudoHtml("<p>Teste</p>");
+        requestDto.setIdAtividade(new ArrayList<>());
 
         mockMvc.perform(post("/topicos")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -120,7 +135,8 @@ class TopicosControllerIntegrationTest {
         mockMvc.perform(get("/topicos/{id}", topico.getIdTopico()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.idTopico").value(topico.getIdTopico()))
-                .andExpect(jsonPath("$.tituloTopico").value("Tópico Salvo"));
+                .andExpect(jsonPath("$.tituloTopico").value("Tópico Salvo"))
+                .andExpect(jsonPath("$.atividades").exists());
     }
 
     @Test
@@ -147,7 +163,8 @@ class TopicosControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(2))
                 .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.content[0].tituloTopico").value("Tópico 1"));
+                .andExpect(jsonPath("$.content[0].tituloTopico").value("Tópico 1"))
+                .andExpect(jsonPath("$.content[0].atividades").exists());
     }
 
     @Test
@@ -194,6 +211,18 @@ class TopicosControllerIntegrationTest {
         topico.setTituloTopico(titulo);
         topico.setConteudoHtml(conteudo);
         topico.setTurma(turma);
+        topico.setAtividades(new ArrayList<>());
         return topicosRepository.save(topico);
+    }
+    
+    private AtividadeTexto createAndSaveAtividadeTexto(String titulo) {
+        AtividadeTexto at = new AtividadeTexto();
+        at.setTituloAtividade(titulo);
+        at.setDescricaoAtividade("Desc");
+        at.setDataInicioAtividade(LocalDate.now());
+        at.setDataFechamentoAtividade(LocalDate.now().plusDays(1));
+        at.setStatusAtividade(true);
+        at.setNumeroMaximoCaracteres(1000L);
+        return atividadeRepository.save(at);
     }
 }
