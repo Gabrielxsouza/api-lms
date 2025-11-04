@@ -1,4 +1,4 @@
-package br.ifsp.lms_api.controller;
+package br.ifsp.lms_api.controller.unit;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.ifsp.lms_api.controller.DisciplinaController;
 import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaRequestDto;
 import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaResponseDto;
 import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaUpdateDto;

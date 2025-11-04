@@ -1,4 +1,4 @@
-package br.ifsp.lms_api.controller;
+package br.ifsp.lms_api.controller.integration;
 
 import java.time.LocalDate;
 import java.util.List;
