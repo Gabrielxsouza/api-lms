@@ -1,4 +1,4 @@
-package br.ifsp.lms_api.controller;
+package br.ifsp.lms_api.controller.unit;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.ifsp.lms_api.controller.AtividadeQuestionarioController;
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioRequestDto;
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioResponseDto;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;

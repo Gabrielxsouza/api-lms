@@ -1,4 +1,4 @@
-package br.ifsp.lms_api.controller;
+package br.ifsp.lms_api.controller.unit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +18,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import br.ifsp.lms_api.controller.TopicosController;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosRequestDto;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosResponseDto;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosUpdateDto;

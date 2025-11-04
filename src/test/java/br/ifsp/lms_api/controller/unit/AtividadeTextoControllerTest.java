@@ -1,4 +1,4 @@
-package br.ifsp.lms_api.controller;
+package br.ifsp.lms_api.controller.unit;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.ifsp.lms_api.controller.AtividadeTextoController;
 import br.ifsp.lms_api.dto.atividadeTextoDto.AtividadeTextoRequestDto;
 import br.ifsp.lms_api.dto.atividadeTextoDto.AtividadeTextoResponseDto;
 import br.ifsp.lms_api.dto.atividadeTextoDto.AtividadeTextoUpdateDto;

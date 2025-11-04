@@ -1,4 +1,4 @@
-package br.ifsp.lms_api.controller;
+package br.ifsp.lms_api.controller.unit;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.ifsp.lms_api.controller.QuestoesController;
 import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.dto.questoesDto.QuestoesRequestDto;
 import br.ifsp.lms_api.dto.questoesDto.QuestoesResponseDto;

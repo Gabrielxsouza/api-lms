@@ -1,4 +1,4 @@
-package br.ifsp.lms_api.controller;
+package br.ifsp.lms_api.controller.integration;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -17,19 +17,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaRequestDto;
-import br.ifsp.lms_api.dto.TurmaDto.TurmaParaDisciplinaDTO;
+import br.ifsp.lms_api.dto.TurmaDto.TurmaRequestDto;
 import br.ifsp.lms_api.model.Disciplina;
 import br.ifsp.lms_api.model.Turma;
 import br.ifsp.lms_api.repository.DisciplinaRepository;
 import br.ifsp.lms_api.repository.TurmaRepository;
 import jakarta.persistence.EntityManager;
-import java.util.List;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional 
-public class DisciplinaControllerIntegrationTest {
+@Transactional
+public class TurmaControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -55,89 +53,92 @@ public class DisciplinaControllerIntegrationTest {
         disciplinaRepository.deleteAll();
 
         Disciplina disciplina = new Disciplina();
-        disciplina.setNomeDisciplina("Disciplina Base");
-        disciplina.setCodigoDisciplina("BASE-101");
+        disciplina.setNomeDisciplina("Disciplina Pai");
+        disciplina.setCodigoDisciplina("PAI-101");
         disciplina.setDescricaoDisciplina("Base");
+        disciplinaExistente = disciplinaRepository.save(disciplina);
 
         Turma turma = new Turma();
         turma.setNomeTurma("Turma Base");
         turma.setSemestre("2025/1");
-        
-        disciplina.setTurmas(List.of(turma));
-        turma.setDisciplina(disciplina);
-
-        disciplinaExistente = disciplinaRepository.save(disciplina);
+        turma.setDisciplina(disciplinaExistente);
+        turmaExistente = turmaRepository.save(turma);
         
         entityManager.flush();
         entityManager.clear();
-        
-        disciplinaExistente = disciplinaRepository.findAll().get(0);
-        turmaExistente = turmaRepository.findAll().get(0);
     }
 
     @Test
-    void testCreateDisciplina_Success_WithNestedTurmas() throws Exception {
-        TurmaParaDisciplinaDTO novaTurmaDto = new TurmaParaDisciplinaDTO("Turma Aninhada", "2025/2");
-        DisciplinaRequestDto requestDto = new DisciplinaRequestDto(
-            "Engenharia de Software",
-            "Testes",
-            "ESL708",
-            List.of(novaTurmaDto)
+    void testCreateTurma_Success() throws Exception {
+        TurmaRequestDto requestDto = new TurmaRequestDto(
+            "Turma Nova Avulsa",
+            "2025/2",
+            disciplinaExistente.getIdDisciplina()
         );
 
-        mockMvc.perform(post("/disciplinas")
+        mockMvc.perform(post("/turmas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.idDisciplina").exists())
-                .andExpect(jsonPath("$.nomeDisciplina", is("Engenharia de Software")))
-                .andExpect(jsonPath("$.turmas", hasSize(1)))
-                .andExpect(jsonPath("$.turmas[0].nomeTurma", is("Turma Aninhada")));
+                .andExpect(jsonPath("$.idTurma").exists())
+                .andExpect(jsonPath("$.nomeTurma", is("Turma Nova Avulsa")));
 
-        assertEquals(2, disciplinaRepository.count());
         assertEquals(2, turmaRepository.count());
     }
 
     @Test
-    void testGetAllDisciplinas_Success() throws Exception {
-        mockMvc.perform(get("/disciplinas")
+    void testCreateTurma_DisciplinaNotFound() throws Exception {
+        TurmaRequestDto requestDto = new TurmaRequestDto(
+            "Turma Fantasma",
+            "2025/2",
+            999L 
+        );
+
+        mockMvc.perform(post("/turmas")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isNotFound()); 
+
+        assertEquals(1, turmaRepository.count()); 
+    }
+    
+    @Test
+    void testGetAllTurmas_Success() throws Exception {
+        mockMvc.perform(get("/turmas")
                 .param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements", is(1)))
                 .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].nomeDisciplina", is("Disciplina Base")));
+                .andExpect(jsonPath("$.content[0].nomeTurma", is("Turma Base")));
     }
 
     @Test
-    void testUpdateDisciplina_Success() throws Exception {
-        Long id = disciplinaExistente.getIdDisciplina();
+    void testUpdateTurma_Success() throws Exception {
+        Long id = turmaExistente.getIdTurma();
         String updateJson = """
         {
-            "nomeDisciplina": "Disciplina Base ATUALIZADA"
+            "nomeTurma": "Turma Base ATUALIZADA"
         }
         """;
 
-        mockMvc.perform(patch("/disciplinas/{id}", id)
+        mockMvc.perform(patch("/turmas/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(updateJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idDisciplina", is(id.intValue())))
-                .andExpect(jsonPath("$.nomeDisciplina", is("Disciplina Base ATUALIZADA")));
+                .andExpect(jsonPath("$.idTurma", is(id.intValue())))
+                .andExpect(jsonPath("$.nomeTurma", is("Turma Base ATUALIZADA")));
     }
 
     @Test
-    void testDeleteDisciplina_Success_WithCascade() throws Exception {
-        Long disciplinaId = disciplinaExistente.getIdDisciplina();
-        Long turmaId = turmaExistente.getIdTurma();
+    void testDeleteTurma_Success() throws Exception {
+        Long id = turmaExistente.getIdTurma();
         
-        assertEquals(1, disciplinaRepository.count());
-        assertEquals(1, turmaRepository.count());
-
-        mockMvc.perform(delete("/disciplinas/{id}", disciplinaId))
+        mockMvc.perform(delete("/turmas/{id}", id))
                 .andExpect(status().isNoContent());
 
-        assertFalse(disciplinaRepository.findById(disciplinaId).isPresent());
-        assertFalse(turmaRepository.findById(turmaId).isPresent(), "A turma não foi deletada em cascata!");
+        assertFalse(turmaRepository.findById(id).isPresent());
+        assertEquals(0, turmaRepository.count());
+        assertEquals(1, disciplinaRepository.count()); 
     }
 }

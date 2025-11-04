@@ -1,4 +1,4 @@
-package br.ifsp.lms_api.controller;
+package br.ifsp.lms_api.controller.unit;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -20,8 +20,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule; 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import br.ifsp.lms_api.controller.AtividadeArquivosController;
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosRequestDto;
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosResponseDto;
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosUpdateDto;
