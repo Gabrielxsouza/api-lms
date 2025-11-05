@@ -4,18 +4,16 @@ import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosResponseDto;
+import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioResponseDto;
+import br.ifsp.lms_api.dto.atividadeTextoDto.AtividadeTextoResponseDto;
+import br.ifsp.lms_api.dto.atividadesDto.AtividadesResponseDto;
+import br.ifsp.lms_api.dto.questoesDto.QuestoesResponseDto;
 import br.ifsp.lms_api.model.Atividade;
 import br.ifsp.lms_api.model.AtividadeArquivos;
 import br.ifsp.lms_api.model.AtividadeQuestionario;
 import br.ifsp.lms_api.model.AtividadeTexto;
-
-import br.ifsp.lms_api.dto.atividadesDto.AtividadesResponseDto;
-import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosResponseDto;
-import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioResponseDto;
-import br.ifsp.lms_api.dto.atividadeTextoDto.AtividadeTextoResponseDto;
-
 import br.ifsp.lms_api.model.Questoes;
-import br.ifsp.lms_api.dto.questoesDto.QuestoesResponseDto;
 
 @Configuration
 public class MapperConfig {
@@ -31,14 +29,31 @@ modelMapper.typeMap(Atividade.class, AtividadesResponseDto.class)
 
 modelMapper.typeMap(AtividadeTexto.class, AtividadeTextoResponseDto.class);
 
-modelMapper.typeMap(AtividadeArquivos.class, AtividadeArquivosResponseDto.class);
+modelMapper.typeMap(AtividadeArquivos.class, AtividadeArquivosResponseDto.class)
+    .addMappings(mapper -> mapper.map(
+        src -> src.getArquivosPermitidos(),
+        AtividadeArquivosResponseDto::setArquivosPermitidos
+    ));
 
 
 modelMapper.typeMap(AtividadeQuestionario.class, AtividadeQuestionarioResponseDto.class)
-.addMappings(mapper -> mapper.map(
-    src -> src.getQuestoes(),
-    AtividadeQuestionarioResponseDto::setQuestoesQuestionario
-));
+    .addMappings(mapper -> {
+   
+        mapper.map(
+            src -> src.getQuestoes(),
+            AtividadeQuestionarioResponseDto::setQuestoesQuestionario
+        );
+        
+        
+        mapper.map(
+            src -> src.getNumeroTentativas(),
+            AtividadeQuestionarioResponseDto::setNumeroTentativas
+        );
+        mapper.map(
+            src -> src.getDuracaoQuestionario(),
+            AtividadeQuestionarioResponseDto::setDuracaoQuestionario
+        );
+    });
 
 modelMapper.typeMap(Questoes.class, QuestoesResponseDto.class);
 

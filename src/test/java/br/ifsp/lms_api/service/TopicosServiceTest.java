@@ -6,21 +6,17 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -102,7 +98,6 @@ class TopicosServiceTest {
         responseDto.setIdTopico(1L);
 
         when(turmaRepository.findById(1L)).thenReturn(Optional.of(turmaPadrao));
-        when(modelMapper.map(requestDto, Topicos.class)).thenReturn(topicoMapeado);
         when(topicosRepository.save(any(Topicos.class))).thenReturn(topicoSalvo);
         
         when(atividadeRepository.findById(10L)).thenReturn(Optional.of(atividadeMock));
@@ -140,7 +135,6 @@ class TopicosServiceTest {
     @Test
     void testCreateTopico_AtividadeNotFound_ShouldThrowException() {
         when(turmaRepository.findById(1L)).thenReturn(Optional.of(turmaPadrao));
-        when(modelMapper.map(requestDto, Topicos.class)).thenReturn(new Topicos());
         when(topicosRepository.save(any(Topicos.class))).thenReturn(new Topicos());
 
         when(atividadeRepository.findById(10L)).thenReturn(Optional.empty());
