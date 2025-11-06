@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class AtividadesRequestDto {
+public class AtividadesRequestDto {
 
 
     @NotBlank(message = "O título da atividade é obrigatório")
