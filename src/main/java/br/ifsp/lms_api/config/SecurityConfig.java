@@ -1,5 +1,6 @@
 package br.ifsp.lms_api.config;
 
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,20 +12,33 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private CustomLoginSuccessHandler customLoginSuccessHandler;
+
+    public SecurityConfig(CustomLoginSuccessHandler customLoginSuccessHandler) {
+        this.customLoginSuccessHandler = customLoginSuccessHandler;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // 1. Cria o Bean para criptografar senhas
         return new BCryptPasswordEncoder();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // 2. Desabilita a segurança para TODOS os endpoints
         http
-            .csrf(csrf -> csrf.disable()) // Desabilita CSRF
+            .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll() // Permite TODAS as requisições
+                .requestMatchers("/login", "/publico/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginPage("/login") 
+                .permitAll()
+                .successHandler(customLoginSuccessHandler) 
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .permitAll()
             );
 
         return http.build();

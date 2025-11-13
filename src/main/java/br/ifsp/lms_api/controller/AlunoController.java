@@ -9,6 +9,7 @@ import br.ifsp.lms_api.service.AlunoService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -20,7 +21,6 @@ public class AlunoController {
 
     private final AlunoService alunoService;
 
-    // Injeção de dependência via construtor
     public AlunoController(AlunoService alunoService) {
         this.alunoService = alunoService;
     }
@@ -33,7 +33,9 @@ public class AlunoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
+
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<PagedResponse<AlunoResponseDto>> getAll(Pageable pageable) {
         return ResponseEntity.ok(alunoService.getAllAlunos(pageable));
     }
