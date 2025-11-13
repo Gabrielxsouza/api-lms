@@ -1,5 +1,12 @@
 package br.ifsp.lms_api.model;
 
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
@@ -23,7 +30,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class Usuario {
+public abstract class Usuario implements UserDetails{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,4 +52,47 @@ public abstract class Usuario {
     @NotBlank(message = "O CPF é obrigatório")
     @Column(unique = true)
     private String cpf;
+
+    @Column(name = "tipo_usuario", insertable = false, updatable = false)
+    private String tipoUsuario;
+
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Usa o valor da coluna "tipo_usuario" (ADMIN, ALUNO, PROFESSOR)
+        // e transforma em uma "Role" que o Spring Security entende.
+        // Ex: "ADMIN" vira "ROLE_ADMIN"
+        return List.of(new SimpleGrantedAuthority("ROLE_" + this.tipoUsuario));
+    }
+
+    @Override
+    public String getPassword() {
+        return this.senha; // Retorna o campo da senha
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email; // isso aqui é pro email servir pra logar no lugar do nome
+    }
+
+    //ver depois
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }
