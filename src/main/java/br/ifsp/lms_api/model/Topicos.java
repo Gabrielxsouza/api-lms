@@ -1,6 +1,7 @@
 package br.ifsp.lms_api.model;
 
 
+import java.util.HashSet;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -13,7 +14,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
@@ -21,6 +24,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -60,4 +64,13 @@ public class Topicos {
         fetch = FetchType.LAZY
     )
     private List<Atividade> atividades;
+
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(
+        name = "topico_tags", // Nome da tabela de junção
+        joinColumns = @JoinColumn(name = "id_topico"),
+        inverseJoinColumns = @JoinColumn(name = "id_tag")
+    )
+    private Set<Tag> tags = new HashSet<>();
+
 }

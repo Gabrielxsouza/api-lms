@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,8 +23,11 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.DiscriminatorColumn;
-
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.CascadeType;
+import java.util.Set;
 import java.time.LocalDate;
+import java.util.HashSet;
 
 @Entity
 @Getter
@@ -71,4 +75,12 @@ public abstract class Atividade {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idTopico")
     private Topicos topico;
+
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(
+        name = "atividade_tags",
+        joinColumns = @JoinColumn(name = "id_atividade"),
+        inverseJoinColumns = @JoinColumn(name = "id_tag")
+    )
+    private Set<Tag> tags = new HashSet<>();
 }

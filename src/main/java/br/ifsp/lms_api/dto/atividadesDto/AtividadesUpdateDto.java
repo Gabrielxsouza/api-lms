@@ -2,7 +2,7 @@ package br.ifsp.lms_api.dto.atividadesDto;
 
 import java.time.LocalDate;
 import java.util.Optional;
-
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,4 +17,5 @@ public class AtividadesUpdateDto {
     private Optional<LocalDate> dataInicioAtividade = Optional.empty();
     private Optional<LocalDate> dataFechamentoAtividade = Optional.empty();
     private Optional<Boolean> statusAtividade = Optional.empty();
+    private Optional<List<Long>> tagIds = Optional.empty();
 }

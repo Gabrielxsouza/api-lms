@@ -5,11 +5,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "tags")
@@ -26,5 +29,12 @@ public class Tag {
     @Column(unique = true, nullable = false, length = 100)
     private String nome;
 
-    // Nota: list de questoes aqui depois
+    @ManyToMany(mappedBy = "tags")
+    private Set<Topicos> topicos = new HashSet<>();
+
+    @ManyToMany(mappedBy = "tags")
+    private Set<Atividade> atividades = new HashSet<>();
+    
+    @ManyToMany(mappedBy = "tags") 
+    private Set<Questoes> questoes = new HashSet<>();
 }

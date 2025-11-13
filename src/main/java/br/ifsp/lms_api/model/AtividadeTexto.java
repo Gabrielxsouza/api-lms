@@ -14,5 +14,5 @@ import lombok.Setter;
 @NoArgsConstructor
 @DiscriminatorValue("TEXTO")
 public class AtividadeTexto extends Atividade {
-    private long numeroMaximoCaracteres;
+    private Long numeroMaximoCaracteres;
 }

@@ -1,5 +1,6 @@
 package br.ifsp.lms_api.dto.questoesDto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -25,5 +26,7 @@ public class QuestoesRequestDto {
     private String enunciado;
 
     private List<AlternativasRequestDto> alternativas;
+
+    private List<Long> tagIds = new ArrayList<>();
     
 }

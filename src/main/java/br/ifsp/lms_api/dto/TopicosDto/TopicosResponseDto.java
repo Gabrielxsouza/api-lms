@@ -3,6 +3,7 @@ package br.ifsp.lms_api.dto.TopicosDto;
 import java.util.List;
 
 import br.ifsp.lms_api.dto.MaterialDeAulaDto.MaterialDeAulaResponseDto;
+import br.ifsp.lms_api.dto.TagDto.TagResponseDto;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaResponseDto;
 import br.ifsp.lms_api.dto.atividadesDto.AtividadesResponseDto;
 import lombok.AllArgsConstructor;
@@ -25,7 +26,8 @@ public class TopicosResponseDto {
 
     private List<AtividadesResponseDto> atividades;
 
-
+    private List<TagResponseDto> tags;
+    
     public void setConteudoHtml(String conteudoHtml) {
         this.conteudoHtml = conteudoHtml;
     }
