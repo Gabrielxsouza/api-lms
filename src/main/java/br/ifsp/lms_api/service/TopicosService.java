@@ -1,6 +1,7 @@
 package br.ifsp.lms_api.service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -20,7 +21,9 @@ import br.ifsp.lms_api.mapper.PagedResponseMapper;
 import br.ifsp.lms_api.model.Atividade;
 import br.ifsp.lms_api.model.Topicos;
 import br.ifsp.lms_api.model.Turma;
+import br.ifsp.lms_api.model.Tag;
 import br.ifsp.lms_api.repository.AtividadeRepository;
+import br.ifsp.lms_api.repository.TagRepository;
 import br.ifsp.lms_api.repository.TopicosRepository;
 import br.ifsp.lms_api.repository.TurmaRepository;
 
@@ -31,7 +34,8 @@ public class TopicosService {
     private final AtividadeRepository atividadeRepository;
     private final ModelMapper modelMapper;
     private final PagedResponseMapper pagedResponseMapper;
-
+    private final TagRepository tagRepository; 
+    
     private static final PolicyFactory POLITICA_DE_CONTEUDO_SEGURO = new HtmlPolicyBuilder()
             .allowElements("p", "br", "h2", "h3", "h4", "h5", "h6")
             .allowElements("ul", "li", "ol")
@@ -52,12 +56,13 @@ public class TopicosService {
             TurmaRepository turmaRepository,
             AtividadeRepository atividadeRepository,
             ModelMapper modelMapper,
-            PagedResponseMapper pagedResponseMapper) {
+            PagedResponseMapper pagedResponseMapper, TagRepository tagRepository) {
         this.topicosRepository = topicosRepository;
         this.turmaRepository = turmaRepository;
         this.atividadeRepository = atividadeRepository;
         this.modelMapper = modelMapper;
         this.pagedResponseMapper = pagedResponseMapper;
+        this.tagRepository = tagRepository;
     }
 
     @Transactional
@@ -68,13 +73,18 @@ public class TopicosService {
                         "Turma com ID " + topicosRequest.getIdTurma() + " não encontrada"));
 
         String htmlLimpo = segurancaConteudo(topicosRequest.getConteudoHtml());
-
+        
         Topicos topico = new Topicos();
         topico.setTituloTopico(topicosRequest.getTituloTopico());
         topico.setConteudoHtml(htmlLimpo);
         topico.setTurma(turma);
         topico.setIdTopico(null);
         topico.setAtividades(new ArrayList<>());
+
+        if (topicosRequest.getTagIds() != null && !topicosRequest.getTagIds().isEmpty()) {
+            List<Tag> tags = tagRepository.findAllById(topicosRequest.getTagIds());
+            topico.setTags(new HashSet<>(tags));
+        }
         
         Topicos topicoSalvo = topicosRepository.save(topico);
 
@@ -141,6 +151,15 @@ public class TopicosService {
 
             String htmlLimpo = segurancaConteudo(htmlSuja);
             topicoExistente.setConteudoHtml(htmlLimpo);
+        });
+
+        topicosUpdate.getTagIds().ifPresent(tagIds -> {
+            if (tagIds.isEmpty()) {
+                topicoExistente.getTags().clear();
+            } else {
+                List<Tag> tags = tagRepository.findAllById(tagIds);
+                topicoExistente.setTags(new HashSet<>(tags));
+            }
         });
 
         Topicos topico = topicosRepository.save(topicoExistente);

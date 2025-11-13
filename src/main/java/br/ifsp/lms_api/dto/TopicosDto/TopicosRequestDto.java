@@ -1,5 +1,6 @@
 package br.ifsp.lms_api.dto.TopicosDto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
@@ -21,5 +22,7 @@ public class TopicosRequestDto {
     private long idTurma;
 
     private List<Long> idAtividade;
+
+    private List<Long> tagIds = new ArrayList<>();
 
 }

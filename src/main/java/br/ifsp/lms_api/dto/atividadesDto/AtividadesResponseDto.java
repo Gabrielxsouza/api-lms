@@ -4,9 +4,12 @@ import java.time.LocalDate;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import br.ifsp.lms_api.dto.TagDto.TagResponseDto;
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosResponseDto;
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioResponseDto;
 import br.ifsp.lms_api.dto.atividadeTextoDto.AtividadeTextoResponseDto;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,4 +45,6 @@ public class AtividadesResponseDto {
     private LocalDate dataFechamentoAtividade;
 
     private Boolean statusAtividade;
+
+    private List<TagResponseDto> tags;
 }

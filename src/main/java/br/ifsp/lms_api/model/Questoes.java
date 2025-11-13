@@ -7,6 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany; 
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
@@ -18,7 +20,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -46,4 +50,11 @@ public class Questoes {
     @NotEmpty(message = "A questão deve ter pelo menos uma alternativa")
     private List<Alternativas> alternativas = new ArrayList<>();
 
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(
+        name = "questao_tags",
+        joinColumns = @JoinColumn(name = "id_questao"),
+        inverseJoinColumns = @JoinColumn(name = "id_tag")
+    )
+    private Set<Tag> tags = new HashSet<>();
 }

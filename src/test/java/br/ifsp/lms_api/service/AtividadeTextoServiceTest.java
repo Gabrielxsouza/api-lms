@@ -149,7 +149,7 @@ AtividadeTextoUpdateDto updateDto = new AtividadeTextoUpdateDto();
         AtividadeTexto existingAtividade = new AtividadeTexto();
         existingAtividade.setIdAtividade(id);
         existingAtividade.setTituloAtividade("Título Antigo");
-        existingAtividade.setNumeroMaximoCaracteres(500); 
+        existingAtividade.setNumeroMaximoCaracteres(Long.valueOf(500));
         existingAtividade.setDescricaoAtividade("Descrição Antiga");
 
         AtividadeTextoResponseDto responseDto = new AtividadeTextoResponseDto();
