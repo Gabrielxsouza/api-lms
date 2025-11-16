@@ -1,12 +1,12 @@
 package br.ifsp.lms_api.initialData;
 
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder; // 1. IMPORTAR
+import org.springframework.security.crypto.password.PasswordEncoder; 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.ifsp.lms_api.model.*; // Importe todos os seus models
-import br.ifsp.lms_api.repository.*; // Importe todos os seus repositórios
+import br.ifsp.lms_api.model.*; 
+import br.ifsp.lms_api.repository.*; 
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,7 +15,6 @@ import java.util.Set;
 @Component
 public class DataInitializer implements CommandLineRunner {
 
-    // 2. INJETAR TODOS OS REPOSITÓRIOS + PASSWORD ENCODER
     private final TagRepository tagRepository;
     private final DisciplinaRepository disciplinaRepository;
     private final TurmaRepository turmaRepository;
@@ -60,7 +59,6 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         System.out.println(">>> INICIANDO O DATA SEEDER (POPULANDO BANCO DE DADOS)...");
 
-        // --- 1. Criar Tags ---
         Tag tagCalculo = new Tag();
         tagCalculo.setNome("Cálculo 1");
         Tag tagDerivadas = new Tag();
@@ -70,7 +68,6 @@ public class DataInitializer implements CommandLineRunner {
         
         tagRepository.saveAll(List.of(tagCalculo, tagDerivadas, tagP1));
 
-        // --- 2. Criar Usuários ---
         Aluno aluno = new Aluno();
         aluno.setNome("Maria Eduarda Alves Selvatti");
         aluno.setEmail("maria.selvatti@aluno.ifsp.edu.br");
@@ -78,6 +75,15 @@ public class DataInitializer implements CommandLineRunner {
         aluno.setCpf("123.456.789-00");
         aluno.setRa("GU3000001");
         alunoRepository.save(aluno);
+
+
+        Aluno aluno2 = new Aluno();
+        aluno2.setNome("Gabriel Feitoza");
+        aluno2.setEmail("gabrielfeitoza@aluno.ifsp.edu.br");
+        aluno2.setSenha(passwordEncoder.encode("123456"));
+        aluno2.setCpf("111.113.111-11");
+        aluno2.setRa("GU3000002");
+        alunoRepository.save(aluno2);
 
         Professor prof = new Professor();
         prof.setNome("Prof. Giovani");
@@ -94,7 +100,6 @@ public class DataInitializer implements CommandLineRunner {
         admin.setCpf("111.111.111-11");
         administradorRepository.save(admin);
 
-        // --- 3. Criar Disciplina e Turma ---
         Disciplina disciplina = new Disciplina();
         disciplina.setNomeDisciplina("Engenharia de Software");
         disciplina.setCodigoDisciplina("ESL708");
@@ -104,32 +109,29 @@ public class DataInitializer implements CommandLineRunner {
         turma.setNomeTurma("Turma A - 2025");
         turma.setSemestre("2025/2");
         
-        // "Amarra" os dois lados
         turma.setDisciplina(disciplina);
         disciplina.setTurmas(List.of(turma));
         
-        disciplinaRepository.save(disciplina); // Salva a disciplina (e a turma em cascata)
+        disciplinaRepository.save(disciplina); 
 
-        // --- 4. Criar Tópico ---
         Topicos topico1 = new Topicos();
         topico1.setTituloTopico("Tópico 1 - Prova P1");
         topico1.setConteudoHtml("<p>Este tópico contém a P1.</p>");
-        topico1.setTurma(turma); // Vincula à Turma
+        topico1.setTurma(turma); 
         topico1.setTags(Set.of(tagCalculo));
-        topicosRepository.save(topico1); // Salva o tópico
+        topicosRepository.save(topico1); 
 
-        // --- 5. Criar AtividadeTexto (e vincular ao Tópico) ---
         AtividadeTexto atividadeTexto = new AtividadeTexto();
         atividadeTexto.setTituloAtividade("Redação P1 (Texto)");
         atividadeTexto.setDataInicioAtividade(LocalDate.now());
         atividadeTexto.setDataFechamentoAtividade(LocalDate.now().plusDays(7));
         atividadeTexto.setStatusAtividade(true);
-        atividadeTexto.setNumeroMaximoCaracteres(1000L); // Use 'L' para Long
+        atividadeTexto.setNumeroMaximoCaracteres(1000L); 
         atividadeTexto.setTags(Set.of(tagP1));
-        atividadeTexto.setTopico(topico1); // Vincula ao Tópico
+        atividadeTexto.setTopico(topico1); 
         atividadeTextoRepository.save(atividadeTexto);
 
-        // --- 6. Criar AtividadeArquivos (e vincular ao Tópico) ---
+
         AtividadeArquivos atividadeArquivo = new AtividadeArquivos();
         atividadeArquivo.setTituloAtividade("Upload P1 (Arquivo)");
         atividadeArquivo.setDataInicioAtividade(LocalDate.now());
@@ -137,10 +139,9 @@ public class DataInitializer implements CommandLineRunner {
         atividadeArquivo.setStatusAtividade(true);
         atividadeArquivo.setArquivosPermitidos(List.of(".pdf", ".zip"));
         atividadeArquivo.setTags(Set.of(tagP1));
-        atividadeArquivo.setTopico(topico1); // Vincula ao Tópico
+        atividadeArquivo.setTopico(topico1); 
         atividadeArquivosRepository.save(atividadeArquivo);
 
-        // --- 7. Criar Questões/Alternativas ---
         Alternativas alt1 = new Alternativas(null, "2x", true, null);
         Alternativas alt2 = new Alternativas(null, "x^2", false, null);
         
@@ -148,14 +149,12 @@ public class DataInitializer implements CommandLineRunner {
         questao1.setEnunciado("Qual a derivada de f(x) = x^2 ?");
         questao1.setTags(Set.of(tagCalculo, tagDerivadas));
         
-        // "Amarra" os dois lados (Questao <-> Alternativa)
         questao1.setAlternativas(List.of(alt1, alt2));
         alt1.setQuestoes(questao1);
         alt2.setQuestoes(questao1);
         
-        questoesRepository.save(questao1); // Salva a Questão (e Alternativas em cascata)
+        questoesRepository.save(questao1);
 
-        // --- 8. Criar AtividadeQuestionario (e vincular tudo) ---
         AtividadeQuestionario questionario = new AtividadeQuestionario();
         questionario.setTituloAtividade("Simulado P1 de Cálculo");
         questionario.setDataInicioAtividade(LocalDate.now());
@@ -163,9 +162,9 @@ public class DataInitializer implements CommandLineRunner {
         questionario.setStatusAtividade(true);
         questionario.setDuracaoQuestionario(60L);
         questionario.setNumeroTentativas(3);
-        questionario.setTopico(topico1); // Vincula ao Tópico
-        questionario.setTags(Set.of(tagP1, tagCalculo)); // Vincula Tags
-        questionario.setQuestoes(List.of(questao1)); // Vincula Questões
+        questionario.setTopico(topico1); 
+        questionario.setTags(Set.of(tagP1, tagCalculo)); 
+        questionario.setQuestoes(List.of(questao1));
         
         atividadeQuestionarioRepository.save(questionario);
 

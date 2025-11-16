@@ -22,6 +22,5 @@ public class TentativaQuestionarioRequestDto {
     @NotNull(message = "O id do questionario é obrigatorio")
     private Long idQuestionario;
 
-    @NotNull(message = "O id do aluno é obrigatorio")
     private Long idAluno;
 }
