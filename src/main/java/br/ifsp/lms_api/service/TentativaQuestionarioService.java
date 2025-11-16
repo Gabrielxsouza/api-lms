@@ -8,9 +8,13 @@ import java.util.stream.Collectors;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import br.ifsp.lms_api.dto.page.PagedResponse;
 
 import br.ifsp.lms_api.dto.tentativaQuestionarioDto.TentativaQuestionarioRequestDto;
 import br.ifsp.lms_api.dto.tentativaQuestionarioDto.TentativaQuestionarioResponseDto;
+import br.ifsp.lms_api.exception.LimiteTentativasException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
 import br.ifsp.lms_api.model.Aluno;
 import br.ifsp.lms_api.model.AtividadeQuestionario;
@@ -55,7 +59,7 @@ public class TentativaQuestionarioService {
                 .findByAtividadeQuestionario_IdAndAluno_Id(dto.getIdQuestionario(), dto.getIdAluno());
         
         if (tentativasAnteriores.size() >= questionario.getNumeroTentativas()) {
-            throw new RuntimeException("Limite de tentativas atingido.");
+            throw new LimiteTentativasException("Limite de tentativas atingido.");
         }
 
         TentativaQuestionario novaTentativa = new TentativaQuestionario();
@@ -71,8 +75,28 @@ public class TentativaQuestionarioService {
 
         TentativaQuestionario tentativaSalva = tentativaQuestionarioRepository.save(novaTentativa);
 
-        return modelMapper.map(tentativaSalva, TentativaQuestionarioResponseDto.class);
+        TentativaQuestionarioResponseDto responseDto = modelMapper.map(tentativaSalva, TentativaQuestionarioResponseDto.class);
+
+        responseDto.setIdQuestionario(tentativaSalva.getAtividadeQuestionario().getIdAtividade());
+        responseDto.setIdAluno(tentativaSalva.getAluno().getIdUsuario()); 
+
+        return responseDto;
     }
+
+
+    public PagedResponse<TentativaQuestionarioResponseDto> getAllTentativasQuestionario(Pageable pageable) {
+        Page<TentativaQuestionario> tentativas = tentativaQuestionarioRepository.findAll(pageable);
+        return pagedResponseMapper.toPagedResponse(tentativas, TentativaQuestionarioResponseDto.class);
+    }
+
+    public PagedResponse<TentativaQuestionarioResponseDto> getTentativasQuestionarioByAlunoId(Long alunoId, Pageable pageable) {
+        Page<TentativaQuestionario> tentativas = tentativaQuestionarioRepository.findByAluno_IdUsuario(alunoId, pageable);
+        return pagedResponseMapper.toPagedResponse(tentativas, TentativaQuestionarioResponseDto.class);
+    }
+
+
+
+
 
     private Double calcularNota(TentativaQuestionario tentativa) {
 

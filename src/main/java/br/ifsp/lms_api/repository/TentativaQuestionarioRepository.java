@@ -2,6 +2,8 @@ package br.ifsp.lms_api.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,4 +16,8 @@ public abstract List<TentativaQuestionario> findByAtividadeQuestionario_IdAndAlu
     @Param("questionarioId") Long questionarioId, 
     @Param("alunoId") Long alunoId
 );
+
+ Page<TentativaQuestionario> findByAluno_IdUsuario(Long idUsuario, Pageable pageable);
+
+ 
 }

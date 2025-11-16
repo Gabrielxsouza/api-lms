@@ -38,9 +38,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
     
-    /**
-     * Trata exceções de recurso não encontrado
-     */
+
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<Map<String, String>> handleResourceNotFoundException(ResourceNotFoundException exception) {
@@ -49,15 +47,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
     
-    /**
-     * Trata exceções genéricas que não foram capturadas pelos handlers anteriores.
-     */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<Map<String, String>> handleGenericException(Exception exception) {
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("error", "Erro interno no servidor. Entre em contato com o suporte.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+
+    @ExceptionHandler(LimiteTentativasException.class)
+    public ResponseEntity<Object> handleLimiteTentativas(LimiteTentativasException ex) {
+        
+        Map<String, String> body = new HashMap<>();
+        body.put("erro", "Tentativa bloqueada");
+        body.put("mensagem", ex.getMessage());
+
+        return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
     }
     
 }
