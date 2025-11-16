@@ -40,7 +40,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
             targetUrl = "login/admin"; 
         
         } else if (usuarioLogado instanceof Professor) {
-            targetUrl = "login/professores";
+            targetUrl = "login/professor";
         
         } else if (usuarioLogado instanceof Aluno) {
             targetUrl = "login/alunos";
