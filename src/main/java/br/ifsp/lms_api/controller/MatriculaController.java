@@ -28,7 +28,7 @@ import jakarta.validation.Valid;
 @RestController
 @Validated
 @RequestMapping("/matriculas")
-@Tag(name = "Matrículas", description = "Endpoints para gerenciar matrículas de alunos em cursos")
+@Tag(name = "Matrículas", description = "Endpoints para gerenciar matrículas de alunos em turmas")
 public class MatriculaController {
 
     private final MatriculaService matriculaService;
@@ -37,17 +37,17 @@ public class MatriculaController {
         this.matriculaService = matriculaService;
     }
 
-    @Operation(summary = "Criar nova matrícula", description = "Cria uma nova matrícula para um aluno em um curso específico.")
+    @Operation(summary = "Criar nova matrícula", description = "Cria uma nova matrícula para um aluno em uma turma específico.")
     @ApiResponse(responseCode = "201", description = "Matrícula criada com sucesso")
     @ApiResponse(responseCode = "400", description = "Entrada inválida (campos obrigatórios faltando ou mal formatados)")
-    @ApiResponse(responseCode = "500", description = "Erro interno (ex: aluno ou curso não encontrado)")
+    @ApiResponse(responseCode = "500", description = "Erro interno (ex: aluno ou turma não encontrado)")
     @PostMapping
     public ResponseEntity<MatriculaResponseDto> create(@Valid @RequestBody MatriculaRequestDto requestDto) {
         MatriculaResponseDto responseDto = matriculaService.createMatricula(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
-    @Operation(summary = "Listar todas as matrículas", description = "Retorna uma lista paginada de todas as matrículas de alunos em cursos.")
+    @Operation(summary = "Listar todas as matrículas", description = "Retorna uma lista paginada de todas as matrículas de alunos em turmas.")
     @ApiResponse(responseCode = "200", description = "Lista paginada de matrículas")
     @GetMapping
     public ResponseEntity<PagedResponse<MatriculaResponseDto>> getAll(
