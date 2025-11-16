@@ -21,19 +21,29 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
 
-        Usuario usuarioLogado = (Usuario) authentication.getPrincipal();
-        Long usuarioId = usuarioLogado.getIdUsuario();
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        
+        Usuario usuarioLogado = userDetails.getUsuario(); 
+
+
+        Long usuarioId = usuarioLogado.getIdUsuario(); 
+        String nomeUsuario = usuarioLogado.getNome();
+
+        request.getSession().setAttribute("usuarioId", usuarioId);
+        request.getSession().setAttribute("nomeUsuario", nomeUsuario);
         
         String targetUrl = "/";
 
+       
         if (usuarioLogado instanceof Administrador) {
-            targetUrl = "/admin/" + usuarioId; 
+            targetUrl = "login/admin"; 
         
         } else if (usuarioLogado instanceof Professor) {
-            targetUrl = "/professores/" + usuarioId;
+            targetUrl = "login/professores";
         
         } else if (usuarioLogado instanceof Aluno) {
-            targetUrl = "/alunos/" + usuarioId;
+            targetUrl = "login/alunos";
         
         } else {
             targetUrl = "/"; 
