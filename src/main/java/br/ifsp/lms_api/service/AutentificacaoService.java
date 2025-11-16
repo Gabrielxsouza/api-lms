@@ -6,8 +6,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import br.ifsp.lms_api.model.Aluno;
-import br.ifsp.lms_api.model.Usuario;
 import br.ifsp.lms_api.repository.AlunoRepository;
 import br.ifsp.lms_api.repository.UsuarioRepository;
 
