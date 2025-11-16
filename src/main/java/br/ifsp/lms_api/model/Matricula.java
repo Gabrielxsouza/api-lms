@@ -1,5 +1,8 @@
 package br.ifsp.lms_api.model;
 
+// Import adicionado
+import com.fasterxml.jackson.annotation.JsonBackReference; 
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -28,10 +31,12 @@ public class Matricula {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idUsuario") // Chave estrangeira para Aluno (que é um Usuario)
+    @JsonBackReference // <-- ADICIONADO (Evita loop Aluno -> Matricula -> Aluno)
     private Aluno aluno;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idTurma") // Chave estrangeira para Turma
+    @JsonBackReference // <-- ADICIONADO (Evita loop Turma -> Matricula -> Turma)
     private Turma turma;
 
     @NotNull(message = "O status da matrícula é obrigatório")
