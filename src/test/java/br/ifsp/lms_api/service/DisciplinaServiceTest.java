@@ -15,7 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper; 
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -69,7 +69,7 @@ public class DisciplinaServiceTest {
         turma.setIdTurma(1L);
         turma.setNomeTurma("Turma A");
         turma.setSemestre("2025/2");
-        turma.setDisciplina(disciplina); 
+        turma.setDisciplina(disciplina);
 
         disciplina.setTurmas(List.of(turma));
 
@@ -82,7 +82,7 @@ public class DisciplinaServiceTest {
             List.of(turmaRequestDto)
         );
 
-        turmaResponseDto = new TurmaResponseDto(1L, "Turma A", "2025/2", null); 
+        turmaResponseDto = new TurmaResponseDto(1L, "Turma A", "2025/2", null);
 
         responseDto = new DisciplinaResponseDto(
             1L,
@@ -91,7 +91,7 @@ public class DisciplinaServiceTest {
             "ESL708",
             List.of(turmaResponseDto)
         );
-        
+
         updateDto = new DisciplinaUpdateDto(
             Optional.of("Novo Nome"),
             Optional.of("Nova Descricao"),
@@ -103,24 +103,24 @@ public class DisciplinaServiceTest {
             "Novo Nome",
             "Nova Descricao",
             "ESL709",
-            List.of(turmaResponseDto) 
+            List.of(turmaResponseDto)
         );
     }
 
     @Test
     void testCreateDisciplina_Success() {
-        
+
         Disciplina disciplinaSemTurmas = new Disciplina();
         disciplinaSemTurmas.setNomeDisciplina(requestDto.getNomeDisciplina());
         disciplinaSemTurmas.setCodigoDisciplina(requestDto.getCodigoDisciplina());
         disciplinaSemTurmas.setDescricaoDisciplina(requestDto.getDescricaoDisciplina());
-        
+
         when(modelMapper.map(eq(requestDto), eq(Disciplina.class))).thenReturn(disciplinaSemTurmas);
 
-        when(modelMapper.map(eq(turmaRequestDto), eq(Turma.class))).thenReturn(new Turma(null, "Turma A", "2025/2", null, null));
+        when(modelMapper.map(eq(turmaRequestDto), eq(Turma.class))).thenReturn(new Turma(null, "Turma A", "2025/2", null, null, null));
 
         ArgumentCaptor<Disciplina> disciplinaCaptor = ArgumentCaptor.forClass(Disciplina.class);
-        when(disciplinaRepository.save(disciplinaCaptor.capture())).thenReturn(disciplina); 
+        when(disciplinaRepository.save(disciplinaCaptor.capture())).thenReturn(disciplina);
 
         when(modelMapper.map(eq(disciplina), eq(DisciplinaResponseDto.class))).thenReturn(responseDto);
 
@@ -135,14 +135,14 @@ public class DisciplinaServiceTest {
         Disciplina disciplinaSalva = disciplinaCaptor.getValue();
         assertNotNull(disciplinaSalva.getTurmas());
         assertEquals(1, disciplinaSalva.getTurmas().size());
-        assertEquals(disciplinaSalva, disciplinaSalva.getTurmas().get(0).getDisciplina()); 
+        assertEquals(disciplinaSalva, disciplinaSalva.getTurmas().get(0).getDisciplina());
 
         verify(disciplinaRepository, times(1)).save(any(Disciplina.class));
         verify(modelMapper, times(1)).map(eq(requestDto), eq(Disciplina.class));
         verify(modelMapper, times(1)).map(eq(turmaRequestDto), eq(Turma.class));
         verify(modelMapper, times(1)).map(eq(disciplina), eq(DisciplinaResponseDto.class));
     }
-    
+
     @Test
     void testGetDisciplinaById_Success() {
         when(disciplinaRepository.findById(1L)).thenReturn(Optional.of(disciplina));
@@ -170,7 +170,7 @@ public class DisciplinaServiceTest {
     void testGetAllDisciplinas_Success() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Disciplina> disciplinaPage = new PageImpl<>(List.of(disciplina), pageable, 1L);
-        
+
         PagedResponse<DisciplinaResponseDto> pagedResponse = new PagedResponse<>(
             List.of(responseDto), 0, 10, 1L, 1, true
         );
@@ -187,7 +187,7 @@ public class DisciplinaServiceTest {
         verify(disciplinaRepository, times(1)).findAll(pageable);
         verify(pagedResponseMapper, times(1)).toPagedResponse(disciplinaPage, DisciplinaResponseDto.class);
     }
-    
+
     @Test
     void testUpdateDisciplina_Success() {
         when(disciplinaRepository.findById(1L)).thenReturn(Optional.of(disciplina));
@@ -203,12 +203,12 @@ public class DisciplinaServiceTest {
         ArgumentCaptor<Disciplina> captor = ArgumentCaptor.forClass(Disciplina.class);
         verify(disciplinaRepository, times(1)).save(captor.capture());
         Disciplina disciplinaSalva = captor.getValue();
-        
+
         assertEquals("Novo Nome", disciplinaSalva.getNomeDisciplina());
         assertEquals("Nova Descricao", disciplinaSalva.getDescricaoDisciplina());
         assertEquals("ESL709", disciplinaSalva.getCodigoDisciplina());
     }
-    
+
     @Test
     void testDeleteDisciplina_Success() {
         when(disciplinaRepository.findById(1L)).thenReturn(Optional.of(disciplina));

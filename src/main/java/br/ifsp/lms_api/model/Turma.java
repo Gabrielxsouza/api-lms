@@ -1,6 +1,8 @@
 package br.ifsp.lms_api.model;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -24,7 +26,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Turma {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idTurma;
@@ -42,10 +44,18 @@ public class Turma {
 
     @JsonManagedReference
     @OneToMany(
-        mappedBy = "turma", 
-        cascade = CascadeType.ALL, 
+        mappedBy = "turma",
+        cascade = CascadeType.ALL,
         orphanRemoval = true,
         fetch = FetchType.LAZY
     )
     private List<Topicos> topicos;
+
+    @JsonBackReference
+    @OneToMany(
+        mappedBy = "turma",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
+    private List<Matricula> matriculas;
 }
