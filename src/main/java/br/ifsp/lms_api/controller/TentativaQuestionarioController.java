@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+
 import br.ifsp.lms_api.dto.page.PagedResponse;
 
 
@@ -34,8 +36,10 @@ public class TentativaQuestionarioController {
     }
 
     @GetMapping
-    public PagedResponse<TentativaQuestionarioResponseDto> getAllTentativasQuestionario(@RequestParam(required = false) Pageable pageable) {
-        return tentativaQuestionarioService.getAllTentativasQuestionario(pageable);
+    public PagedResponse<TentativaQuestionarioResponseDto> getAllTentativasQuestionario(
+        @PageableDefault(page = 0, size = 10) Pageable pageable
+    ) {
+        return tentativaQuestionarioService.getAllTentativasQuestionario(pageable); 
     }
 
     @GetMapping("aluno/{alunoId}")
