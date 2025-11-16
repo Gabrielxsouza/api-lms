@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,10 +38,22 @@ public class Turma {
     @Column(length = 20)
     private String semestre;
 
+    // --- RELACIONAMENTOS PAIS (Turma "pertence a") ---
+    // Usam @JsonBackReference para evitar loop na serialização
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idDisciplina")
-    @JsonManagedReference
+    @JsonBackReference // <-- CORRIGIDO (Era @JsonManagedReference)
     private Disciplina disciplina;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idCurso")
+    @JsonBackReference // <-- ADICIONADO
+    private Curso curso;
+
+
+    // --- RELACIONAMENTOS FILHOS (Turma "possui") ---
+    // Usam @JsonManagedReference para mostrar a lista no JSON da Turma
 
     @JsonManagedReference
     @OneToMany(
@@ -51,7 +64,7 @@ public class Turma {
     )
     private List<Topicos> topicos;
 
-    @JsonBackReference
+    @JsonManagedReference // <-- CORRIGIDO (Era @JsonBackReference)
     @OneToMany(
         mappedBy = "turma",
         cascade = CascadeType.ALL,

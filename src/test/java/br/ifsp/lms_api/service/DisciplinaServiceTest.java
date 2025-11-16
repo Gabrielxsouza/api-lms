@@ -1,19 +1,24 @@
 package br.ifsp.lms_api.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -117,7 +122,8 @@ public class DisciplinaServiceTest {
 
         when(modelMapper.map(eq(requestDto), eq(Disciplina.class))).thenReturn(disciplinaSemTurmas);
 
-        when(modelMapper.map(eq(turmaRequestDto), eq(Turma.class))).thenReturn(new Turma(null, "Turma A", "2025/2", null, null, null));
+       when(modelMapper.map(eq(turmaRequestDto), eq(Turma.class))).thenReturn(new Turma(null, "Turma A", "2025/2", null, null, null, null));
+//                                                                                             (disciplina) (curso) (topicos) (matriculas)
 
         ArgumentCaptor<Disciplina> disciplinaCaptor = ArgumentCaptor.forClass(Disciplina.class);
         when(disciplinaRepository.save(disciplinaCaptor.capture())).thenReturn(disciplina);
