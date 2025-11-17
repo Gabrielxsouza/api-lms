@@ -4,6 +4,11 @@ import java.util.Optional;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import br.ifsp.lms_api.config.CustomUserDetails; // <-- Importe a nova classe
+import br.ifsp.lms_api.model.Aluno;
+import br.ifsp.lms_api.model.Usuario;
+import br.ifsp.lms_api.repository.AlunoRepository;
+import br.ifsp.lms_api.repository.UsuarioRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,6 +17,7 @@ import org.springframework.stereotype.Service;
 import br.ifsp.lms_api.model.Usuario;
 import br.ifsp.lms_api.repository.AlunoRepository;
 import br.ifsp.lms_api.repository.UsuarioRepository;
+import java.util.Optional;
 
 @Service
 public class AutentificacaoService implements UserDetailsService {
@@ -27,15 +33,18 @@ public class AutentificacaoService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         
-        Optional<UserDetails> userDetails = usuarioRepository.findByEmail(username)
-                .map(usuario -> (UserDetails) usuario);
-
-        Optional<UserDetails> finalUserDetails = userDetails.or(() -> 
-                alunoRepository.findByRa(username).map(aluno -> (UserDetails) aluno)
-        );
-
-        return finalUserDetails
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
+        Optional<Usuario> usuarioPorEmail = usuarioRepository.findByEmail(username);
+        
+        if (usuarioPorEmail.isPresent()) {
+            return new CustomUserDetails(usuarioPorEmail.get());
+        }
+        Optional<Aluno> alunoPorRa = alunoRepository.findByRa(username);
+        
+        if (alunoPorRa.isPresent()) {
+            return new CustomUserDetails(alunoPorRa.get()); 
+        }
+        
+        throw new UsernameNotFoundException("Usuário não encontrado: " + username);
     }
 
     // --- MÉTODO ADICIONADO ---

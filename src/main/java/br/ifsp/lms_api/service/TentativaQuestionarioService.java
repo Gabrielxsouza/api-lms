@@ -47,8 +47,9 @@ public class TentativaQuestionarioService {
 
 
     @Transactional
-    public TentativaQuestionarioResponseDto createTentativaQuestionario(TentativaQuestionarioRequestDto dto) {
+    public TentativaQuestionarioResponseDto createTentativaQuestionario(TentativaQuestionarioRequestDto dto, Long idAlunoLogado) {
 
+        dto.setIdAluno(idAlunoLogado);
         AtividadeQuestionario questionario = questionarioRepository.findById(dto.getIdQuestionario())
                 .orElseThrow(() -> new RuntimeException("Questionário não encontrado com ID: " + dto.getIdQuestionario()));
 
@@ -92,6 +93,13 @@ public class TentativaQuestionarioService {
     public PagedResponse<TentativaQuestionarioResponseDto> getTentativasQuestionarioByAlunoId(Long alunoId, Pageable pageable) {
         Page<TentativaQuestionario> tentativas = tentativaQuestionarioRepository.findByAluno_IdUsuario(alunoId, pageable);
         return pagedResponseMapper.toPagedResponse(tentativas, TentativaQuestionarioResponseDto.class);
+    }
+
+    public TentativaQuestionarioResponseDto deleteTentativaQuestionario(Long idTentativa) {
+        TentativaQuestionario tentativa = tentativaQuestionarioRepository.findById(idTentativa)
+                .orElseThrow(() -> new RuntimeException("Tentativa de questionário nao encontrada com ID: " + idTentativa));
+        tentativaQuestionarioRepository.delete(tentativa);
+        return modelMapper.map(tentativa, TentativaQuestionarioResponseDto.class);
     }
 
 

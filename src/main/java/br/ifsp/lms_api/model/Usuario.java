@@ -59,20 +59,17 @@ public abstract class Usuario implements UserDetails{
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Usa o valor da coluna "tipo_usuario" (ADMIN, ALUNO, PROFESSOR)
-        // e transforma em uma "Role" que o Spring Security entende.
-        // Ex: "ADMIN" vira "ROLE_ADMIN"
         return List.of(new SimpleGrantedAuthority("ROLE_" + this.tipoUsuario));
     }
 
     @Override
     public String getPassword() {
-        return this.senha; // Retorna o campo da senha
+        return this.senha; 
     }
 
     @Override
     public String getUsername() {
-        return this.email; // isso aqui é pro email servir pra logar no lugar do nome
+        return this.email; 
     }
 
     //ver depois
