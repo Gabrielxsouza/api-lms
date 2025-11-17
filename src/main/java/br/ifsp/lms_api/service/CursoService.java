@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.ifsp.lms_api.dto.CursoDto.CursoRequestDto;
 import br.ifsp.lms_api.dto.CursoDto.CursoResponseDto;
 import br.ifsp.lms_api.dto.CursoDto.CursoUpdateDto;
-import br.ifsp.lms_api.dto.TurmaDto.TurmaResponseDto; 
+import br.ifsp.lms_api.dto.TurmaDto.TurmaResponseDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
@@ -22,6 +22,7 @@ import br.ifsp.lms_api.repository.CursoRepository;
 @Service
 public class CursoService {
     private final CursoRepository cursoRepository;
+
     private final ModelMapper modelMapper;
     private final PagedResponseMapper pagedResponseMapper;
 
@@ -29,6 +30,10 @@ public class CursoService {
 
     public CursoService(CursoRepository cursoRepository, 
                         ModelMapper modelMapper, 
+
+    public CursoService(CursoRepository cursoRepository,
+
+                        ModelMapper modelMapper,
                         PagedResponseMapper pagedResponseMapper) {
         this.cursoRepository = cursoRepository;
         this.modelMapper = modelMapper;
@@ -41,13 +46,18 @@ public class CursoService {
 
 
         Curso savedCurso = cursoRepository.save(curso);
+
+        Curso curso = modelMapper.map(cursoRequestDto, Curso.class);
+
+        Curso savedCurso = cursoRepository.save(curso);
+
         return convertCursoToDto(savedCurso);
     }
 
     @Transactional(readOnly = true)
     public PagedResponse<CursoResponseDto> getAllCursos(Pageable pageable) {
         Page<Curso> cursoPage = cursoRepository.findAll(pageable);
-        
+
         List<CursoResponseDto> dtoList = cursoPage.getContent().stream()
             .map(this::convertCursoToDto)
             .collect(Collectors.toList());
@@ -90,7 +100,7 @@ public class CursoService {
         return cursoRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(String.format(NOT_FOUND_MSG, id)));
     }
-    
+
     private CursoResponseDto convertCursoToDto(Curso curso) {
         CursoResponseDto responseDto = new CursoResponseDto();
         responseDto.setIdCurso(curso.getIdCurso());
@@ -98,14 +108,14 @@ public class CursoService {
         responseDto.setDescricaoCurso(curso.getDescricaoCurso());
         responseDto.setCodigoCurso(curso.getCodigoCurso());
 
-        if (curso.getTurmas() != null) {
+        if (curso.getTurmas() != null) { 
             List<TurmaResponseDto> turmaDtos = curso.getTurmas()
                 .stream()
-                .map(turma -> modelMapper.map(turma, TurmaResponseDto.class)) 
+                .map(turma -> modelMapper.map(turma, TurmaResponseDto.class))
                 .collect(Collectors.toList());
             responseDto.setTurmas(turmaDtos);
         }
-        
+
         return responseDto;
     }
 }

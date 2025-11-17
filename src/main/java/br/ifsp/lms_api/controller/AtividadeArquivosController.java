@@ -23,6 +23,7 @@ import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosUpdateDto;
 import br.ifsp.lms_api.service.AtividadeArquivosService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -46,9 +47,9 @@ public class AtividadeArquivosController {
     public ResponseEntity<AtividadeArquivosResponseDto> create(
             @Valid @RequestBody AtividadeArquivosRequestDto atividadeArquivosRequestDto,
             @AuthenticationPrincipal CustomUserDetails usuarioLogado) {
-        
+
         AtividadeArquivosResponseDto responseDto = atividadeArquivosService.createAtividadeArquivos(
-            atividadeArquivosRequestDto, 
+            atividadeArquivosRequestDto,
             usuarioLogado.getId()
         );
 
@@ -67,13 +68,13 @@ public class AtividadeArquivosController {
     @Operation(summary = "Atualizar atividade")
     @PatchMapping("/{idAtividade}")
     public ResponseEntity<AtividadeArquivosResponseDto> update(
-            @Parameter(description = "ID da atividade") @PathVariable Long idAtividade, 
+            @Parameter(description = "ID da atividade") @PathVariable Long idAtividade,
             @Valid @RequestBody AtividadeArquivosUpdateDto atividadeArquivosUpdateDto,
             @AuthenticationPrincipal CustomUserDetails usuarioLogado) {
-        
+
         AtividadeArquivosResponseDto responseDto = atividadeArquivosService.updateAtividadeArquivos(
-            idAtividade, 
-            atividadeArquivosUpdateDto, 
+            idAtividade,
+            atividadeArquivosUpdateDto,
             usuarioLogado.getId()
         );
         return ResponseEntity.ok(responseDto);
@@ -84,11 +85,10 @@ public class AtividadeArquivosController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @Parameter(description = "ID da atividade") @PathVariable Long id,
-            @AuthenticationPrincipal CustomUserDetails usuarioLogado) { // <-- ADICIONADO O USUÁRIO
-        
-        // CORREÇÃO: Passando o ID do usuário para o serviço
+            @AuthenticationPrincipal CustomUserDetails usuarioLogado) { 
+
         atividadeArquivosService.deleteAtividadeArquivos(id, usuarioLogado.getId());
-        
+
         return ResponseEntity.noContent().build();
     }
 
