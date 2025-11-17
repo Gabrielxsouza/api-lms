@@ -28,11 +28,8 @@ public class CursoService {
 
     private static final String NOT_FOUND_MSG = "Curso com ID %d não encontrado.";
 
-    public CursoService(CursoRepository cursoRepository, 
-                        ModelMapper modelMapper, 
 
     public CursoService(CursoRepository cursoRepository,
-
                         ModelMapper modelMapper,
                         PagedResponseMapper pagedResponseMapper) {
         this.cursoRepository = cursoRepository;
@@ -44,10 +41,6 @@ public class CursoService {
     public CursoResponseDto createCurso(CursoRequestDto cursoRequestDto) {
         Curso curso = modelMapper.map(cursoRequestDto, Curso.class);
 
-
-        Curso savedCurso = cursoRepository.save(curso);
-
-        Curso curso = modelMapper.map(cursoRequestDto, Curso.class);
 
         Curso savedCurso = cursoRepository.save(curso);
 
