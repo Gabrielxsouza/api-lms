@@ -22,15 +22,12 @@ import br.ifsp.lms_api.repository.CursoRepository;
 @Service
 public class CursoService {
     private final CursoRepository cursoRepository;
-    // O DisciplinaRepository foi removido das dependências
     private final ModelMapper modelMapper;
-    private final PagedResponseMapper pagedResponseMapper; 
+    private final PagedResponseMapper pagedResponseMapper;
 
     private static final String NOT_FOUND_MSG = "Curso com ID %d não encontrado.";
-    // O DISC_NOT_FOUND_MSG foi removido
 
     public CursoService(CursoRepository cursoRepository, 
-                        // DisciplinaRepository removido do construtor
                         ModelMapper modelMapper, 
                         PagedResponseMapper pagedResponseMapper) {
         this.cursoRepository = cursoRepository;
@@ -40,25 +37,12 @@ public class CursoService {
 
     @Transactional
     public CursoResponseDto createCurso(CursoRequestDto cursoRequestDto) {
-        
-        // --- MÉTODO DE CRIAÇÃO SIMPLIFICADO ---
         Curso curso = modelMapper.map(cursoRequestDto, Curso.class);
-        
-        // Toda a lógica de 'List<Turma> turmas = ...' foi REMOVIDA.
+
 
         Curso savedCurso = cursoRepository.save(curso);
-        
-        // O savedCurso terá uma lista de turmas vazia.
-        // O helper 'convertCursoToDto' vai lidar com isso corretamente.
         return convertCursoToDto(savedCurso);
     }
-
-    //
-    // O RESTO DO SEU SERVICE (getAllCursos, getCursoById, etc.)
-    // CONTINUA EXATAMENTE IGUAL.
-    // O método 'convertCursoToDto' que criamos continua o mesmo
-    // e vai funcionar perfeitamente.
-    //
 
     @Transactional(readOnly = true)
     public PagedResponse<CursoResponseDto> getAllCursos(Pageable pageable) {
@@ -114,7 +98,7 @@ public class CursoService {
         responseDto.setDescricaoCurso(curso.getDescricaoCurso());
         responseDto.setCodigoCurso(curso.getCodigoCurso());
 
-        if (curso.getTurmas() != null) { // Adiciona verificação de nulo por segurança
+        if (curso.getTurmas() != null) {
             List<TurmaResponseDto> turmaDtos = curso.getTurmas()
                 .stream()
                 .map(turma -> modelMapper.map(turma, TurmaResponseDto.class)) 
