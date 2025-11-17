@@ -4,8 +4,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Parameter;
 
 
 import br.ifsp.lms_api.config.CustomUserDetails;
@@ -37,5 +39,29 @@ public class AnaliseDesempenhoController {
         
         Long idAlunoLogado = usuarioLogado.getId();
         return analiseService.gerarRelatorioAluno(idAlunoLogado);
+    }
+
+    @PreAuthorize("hasAnyRole('PROFESSOR', 'ADMIN')")
+    @Operation(summary = "Gerar relatório de desempenho da Turma (Professor/Admin)")
+    @ApiResponse(responseCode = "200", description = "Relatório agregado da turma gerado com sucesso.")
+    @ApiResponse(responseCode = "404", description = "Turma não encontrada.")
+    @GetMapping("/turma/{idTurma}")
+    public RelatorioDesempenhoResponseDto getRelatorioTurma(
+            @Parameter(description = "ID da Turma a ser analisada") 
+            @PathVariable Long idTurma) {
+
+        return analiseService.gerarRelatorioTurma(idTurma);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Gerar relatório de desempenho da Disciplina (Admin)")
+    @ApiResponse(responseCode = "200", description = "Relatório agregado da disciplina gerado com sucesso.")
+    @ApiResponse(responseCode = "404", description = "Disciplina não encontrada.")
+    @GetMapping("/disciplina/{idDisciplina}")
+    public RelatorioDesempenhoResponseDto getRelatorioDisciplina(
+            @Parameter(description = "ID da Disciplina a ser analisada") 
+            @PathVariable Long idDisciplina) {
+        
+        return analiseService.gerarRelatorioDisciplina(idDisciplina);
     }
 }

@@ -31,6 +31,7 @@ public class DataInitializer implements CommandLineRunner {
     private final AtividadeArquivosRepository atividadeArquivosRepository;
     private final AtividadeQuestionarioRepository atividadeQuestionarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MatriculaRepository matriculaRepository;
 
     // --- ADICIONAR ESTES REPOSITÓRIOS ---
     private final MaterialDeAulaRepository materialDeAulaRepository;
@@ -49,11 +50,11 @@ public class DataInitializer implements CommandLineRunner {
                            AtividadeArquivosRepository atividadeArquivosRepository,
                            AtividadeQuestionarioRepository atividadeQuestionarioRepository,
                            PasswordEncoder passwordEncoder,
-                           // --- ADICIONAR À ASSINATURA ---
                            MaterialDeAulaRepository materialDeAulaRepository,
                            TentativaTextoRepository tentativaTextoRepository,
-                           TentativaQuestionarioRepository tentativaQuestionarioRepository) {
-        
+                           TentativaQuestionarioRepository tentativaQuestionarioRepository,
+                           MatriculaRepository matriculaRepository) {
+
         // (Atribuições existentes)
         this.tagRepository = tagRepository;
         this.disciplinaRepository = disciplinaRepository;
@@ -72,6 +73,7 @@ public class DataInitializer implements CommandLineRunner {
         this.materialDeAulaRepository = materialDeAulaRepository;
         this.tentativaTextoRepository = tentativaTextoRepository;
         this.tentativaQuestionarioRepository = tentativaQuestionarioRepository;
+        this.matriculaRepository = matriculaRepository;
     }
 
     @Override
@@ -249,7 +251,19 @@ public class DataInitializer implements CommandLineRunner {
         // vai recalcular por questão de qualquer forma.
         tentativaQuestionarioRepository.save(tentQuest);
 
-        // --- FIM DAS NOVAS ADIÇÕES ---
+        System.out.println(">>> Matriculando alunos na turma...");
+        Matricula matriculaMaria = new Matricula();
+        matriculaMaria.setAluno(aluno); // A 'Maria'
+        matriculaMaria.setTurma(turma); // A 'Turma A'
+        matriculaMaria.setStatusMatricula(Status.ATIVA); // <-- CORRIGIDO
+        matriculaRepository.save(matriculaMaria);
+
+        Matricula matriculaGabriel = new Matricula();
+        matriculaGabriel.setAluno(aluno2); // O 'Gabriel'
+        matriculaGabriel.setTurma(turma); // A 'Turma A'
+        matriculaGabriel.setStatusMatricula(Status.ATIVA); // <-- CORRIGIDO
+        matriculaRepository.save(matriculaGabriel);
+                // --- FIM DAS NOVAS ADIÇÕES ---
 
         System.out.println(">>> DATA SEEDER CONCLUÍDO. APLICAÇÃO PRONTA!");
     }

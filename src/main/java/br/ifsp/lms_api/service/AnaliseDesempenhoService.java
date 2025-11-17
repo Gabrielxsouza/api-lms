@@ -1,24 +1,29 @@
 package br.ifsp.lms_api.service;
 
-// Nossos DTOs de resposta e a nova classe helper
 import br.ifsp.lms_api.dto.analise.MaterialSugeridoDto;
 import br.ifsp.lms_api.dto.analise.NotaTagAgregada;
 import br.ifsp.lms_api.dto.analise.RelatorioDesempenhoResponseDto;
 import br.ifsp.lms_api.dto.analise.TagDesempenhoDto;
 
 import br.ifsp.lms_api.model.Alternativas;
+import br.ifsp.lms_api.model.Aluno;
 import br.ifsp.lms_api.model.MaterialDeAula;
+import br.ifsp.lms_api.model.Matricula;
 import br.ifsp.lms_api.model.Questoes;
 import br.ifsp.lms_api.model.Tag;
 import br.ifsp.lms_api.model.TentativaArquivo;
 import br.ifsp.lms_api.model.TentativaQuestionario;
 import br.ifsp.lms_api.model.TentativaTexto;
 import br.ifsp.lms_api.model.Topicos;
-
+import br.ifsp.lms_api.model.Turma;
+import br.ifsp.lms_api.model.Disciplina;
+import br.ifsp.lms_api.repository.DisciplinaRepository; 
+import jakarta.persistence.EntityNotFoundException;
 import br.ifsp.lms_api.repository.TentativaArquivoRepository;
 import br.ifsp.lms_api.repository.TentativaQuestionarioRepository;
 import br.ifsp.lms_api.repository.TentativaTextoRepository;
 import br.ifsp.lms_api.repository.TopicosRepository;
+import br.ifsp.lms_api.repository.TurmaRepository;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,17 +44,23 @@ public class AnaliseDesempenhoService {
     private final TentativaArquivoRepository tentativaArquivoRepo;
     private final TentativaQuestionarioRepository tentativaQuestionarioRepo;
     private final TopicosRepository topicosRepo;
+    private final TurmaRepository turmaRepo;
+    private final DisciplinaRepository disciplinaRepo;
 
     private static final double LIMIAR_APROVACAO = 6.0;
 
     public AnaliseDesempenhoService(TentativaTextoRepository tentativaTextoRepo,
                                     TentativaArquivoRepository tentativaArquivoRepo,
                                     TentativaQuestionarioRepository tentativaQuestionarioRepo,
-                                    TopicosRepository topicosRepo) {
+                                    TopicosRepository topicosRepo,
+                                    TurmaRepository turmaRepo,
+                                    DisciplinaRepository disciplinaRepo) {
         this.tentativaTextoRepo = tentativaTextoRepo;
         this.tentativaArquivoRepo = tentativaArquivoRepo;
         this.tentativaQuestionarioRepo = tentativaQuestionarioRepo;
         this.topicosRepo = topicosRepo;
+        this.turmaRepo = turmaRepo;
+        this.disciplinaRepo = disciplinaRepo;
     }
 
     @Transactional(readOnly = true)
@@ -70,6 +81,67 @@ public class AnaliseDesempenhoService {
         relatorio.setDesempenhoGeral(desempenhoGeral);
         relatorio.setPontosFracos(pontosFracos);
         relatorio.setSugestoesEstudo(sugestoes);
+        
+        return relatorio;
+    }
+
+    @Transactional(readOnly = true)
+    public RelatorioDesempenhoResponseDto gerarRelatorioTurma(Long idTurma) {
+        Turma turma = turmaRepo.findById(idTurma)
+                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada"));
+
+        List<Aluno> alunosDaTurma = turma.getMatriculas().stream()
+                                        .map(Matricula::getAluno)
+                                        .toList();
+
+        List<NotaTagAgregada> notasColetadasDaTurma = new ArrayList<>();
+
+        for (Aluno aluno : alunosDaTurma) {
+            notasColetadasDaTurma.addAll(coletarNotasDeAtividades(aluno.getIdUsuario()));
+            notasColetadasDaTurma.addAll(coletarNotasDeQuestionarios(aluno.getIdUsuario()));
+        }
+
+        List<TagDesempenhoDto> desempenhoGeral = calcularMediasPorTag(notasColetadasDaTurma);
+
+        List<TagDesempenhoDto> pontosFracos = filtrarPontosFracos(desempenhoGeral);
+
+        List<MaterialSugeridoDto> sugestoes = buscarSugestoesDeEstudo(pontosFracos);
+
+        RelatorioDesempenhoResponseDto relatorio = new RelatorioDesempenhoResponseDto();
+        relatorio.setDesempenhoGeral(desempenhoGeral);
+        relatorio.setPontosFracos(pontosFracos);
+        relatorio.setSugestoesEstudo(sugestoes);
+
+        return relatorio;
+    }
+
+    @Transactional(readOnly = true)
+    public RelatorioDesempenhoResponseDto gerarRelatorioDisciplina(Long idDisciplina) {
+
+        Disciplina disciplina = disciplinaRepo.findById(idDisciplina)
+                .orElseThrow(() -> new EntityNotFoundException("Disciplina não encontrada"));
+
+        List<NotaTagAgregada> notasColetadasDaDisciplina = new ArrayList<>();
+
+        for (Turma turma : disciplina.getTurmas()) {
+            
+            for (Matricula matricula : turma.getMatriculas()) {
+                Aluno aluno = matricula.getAluno();
+                if (aluno == null) continue;
+
+                notasColetadasDaDisciplina.addAll(coletarNotasDeAtividades(aluno.getIdUsuario()));
+                notasColetadasDaDisciplina.addAll(coletarNotasDeQuestionarios(aluno.getIdUsuario()));
+            }
+        }
+
+        List<TagDesempenhoDto> desempenhoGeral = calcularMediasPorTag(notasColetadasDaDisciplina);
+
+        List<TagDesempenhoDto> pontosFracos = filtrarPontosFracos(desempenhoGeral);
+
+        RelatorioDesempenhoResponseDto relatorio = new RelatorioDesempenhoResponseDto();
+        relatorio.setDesempenhoGeral(desempenhoGeral);
+        relatorio.setPontosFracos(pontosFracos);
+        relatorio.setSugestoesEstudo(new ArrayList<>());
         
         return relatorio;
     }
