@@ -3,6 +3,7 @@ package br.ifsp.lms_api.controller;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,11 +22,13 @@ import br.ifsp.lms_api.service.AdministradorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/admin")
 @Validated
+@Tag(name = "Administradores", description = "Endpoints para gerenciar administradores")
 public class AdministradorController {
 
     private final AdministradorService administradorService;
@@ -34,6 +37,7 @@ public class AdministradorController {
         this.administradorService = administradorService;
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Criar novo administrador", description = "Cria um novo administrador no sistema.")
     @ApiResponse(responseCode = "201", description = "Administrador criado com sucesso")
     @ApiResponse(responseCode = "400", description = "Entrada inválida (campos obrigatórios faltando ou mal formatados)")
@@ -44,6 +48,7 @@ public class AdministradorController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Busca todos os administradores", description = "Retorna uma lista de todos os administradores cadastrados no sistema.")
     @ApiResponse(responseCode = "200", description = "Lista de administradores retornada com sucesso")
     @GetMapping
@@ -52,11 +57,12 @@ public class AdministradorController {
         return ResponseEntity.ok(administradorService.getAllAdmin(pageable));
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Atualiza um administrador", description = "Atualiza os dados de um administrador existente.")
     @ApiResponse(responseCode = "200", description = "Administrador atualizado com sucesso")
     @ApiResponse(responseCode = "400", description = "Entrada inválida (campos obrigatórios faltando ou mal formatados)")
     @ApiResponse(responseCode = "404", description = "Administrador não encontrado")
-    @ApiResponse(responseCode = "500", description = "Erro interno (ex: e-mail ou CPF já cadastrado)")
+    @ApiResponse(responseCode = "500", description = "Erro interno (ex: e-mail)")
     @PatchMapping("/{id}")
     public ResponseEntity<AdminResponseDto> updateAdmin(
             @Parameter(description = "ID do administrador a ser atualizado") @PathVariable Long id,
@@ -65,6 +71,7 @@ public class AdministradorController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Deleta um administrador", description = "Remove um administrador do sistema.")
     @ApiResponse(responseCode = "204", description = "Administrador deletado com sucesso")
     @ApiResponse(responseCode = "404", description = "Administrador não encontrado")

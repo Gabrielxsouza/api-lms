@@ -83,4 +83,6 @@ public abstract class Atividade {
         inverseJoinColumns = @JoinColumn(name = "id_tag")
     )
     private Set<Tag> tags = new HashSet<>();
+
+    
 }
