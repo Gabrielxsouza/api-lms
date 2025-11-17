@@ -109,9 +109,17 @@ public class DataInitializer implements CommandLineRunner {
         turma.setNomeTurma("Turma A - 2025");
         turma.setSemestre("2025/2");
         
+        // --- INÍCIO DA CORREÇÃO ---
+        // Associar a turma ao professor e vice-versa
+        turma.setProfessor(prof);
+        prof.setTurmas(List.of(turma));
+        // --- FIM DA CORREÇÃO ---
+
         turma.setDisciplina(disciplina);
         disciplina.setTurmas(List.of(turma));
         
+        // Salvar a disciplina fará a turma ser salva em cascata
+        // (Assumindo CascadeType.ALL em Disciplina.turmas)
         disciplinaRepository.save(disciplina); 
 
         Topicos topico1 = new Topicos();

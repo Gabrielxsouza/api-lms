@@ -75,36 +75,25 @@ public class AtividadeArquivosService {
         return modelMapper.map(atividade, AtividadeArquivosResponseDto.class);
     }
 
-   @Transactional
-    public AtividadeArquivosResponseDto updateAtividadeArquivos(
-            Long idAtividade, 
-            AtividadeArquivosUpdateDto dto, 
-            Long idUsuarioLogado
-    ) {
-        
-        // 1. Busca a atividade
-        AtividadeArquivos atividade = atividadeArquivosRepository.findById(idAtividade)
+@Transactional
+public AtividadeArquivosResponseDto updateAtividadeArquivos(
+        Long idAtividade, 
+        AtividadeArquivosUpdateDto dto, 
+        Long idUsuarioLogado
+) {
+    
+    AtividadeArquivos atividade = atividadeArquivosRepository.findById(idAtividade)
             .orElseThrow(() -> new ResourceNotFoundException("Atividade não encontrada"));
 
-        // 2. VERIFICAÇÃO DE DONO
-        Optional<Long> idProfessorDaAtividade = Optional.of(atividade)
-            .map(Atividade::getTopico)
-            .map(Topicos::getTurma)
-            .map(Turma::getProfessor)
-            .map(Professor::getIdUsuario);
-
-        // Se o professor não for encontrado OU o ID dele for DIFERENTE do usuário logado...
-        if (!idProfessorDaAtividade.isPresent() || !idProfessorDaAtividade.get().equals(idUsuarioLogado)) {
-            // Lança a exceção de Acesso Negado (403)
-            throw new AccessDeniedException("Acesso Negado. Você não é o professor desta turma.");
-        }
-
-        // 3. Se passou, ele é o dono. Pode atualizar.
-        applyUpdateFromDto(atividade, dto); // <---- !! ADICIONE ESTA LINHA !!
-        
-        AtividadeArquivos updatedAtividade = atividadeArquivosRepository.save(atividade);
-        return modelMapper.map(updatedAtividade, AtividadeArquivosResponseDto.class);
+    if (atividade.getTopico().getTurma().getProfessor().getIdUsuario() != idUsuarioLogado) {
+        throw new AccessDeniedException("Acesso negado");
     }
+
+    applyUpdateFromDto(atividade, dto); 
+    
+    AtividadeArquivos updatedAtividade = atividadeArquivosRepository.save(atividade);
+    return modelMapper.map(updatedAtividade, AtividadeArquivosResponseDto.class);
+}
 
     @Transactional
     public void deleteAtividadeArquivos(Long id) {
