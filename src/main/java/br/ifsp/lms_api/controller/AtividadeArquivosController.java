@@ -104,4 +104,5 @@ public class AtividadeArquivosController {
         atividadeArquivosService.deleteAtividadeArquivos(id);
         return ResponseEntity.noContent().build();
     }
+
 }

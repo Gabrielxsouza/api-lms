@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import br.ifsp.lms_api.dto.MaterialDeAulaDto.MaterialDeAulaResponseDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
+import br.ifsp.lms_api.exception.AccessDeniedException;
 import br.ifsp.lms_api.exception.ResourceNotFoundException; 
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
 import br.ifsp.lms_api.model.MaterialDeAula;
@@ -37,9 +38,13 @@ public class MaterialDeAulaService {
         this.pagedResponseMapper = pagedResponseMapper;
     }
 
-    public MaterialDeAulaResponseDto createMaterial(MultipartFile file, Long idTopico) {
+    public MaterialDeAulaResponseDto createMaterial(MultipartFile file, Long idTopico, Long idProfessor) {
         Topicos topico = topicosRepository.findById(idTopico)
                 .orElseThrow(() -> new ResourceNotFoundException("Tópico com ID " + idTopico + " não encontrado"));
+
+        if(topico.getTurma().getProfessor().getIdUsuario() != idProfessor) {
+            throw new AccessDeniedException("Acesso negado");
+        }
 
         String urlArquivo = storageService.createArquivo(file);
 
@@ -73,10 +78,13 @@ public class MaterialDeAulaService {
     }
 
     @Transactional
-    public MaterialDeAulaResponseDto deleteMaterial(Long id) {
+    public MaterialDeAulaResponseDto deleteMaterial(Long id, Long idProfessor) {
         MaterialDeAula material = materialRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Material com ID " + id + " nao encontrado"));
 
+        if(material.getTopico().getTurma().getProfessor().getIdUsuario() != idProfessor) {
+            throw new AccessDeniedException("Acesso negado");
+        }
         try {
             String urlArquivo = material.getUrlArquivo(); 
 
@@ -95,13 +103,18 @@ public class MaterialDeAulaService {
     }
 
     @Transactional
-    public MaterialDeAulaResponseDto updateMaterial(Long id, MultipartFile novoArquivo) {
+    public MaterialDeAulaResponseDto updateMaterial(Long id, MultipartFile novoArquivo, Long idProfessor) {
         MaterialDeAula materialToUpdate = materialRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Material com ID " + id + " nao encontrado"));
+
+        if(materialToUpdate.getTopico().getTurma().getProfessor().getIdUsuario() != idProfessor) {
+            throw new AccessDeniedException("Acesso negado");
+        }
 
         String urlArquivoAntigo = materialToUpdate.getUrlArquivo();
 
         String urlNovoArquivo = storageService.createArquivo(novoArquivo);
+
 
         materialToUpdate.setNomeArquivo(novoArquivo.getOriginalFilename());
         materialToUpdate.setTipoArquivo(novoArquivo.getContentType());

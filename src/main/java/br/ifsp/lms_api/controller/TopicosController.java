@@ -3,6 +3,7 @@ package br.ifsp.lms_api.controller;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,6 +39,7 @@ public class TopicosController {
         this.topicosService = topicosService;
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Criar novo tópico",
         description = "Cria um novo tópico, vinculando-o a uma turma e, opcionalmente, a atividades e tags."
@@ -55,6 +57,7 @@ public class TopicosController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(
         summary = "Listar todos os tópicos",
         description = "Retorna uma lista paginada de todos os tópicos."
@@ -66,6 +69,7 @@ public class TopicosController {
         return ResponseEntity.ok(topicosService.getAllTopicos(pageable));
     }
 
+    @PreAuthorize("permitAll()")
     @Operation(summary = "Buscar tópico por ID")
     @ApiResponse(
         responseCode = "200",
@@ -79,6 +83,7 @@ public class TopicosController {
         return ResponseEntity.ok(topicosService.getTopicoById(id));
     }
 
+    @PreAuthorize("permitAll()")
     @Operation(
         summary = "Listar tópicos por ID da Turma",
         description = "Retorna uma lista paginada de todos os tópicos pertencentes a uma turma específica."
@@ -91,6 +96,7 @@ public class TopicosController {
         return ResponseEntity.ok(topicosService.getTopicosByIdTurma(idTurma, pageable));
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(summary = "Deletar um tópico")
     @ApiResponse(
         responseCode = "200",
@@ -104,6 +110,7 @@ public class TopicosController {
         return ResponseEntity.ok(topicosService.deleteTopico(id));
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(summary = "Atualizar um tópico (PATCH)")
     @ApiResponse(
         responseCode = "200",

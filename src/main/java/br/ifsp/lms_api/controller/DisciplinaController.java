@@ -3,6 +3,7 @@ package br.ifsp.lms_api.controller;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,7 @@ public class DisciplinaController {
         this.disciplinaService = disciplinaService;
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(
         summary = "Criar nova disciplina",
         description = "Cria uma nova disciplina e, opcionalmente, cria turmas aninhadas na mesma requisição."
@@ -46,6 +48,7 @@ public class DisciplinaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdDisciplina);
     }
 
+    @PreAuthorize("permitAll()")
     @Operation(
         summary = "Listar todas as disciplinas",
         description = "Retorna uma lista paginada de todas as disciplinas."
@@ -73,6 +76,7 @@ public class DisciplinaController {
         return ResponseEntity.ok(updatedDisciplina);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Deletar uma disciplina")
     @ApiResponse(responseCode = "204", description = "Disciplina deletada com sucesso")
     @ApiResponse(responseCode = "404", description = "Disciplina não encontrada")
