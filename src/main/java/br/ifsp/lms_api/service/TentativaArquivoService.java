@@ -6,19 +6,16 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
-// Repositórios
+// Importações
 import br.ifsp.lms_api.repository.TentativaArquivoRepository;
 import br.ifsp.lms_api.repository.AlunoRepository;
 import br.ifsp.lms_api.repository.AtividadeArquivosRepository; 
-
-// Modelos
 import br.ifsp.lms_api.model.Aluno;
 import br.ifsp.lms_api.model.AtividadeArquivos;
 import br.ifsp.lms_api.model.TentativaArquivo;
-
-// DTOs
 import br.ifsp.lms_api.dto.TentativaArquivoDto.TentativaArquivoResponseDto;
 import br.ifsp.lms_api.dto.TentativaArquivoDto.TentativaArquivoUpdateDto;
+import br.ifsp.lms_api.exception.AccessDeniedException; // <-- RE-ADICIONADO (pois o controller exige)
 
 @Service
 public class TentativaArquivoService {
@@ -26,7 +23,7 @@ public class TentativaArquivoService {
     private final TentativaArquivoRepository tentativaArquivoRepository;
     private final AlunoRepository alunoRepository;
     private final AtividadeArquivosRepository atividadeArquivosRepository;
-    private final StorageService storageService; // (do MaterialDeAulaService)
+    private final StorageService storageService; 
     private final ModelMapper modelMapper;
 
     // Construtor completo
@@ -42,44 +39,30 @@ public class TentativaArquivoService {
         this.modelMapper = modelMapper;
     }
 
-    /**
-     * Método de CRIAÇÃO (para o Aluno).
-     */
+    // Método CREATE (não muda)
     @Transactional
     public TentativaArquivoResponseDto createTentativaArquivo(
             MultipartFile file, 
-            Long idAlunoLogado, // Recebe o ID do aluno (do controller)
+            Long idAlunoLogado,
             Long idAtividade) {
 
-        // 1. Busca Aluno e Atividade (do TentativaTextoService)
         Aluno aluno = alunoRepository.findById(idAlunoLogado)
                 .orElseThrow(() -> new EntityNotFoundException("Aluno não encontrado"));
-        
         AtividadeArquivos atividade = atividadeArquivosRepository.findById(idAtividade)
                 .orElseThrow(() -> new EntityNotFoundException("Atividade de Arquivo não encontrada"));
-
-        // 2. Salva o arquivo (do MaterialDeAulaService)
         String urlArquivo = storageService.createArquivo(file);
 
-        // 3. Cria e Salva a nova entidade
         TentativaArquivo novaTentativa = new TentativaArquivo();
         novaTentativa.setAluno(aluno);
         novaTentativa.setAtividadeArquivo(atividade);
-        
-        // Dados do arquivo
         novaTentativa.setNomeArquivo(file.getOriginalFilename());
         novaTentativa.setTipoArquivo(file.getContentType());
         novaTentativa.setUrlArquivo(urlArquivo);
         
         TentativaArquivo tentativaSalva = tentativaArquivoRepository.save(novaTentativa);
-
         return modelMapper.map(tentativaSalva, TentativaArquivoResponseDto.class);
     }
 
-    /**
-     * Método de ATUALIZAÇÃO (para o Professor dar nota/feedback).
-     * Lógica idêntica ao updateTentativaTextoProfessor.
-     */
     @Transactional
     public TentativaArquivoResponseDto updateTentativaArquivoProfessor(
             TentativaArquivoUpdateDto tentativaUpdate, Long idTentativa) {
@@ -87,7 +70,6 @@ public class TentativaArquivoService {
         TentativaArquivo tentativa = tentativaArquivoRepository.findById(idTentativa)
                 .orElseThrow(() -> new EntityNotFoundException("Tentativa de Arquivo nao encontrada"));
 
-        // Atualiza nota e feedback
         tentativaUpdate.getNota().ifPresent(tentativa::setNota);
         tentativaUpdate.getFeedback().ifPresent(tentativa::setFeedBack); 
 
@@ -95,16 +77,59 @@ public class TentativaArquivoService {
         return modelMapper.map(tentativaSalva, TentativaArquivoResponseDto.class);
     }
 
-    /**
-     * Método de DELEÇÃO.
-     * Deleta o ARQUIVO FÍSICO e a ENTIDADE.
-     */
     @Transactional
-    public TentativaArquivoResponseDto deleteTentativaArquivo(Long idTentativa) {
+    public TentativaArquivoResponseDto updateTentativaArquivoAluno(
+            Long idTentativa, Long idAlunoLogado, MultipartFile novoArquivo) {
+        
+        TentativaArquivo tentativa = tentativaArquivoRepository.findById(idTentativa)
+                .orElseThrow(() -> new EntityNotFoundException("Tentativa de Arquivo nao encontrada"));
+
+
+        if (!tentativa.getAluno().getIdUsuario().equals(idAlunoLogado)) {
+            throw new AccessDeniedException("Você não tem permissão para editar a tentativa de outro aluno.");
+        }
+
+        if (tentativa.getNota() != null) {
+            throw new AccessDeniedException("Não é possível editar uma tentativa que já foi avaliada.");
+        }
+
+        String urlArquivoAntigo = tentativa.getUrlArquivo();
+
+        String urlNovoArquivo = storageService.createArquivo(novoArquivo);
+
+        tentativa.setNomeArquivo(novoArquivo.getOriginalFilename());
+        tentativa.setTipoArquivo(novoArquivo.getContentType());
+        tentativa.setUrlArquivo(urlNovoArquivo); 
+        
+        TentativaArquivo tentativaSalva = tentativaArquivoRepository.save(tentativa);
+
+        try {
+            if (urlArquivoAntigo != null && !urlArquivoAntigo.isEmpty()) {
+                String nomeArquivoAntigo = urlArquivoAntigo.substring(urlArquivoAntigo.lastIndexOf('/') + 1);
+                storageService.deleteFile(nomeArquivoAntigo);
+            }
+        } catch (Exception e) {
+            System.err.println("Falha ao deletar arquivo fisico antigo: " + e.getMessage());
+        }
+
+        return modelMapper.map(tentativaSalva, TentativaArquivoResponseDto.class);
+    }
+
+
+    @Transactional
+    public TentativaArquivoResponseDto deleteTentativaArquivo(Long idTentativa, Long idAlunoLogado) { // <-- ASSINATURA MUDOU
+        
         TentativaArquivo tentativa = tentativaArquivoRepository.findById(idTentativa)
             .orElseThrow(() -> new EntityNotFoundException("Tentativa com ID " + idTentativa + " nao encontrada"));
 
-        // 1. Deletar arquivo do storage (do MaterialDeAulaService)
+        if (!tentativa.getAluno().getIdUsuario().equals(idAlunoLogado)) {
+            throw new AccessDeniedException("Você não tem permissão para deletar a tentativa de outro aluno.");
+        }
+
+        if (tentativa.getNota() != null) {
+            throw new AccessDeniedException("Não é possível deletar uma tentativa que já foi avaliada.");
+        }
+
         try {
             String urlArquivo = tentativa.getUrlArquivo(); 
             if (urlArquivo != null && !urlArquivo.isEmpty()) {
@@ -116,7 +141,6 @@ public class TentativaArquivoService {
             throw new RuntimeException("Nao foi possivel deletar o arquivo fisico. Rollback.", e);
         }
 
-        // 2. Deletar entidade do banco
         tentativaArquivoRepository.delete(tentativa);
 
         return modelMapper.map(tentativa, TentativaArquivoResponseDto.class);

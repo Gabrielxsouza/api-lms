@@ -113,9 +113,18 @@ public class TentativaTextoService {
         return mapper.map(tentativaSalva, TentativaTextoResponseDto.class);
     }
 
-    public TentativaTextoResponseDto deleteTentativaTexto(Long idTentativa) {
+    public TentativaTextoResponseDto deleteTentativaTexto(Long idTentativa, Long idAlunoLogado) {
         TentativaTexto tentativa = tentativaTextoRepository.findById(idTentativa)
                 .orElseThrow(() -> new EntityNotFoundException("Tentativa de Texto nao encontrada"));
+
+        if (!tentativa.getAluno().getIdUsuario().equals(idAlunoLogado)) {
+            throw new AccessDeniedException("Você não tem permissão para deletar a tentativa de outro aluno.");
+        }
+
+        if (tentativa.getNota() != null) {
+            throw new AccessDeniedException("Não é possível deletar uma tentativa que já foi avaliada.");
+        }
+
         tentativaTextoRepository.delete(tentativa);
         return mapper.map(tentativa, TentativaTextoResponseDto.class);
     }
