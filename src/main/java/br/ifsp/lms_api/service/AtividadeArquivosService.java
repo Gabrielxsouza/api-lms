@@ -1,23 +1,18 @@
 package br.ifsp.lms_api.service;
 
-import br.ifsp.lms_api.model.Atividade;
 import br.ifsp.lms_api.model.AtividadeArquivos;
-import br.ifsp.lms_api.model.Professor;
 import br.ifsp.lms_api.model.Tag;
 import br.ifsp.lms_api.model.Topicos;
-import br.ifsp.lms_api.model.Turma;
-import br.ifsp.lms_api.model.Usuario;
 
 import java.util.List;
-import java.util.Optional;
 
 import br.ifsp.lms_api.repository.AtividadeArquivosRepository;
 import br.ifsp.lms_api.repository.TagRepository;
+import br.ifsp.lms_api.repository.TopicosRepository;
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosRequestDto;
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosResponseDto;
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosUpdateDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
-import br.ifsp.lms_api.exception.AccessDeniedException;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
 
@@ -26,6 +21,7 @@ import java.util.HashSet;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,27 +29,37 @@ import org.springframework.transaction.annotation.Transactional;
 public class AtividadeArquivosService {
 
     private final AtividadeArquivosRepository atividadeArquivosRepository;
+    private final TopicosRepository topicosRepository;
     private final ModelMapper modelMapper;
     private final PagedResponseMapper pagedResponseMapper;
     private final TagRepository tagRepository;
 
     private static final String NOT_FOUND_MSG = "Atividade de Arquivos com ID %d não encontrada.";
+    private static final String TOPICO_NOT_FOUND_MSG = "Tópico com ID %d não encontrado.";
 
     public AtividadeArquivosService(AtividadeArquivosRepository atividadeArquivosRepository,
+                                    TopicosRepository topicosRepository,
                                     ModelMapper modelMapper,
                                     PagedResponseMapper pagedResponseMapper,
                                     TagRepository tagRepository) {
         this.atividadeArquivosRepository = atividadeArquivosRepository;
+        this.topicosRepository = topicosRepository;
         this.modelMapper = modelMapper;
         this.pagedResponseMapper = pagedResponseMapper;
         this.tagRepository = tagRepository;
     }
 
     @Transactional
-    public AtividadeArquivosResponseDto createAtividadeArquivos(AtividadeArquivosRequestDto dto) {
-        AtividadeArquivos atividade = modelMapper.map(dto, AtividadeArquivos.class);
+    public AtividadeArquivosResponseDto createAtividadeArquivos(AtividadeArquivosRequestDto dto, Long idUsuarioLogado) {
+        
+        Topicos topico = topicosRepository.findById(dto.getIdTopico())
+            .orElseThrow(() -> new ResourceNotFoundException(String.format(TOPICO_NOT_FOUND_MSG, dto.getIdTopico())));
+        
+        checkProfessorOwnership(topico, idUsuarioLogado);
 
+        AtividadeArquivos atividade = modelMapper.map(dto, AtividadeArquivos.class);
         atividade.setIdAtividade(null);
+        atividade.setTopico(topico);
 
         if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
             List<Tag> tags = tagRepository.findAllById(dto.getTagIds());
@@ -75,35 +81,41 @@ public class AtividadeArquivosService {
         return modelMapper.map(atividade, AtividadeArquivosResponseDto.class);
     }
 
-@Transactional
-public AtividadeArquivosResponseDto updateAtividadeArquivos(
-        Long idAtividade, 
-        AtividadeArquivosUpdateDto dto, 
-        Long idUsuarioLogado
-) {
-    
-    AtividadeArquivos atividade = atividadeArquivosRepository.findById(idAtividade)
-            .orElseThrow(() -> new ResourceNotFoundException("Atividade não encontrada"));
+    @Transactional
+    public AtividadeArquivosResponseDto updateAtividadeArquivos(
+            Long idAtividade, 
+            AtividadeArquivosUpdateDto dto, 
+            Long idUsuarioLogado
+    ) {
+        
+        AtividadeArquivos atividade = findEntityById(idAtividade);
+        
+        checkProfessorOwnership(atividade.getTopico(), idUsuarioLogado);
 
-    if (atividade.getTopico().getTurma().getProfessor().getIdUsuario() != idUsuarioLogado) {
-        throw new AccessDeniedException("Acesso negado");
+        applyUpdateFromDto(atividade, dto); 
+        
+        AtividadeArquivos updatedAtividade = atividadeArquivosRepository.save(atividade);
+        return modelMapper.map(updatedAtividade, AtividadeArquivosResponseDto.class);
     }
 
-    applyUpdateFromDto(atividade, dto); 
-    
-    AtividadeArquivos updatedAtividade = atividadeArquivosRepository.save(atividade);
-    return modelMapper.map(updatedAtividade, AtividadeArquivosResponseDto.class);
-}
-
     @Transactional
-    public void deleteAtividadeArquivos(Long id) {
+    public void deleteAtividadeArquivos(Long id, Long idUsuarioLogado) {
         AtividadeArquivos atividade = findEntityById(id);
+        
+        checkProfessorOwnership(atividade.getTopico(), idUsuarioLogado);
+        
         atividadeArquivosRepository.delete(atividade);
     }
 
     private AtividadeArquivos findEntityById(Long id) {
         return atividadeArquivosRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(NOT_FOUND_MSG, id)));
+    }
+    
+    private void checkProfessorOwnership(Topicos topico, Long idUsuarioLogado) {
+        if (topico.getTurma().getProfessor().getIdUsuario() != idUsuarioLogado) {
+            throw new AccessDeniedException("O professor logado não é o dono da turma deste tópico.");
+        }
     }
 
     private void applyUpdateFromDto(AtividadeArquivos atividade, AtividadeArquivosUpdateDto dto) {
