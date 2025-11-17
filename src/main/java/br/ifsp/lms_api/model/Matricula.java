@@ -30,13 +30,13 @@ public class Matricula {
     private Long idMatricula;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idUsuario") // Chave estrangeira para Aluno (que é um Usuario)
-    @JsonBackReference // <-- ADICIONADO (Evita loop Aluno -> Matricula -> Aluno)
+    @JoinColumn(name = "idUsuario")
+    @JsonBackReference
     private Aluno aluno;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idTurma") // Chave estrangeira para Turma
-    @JsonBackReference // <-- ADICIONADO (Evita loop Turma -> Matricula -> Turma)
+    @JoinColumn(name = "idTurma")
+    @JsonBackReference
     private Turma turma;
 
     @NotNull(message = "O status da matrícula é obrigatório")
