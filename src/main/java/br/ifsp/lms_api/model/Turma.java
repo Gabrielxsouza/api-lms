@@ -38,22 +38,20 @@ public class Turma {
     @Column(length = 20)
     private String semestre;
 
-    // --- RELACIONAMENTOS PAIS (Turma "pertence a") ---
-    // Usam @JsonBackReference para evitar loop na serialização
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idDisciplina")
-    @JsonBackReference // <-- CORRIGIDO (Era @JsonManagedReference)
+    @JsonBackReference
     private Disciplina disciplina;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idCurso")
-    @JsonBackReference // <-- ADICIONADO
+    @JsonBackReference
     private Curso curso;
 
-
-    // --- RELACIONAMENTOS FILHOS (Turma "possui") ---
-    // Usam @JsonManagedReference para mostrar a lista no JSON da Turma
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idProfessor")
+    @JsonBackReference
+    private Professor professor;
 
     @JsonManagedReference
     @OneToMany(
@@ -64,7 +62,7 @@ public class Turma {
     )
     private List<Topicos> topicos;
 
-    @JsonManagedReference // <-- CORRIGIDO (Era @JsonBackReference)
+    @JsonManagedReference
     @OneToMany(
         mappedBy = "turma",
         cascade = CascadeType.ALL,

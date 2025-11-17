@@ -4,7 +4,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import br.ifsp.lms_api.dto.TurmaDto.TurmaRequestDto;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaResponseDto;
@@ -22,7 +29,7 @@ import jakarta.validation.Valid;
 @RestController
 @Validated
 @RequestMapping("/turmas")
-@Tag(name = "Turmas", description = "Endpoints para gerenciar turmas (vinculadas a disciplinas)")
+@Tag(name = "Turmas", description = "Endpoints para gerenciar turmas")
 public class TurmaController {
 
     private final TurmaService turmaService;
@@ -32,8 +39,8 @@ public class TurmaController {
     }
 
     @Operation(
-        summary = "Criar nova turma avulsa",
-        description = "Cria uma nova turma vinculada a uma disciplina existente (pelo idDisciplina)."
+        summary = "Criar nova turma",
+        description = "Cria uma nova turma vinculada a um curso e disciplina existentes. O professor é pego automaticamente do usuário logado."
     )
     @ApiResponse(
         responseCode = "201",
@@ -41,7 +48,7 @@ public class TurmaController {
         content = @Content(schema = @Schema(implementation = TurmaResponseDto.class))
     )
     @ApiResponse(responseCode = "400", description = "Entrada inválida")
-    @ApiResponse(responseCode = "404", description = "Disciplina (pai) não encontrada")
+    @ApiResponse(responseCode = "404", description = "Disciplina ou Curso (pai) não encontrado")
     @PostMapping
     public ResponseEntity<TurmaResponseDto> create(
             @Valid @RequestBody TurmaRequestDto requestDto) {
@@ -51,14 +58,25 @@ public class TurmaController {
     }
 
     @Operation(
-        summary = "Listar todas as turmas",
-        description = "Retorna uma lista paginada de todas as turmas cadastradas."
+        summary = "Listar todas as turmas (Apenas ADMIN)",
+        description = "Retorna uma lista paginada de todas as turmas cadastradas no sistema."
     )
     @ApiResponse(responseCode = "200", description = "Lista paginada de turmas")
     @GetMapping
     public ResponseEntity<PagedResponse<TurmaResponseDto>> getAll(
             @Parameter(description = "Parâmetros de paginação (page, size, sort)") Pageable pageable) {
         return ResponseEntity.ok(turmaService.getAllTurmas(pageable));
+    }
+    
+    @Operation(
+        summary = "Listar minhas turmas (Professor)",
+        description = "Retorna uma lista paginada de todas as turmas vinculadas ao professor logado."
+    )
+    @ApiResponse(responseCode = "200", description = "Lista paginada de turmas")
+    @GetMapping("/minhas-turmas")
+    public ResponseEntity<PagedResponse<TurmaResponseDto>> getMinhasTurmas(
+            @Parameter(description = "Parâmetros de paginação (page, size, sort)") Pageable pageable) {
+        return ResponseEntity.ok(turmaService.getMinhasTurmas(pageable));
     }
 
     @Operation(summary = "Atualizar uma turma (PATCH)")
