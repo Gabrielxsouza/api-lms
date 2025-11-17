@@ -1,20 +1,20 @@
 package br.ifsp.lms_api.service;
 
-import br.ifsp.lms_api.model.Professor;
-import br.ifsp.lms_api.repository.ProfessorRepository;
-import br.ifsp.lms_api.dto.professorDto.ProfessorRequestDto;
-import br.ifsp.lms_api.dto.professorDto.ProfessorResponseDto;
-import br.ifsp.lms_api.dto.professorDto.ProfessorUpdateDto;
-import br.ifsp.lms_api.dto.page.PagedResponse;
-import br.ifsp.lms_api.exception.ResourceNotFoundException;
-import br.ifsp.lms_api.mapper.PagedResponseMapper;
-
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder; // IMPORTAR
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import br.ifsp.lms_api.dto.page.PagedResponse;
+import br.ifsp.lms_api.dto.professorDto.ProfessorRequestDto;
+import br.ifsp.lms_api.dto.professorDto.ProfessorResponseDto;
+import br.ifsp.lms_api.dto.professorDto.ProfessorUpdateDto;
+import br.ifsp.lms_api.exception.ResourceNotFoundException;
+import br.ifsp.lms_api.mapper.PagedResponseMapper;
+import br.ifsp.lms_api.model.Professor;
+import br.ifsp.lms_api.repository.ProfessorRepository;
 
 @Service
 public class ProfessorService {
@@ -22,28 +22,26 @@ public class ProfessorService {
     private final ProfessorRepository professorRepository;
     private final ModelMapper modelMapper;
     private final PagedResponseMapper pagedResponseMapper;
-    private final PasswordEncoder passwordEncoder; // INJETAR
+    private final PasswordEncoder passwordEncoder;
 
     private static final String NOT_FOUND_MSG = "Professor com ID %d não encontrado.";
 
-    // ATUALIZAR CONSTRUTOR
     public ProfessorService(ProfessorRepository professorRepository,
                             ModelMapper modelMapper,
                             PagedResponseMapper pagedResponseMapper,
-                            PasswordEncoder passwordEncoder) { // ADICIONAR
+                            PasswordEncoder passwordEncoder) {
         this.professorRepository = professorRepository;
         this.modelMapper = modelMapper;
         this.pagedResponseMapper = pagedResponseMapper;
-        this.passwordEncoder = passwordEncoder; // ADICIONAR
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
     public ProfessorResponseDto createProfessor(ProfessorRequestDto dto) {
         Professor professor = modelMapper.map(dto, Professor.class);
 
-        // HASH DA SENHA ANTES DE SALVAR
         professor.setSenha(passwordEncoder.encode(dto.getSenha()));
-        professor.setIdUsuario(null); // Garante que é um INSERT
+        professor.setIdUsuario(null); 
 
         Professor savedProfessor = professorRepository.save(professor);
         return modelMapper.map(savedProfessor, ProfessorResponseDto.class);
@@ -87,7 +85,6 @@ public class ProfessorService {
         dto.getEmail().ifPresent(professor::setEmail);
         dto.getDepartamento().ifPresent(professor::setDepartamento);
 
-        // LÓGICA DE ATUALIZAÇÃO DE SENHA
         dto.getSenha().ifPresent(novaSenha -> {
             professor.setSenha(passwordEncoder.encode(novaSenha));
         });

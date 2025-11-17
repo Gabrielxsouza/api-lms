@@ -26,12 +26,15 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import br.ifsp.lms_api.dto.CursoDto.CursoParaTurmaResponseDto;
+import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaParaTurmaResponseDto;
 import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaRequestDto;
 import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaResponseDto;
 import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaUpdateDto;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaParaDisciplinaDTO;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaResponseDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
+import br.ifsp.lms_api.dto.professorDto.ProfessorParaTurmaResponseDto;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
 import br.ifsp.lms_api.model.Disciplina;
@@ -87,7 +90,15 @@ public class DisciplinaServiceTest {
             List.of(turmaRequestDto)
         );
 
-        turmaResponseDto = new TurmaResponseDto(1L, "Turma A", "2025/2", null);
+        // --- CORREÇÃO AQUI (Tipo do último argumento mudou) ---
+        turmaResponseDto = new TurmaResponseDto(
+            1L, 
+            "Turma A", 
+            "2025/2", 
+            (CursoParaTurmaResponseDto) null,
+            (ProfessorParaTurmaResponseDto) null,
+            (DisciplinaParaTurmaResponseDto) null // <- MUDOU AQUI
+        );
 
         responseDto = new DisciplinaResponseDto(
             1L,
@@ -122,8 +133,7 @@ public class DisciplinaServiceTest {
 
         when(modelMapper.map(eq(requestDto), eq(Disciplina.class))).thenReturn(disciplinaSemTurmas);
 
-       when(modelMapper.map(eq(turmaRequestDto), eq(Turma.class))).thenReturn(new Turma(null, "Turma A", "2025/2", null, null, null, null, null));
-//                                                                                             (disciplina) (curso) (topicos) (matriculas)
+        when(modelMapper.map(eq(turmaRequestDto), eq(Turma.class))).thenReturn(new Turma(null, "Turma A", "2025/2", null, null, null, null, null));
 
         ArgumentCaptor<Disciplina> disciplinaCaptor = ArgumentCaptor.forClass(Disciplina.class);
         when(disciplinaRepository.save(disciplinaCaptor.capture())).thenReturn(disciplina);
@@ -185,7 +195,7 @@ public class DisciplinaServiceTest {
         when(pagedResponseMapper.toPagedResponse(disciplinaPage, DisciplinaResponseDto.class))
             .thenReturn(pagedResponse);
 
-        PagedResponse<DisciplinaResponseDto> result = disciplinaService.getAllDisciplinas(pageable);
+        PagedResponse<DisciplinaResponseDto> result = disciplinaService.getAllDisciplinas(pageable.first());
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());

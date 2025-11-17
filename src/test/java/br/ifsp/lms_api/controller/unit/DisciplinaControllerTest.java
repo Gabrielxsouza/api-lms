@@ -21,9 +21,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.ifsp.lms_api.controller.DisciplinaController;
+import br.ifsp.lms_api.dto.CursoDto.CursoParaTurmaResponseDto;
+import br.ifsp.lms_api.dto.professorDto.ProfessorParaTurmaResponseDto;
 import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaRequestDto;
 import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaResponseDto;
 import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaUpdateDto;
+// IMPORT CORRIGIDO/ADICIONADO
+import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaParaTurmaResponseDto; 
 import br.ifsp.lms_api.dto.TurmaDto.TurmaParaDisciplinaDTO;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaResponseDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
@@ -49,7 +53,16 @@ public class DisciplinaControllerTest {
     @BeforeEach
     void setUp() {
         TurmaParaDisciplinaDTO turmaDto = new TurmaParaDisciplinaDTO("Turma A", "2025/2");
-        TurmaResponseDto turmaResponseDto = new TurmaResponseDto(1L, "Turma A", "2025/2", null);
+
+        // --- CORREÇÃO AQUI (Tipo do último argumento mudou) ---
+        TurmaResponseDto turmaResponseDto = new TurmaResponseDto(
+            1L, 
+            "Turma A", 
+            "2025/2", 
+            (CursoParaTurmaResponseDto) null,
+            (ProfessorParaTurmaResponseDto) null,
+            (DisciplinaParaTurmaResponseDto) null // <- MUDOU AQUI
+        );
 
         requestDto = new DisciplinaRequestDto(
             "Engenharia de Software",

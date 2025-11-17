@@ -73,7 +73,14 @@ public class TurmaService {
                 String.format(PROFESSOR_NOT_FOUND_MSG, turmaRequestDto.getIdProfessor())
             ));
 
-        Turma turma = modelMapper.map(turmaRequestDto, Turma.class);
+        // --- CORREÇÃO AQUI ---
+        // Em vez de: Turma turma = modelMapper.map(turmaRequestDto, Turma.class);
+        // Criamos manualmente:
+        Turma turma = new Turma();
+        turma.setNomeTurma(turmaRequestDto.getNomeTurma());
+        turma.setSemestre(turmaRequestDto.getSemestre());
+        // --- FIM DA CORREÇÃO ---
+
         turma.setIdTurma(null);
         turma.setDisciplina(disciplina);
         turma.setCurso(curso);

@@ -28,13 +28,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 
-import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaResponseDto;
+import br.ifsp.lms_api.dto.CursoDto.CursoParaTurmaResponseDto;
+import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaParaTurmaResponseDto; 
 import br.ifsp.lms_api.dto.TurmaDto.TurmaRequestDto;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaResponseDto;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaUpdateDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
+import br.ifsp.lms_api.dto.professorDto.ProfessorParaTurmaResponseDto;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
-import br.ifsp.lms_api.mapper.PagedResponseMapper; // IMPORT ADICIONADO
+import br.ifsp.lms_api.mapper.PagedResponseMapper; 
 import br.ifsp.lms_api.model.Curso;
 import br.ifsp.lms_api.model.Disciplina;
 import br.ifsp.lms_api.model.Professor;
@@ -57,10 +59,10 @@ public class TurmaServiceTest {
     private CursoRepository cursoRepository;
 
     @Mock
-    private ProfessorRepository professorRepository; // MOCK ADICIONADO
+    private ProfessorRepository professorRepository;
 
     @Mock
-    private AutentificacaoService autentificacaoService; // Mantido para o getMinhasTurmas
+    private AutentificacaoService autentificacaoService;
 
     @Mock
     private ModelMapper modelMapper;
@@ -79,20 +81,29 @@ public class TurmaServiceTest {
     private TurmaResponseDto responseDto;
     private TurmaUpdateDto updateDto;
     private TurmaResponseDto responseDtoAtualizado;
+    
+    // DTOs de resposta movidos para o escopo
+    private DisciplinaParaTurmaResponseDto disciplinaParaTurmaDto;
+    private CursoParaTurmaResponseDto cursoResponseDto;
+    private ProfessorParaTurmaResponseDto professorResponseDto;
+
 
     @BeforeEach
     void setUp() {
         disciplina = new Disciplina();
         disciplina.setIdDisciplina(1L);
         disciplina.setNomeDisciplina("Engenharia de Software");
+        disciplina.setCodigoDisciplina("ESL708"); // Adicionado
 
         curso = new Curso();
         curso.setIdCurso(1L);
         curso.setNomeCurso("Ciencia da Computacao");
+        curso.setCodigoCurso("CCO"); 
 
         professor = new Professor();
         professor.setIdUsuario(1L);
         professor.setNome("Prof. Teste");
+        professor.setEmail("prof.teste@email.com"); 
 
         turma = new Turma();
         turma.setIdTurma(1L);
@@ -102,15 +113,28 @@ public class TurmaServiceTest {
         turma.setCurso(curso);
         turma.setProfessor(professor);
 
-        // CORRIGIDO: Adicionado idProfessor (1L) como 5º argumento
         requestDto = new TurmaRequestDto("Turma A", "2025/2", 1L, 1L, 1L); 
 
-        DisciplinaResponseDto disciplinaResponseDto = new DisciplinaResponseDto(
-            1L, "Engenharia de Software", "Testes", "ESL708", null 
+        // --- SETUP DOS DTOs DE RESPOSTA (CORRIGIDO) ---
+        disciplinaParaTurmaDto = new DisciplinaParaTurmaResponseDto(
+            1L, "Engenharia de Software", "ESL708"
+        );
+        
+        cursoResponseDto = new CursoParaTurmaResponseDto(
+            1L, "Ciencia da Computacao", "CCO"
+        );
+        
+        professorResponseDto = new ProfessorParaTurmaResponseDto(
+            1L, "Prof. Teste", "prof.teste@email.com"
         );
 
         responseDto = new TurmaResponseDto(
-            1L, "Turma A", "2025/2", disciplinaResponseDto
+            1L, 
+            "Turma A", 
+            "2025/2", 
+            cursoResponseDto, 
+            professorResponseDto,
+            disciplinaParaTurmaDto // <- MUDOU AQUI
         );
         
         updateDto = new TurmaUpdateDto(
@@ -119,19 +143,26 @@ public class TurmaServiceTest {
         );
 
         responseDtoAtualizado = new TurmaResponseDto(
-            1L, "Novo Nome Turma", "Novo Semestre", disciplinaResponseDto
+            1L, 
+            "Novo Nome Turma", 
+            "Novo Semestre", 
+            cursoResponseDto,
+            professorResponseDto,
+            disciplinaParaTurmaDto // <- MUDOU AQUI
         );
     }
 
     @Test
     void testCreateTurma_Success() {
-        // LÓGICA ATUALIZADA: Mockar os 3 repositórios
         when(disciplinaRepository.findById(1L)).thenReturn(Optional.of(disciplina));
         when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
         when(professorRepository.findById(1L)).thenReturn(Optional.of(professor));
         
+        // Simular o ModelMapper criando uma turma "transiente"
         Turma turmaTransient = new Turma();
-        when(modelMapper.map(requestDto, Turma.class)).thenReturn(turmaTransient);
+        turmaTransient.setNomeTurma(requestDto.getNomeTurma());
+        turmaTransient.setSemestre(requestDto.getSemestre());
+        // Não precisamos mais mockar o map, pois o service faz manualmente
         
         when(turmaRepository.save(any(Turma.class))).thenReturn(turma);
         
@@ -142,12 +173,15 @@ public class TurmaServiceTest {
         assertNotNull(result);
         assertEquals(1L, result.getIdTurma());
         assertEquals(1L, result.getDisciplina().getIdDisciplina());
+        assertEquals(1L, result.getCurso().getIdCurso());
+        assertEquals(1L, result.getProfessor().getIdUsuario());
 
         ArgumentCaptor<Turma> captor = ArgumentCaptor.forClass(Turma.class);
         verify(turmaRepository, times(1)).save(captor.capture());
         
         Turma turmaSalva = captor.getValue();
         assertNull(turmaSalva.getIdTurma());
+        assertEquals("Turma A", turmaSalva.getNomeTurma());
         assertEquals(disciplina, turmaSalva.getDisciplina());
         assertEquals(curso, turmaSalva.getCurso());
         assertEquals(professor, turmaSalva.getProfessor());
@@ -155,7 +189,6 @@ public class TurmaServiceTest {
 
     @Test
     void testCreateTurma_DisciplinaNotFound() {
-        // Não precisamos mais mockar o autentificacaoService aqui
         when(disciplinaRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> {
@@ -229,7 +262,6 @@ public class TurmaServiceTest {
             List.of(responseDto), 0, 10, 1L, 1, true
         );
         
-        // Este teste continua usando o autentificacaoService, o que está correto
         when(autentificacaoService.getUsuarioLogado()).thenReturn(professor);
         when(turmaRepository.findByProfessor(professor, pageable)).thenReturn(turmaPage);
         when(pagedResponseMapper.toPagedResponse(turmaPage, TurmaResponseDto.class))
@@ -244,7 +276,7 @@ public class TurmaServiceTest {
     
     @Test
     void testGetMinhasTurmas_NotProfessor() {
-        when(autentificacaoService.getUsuarioLogado()).thenReturn(null); // ou um Aluno
+        when(autentificacaoService.getUsuarioLogado()).thenReturn(null);
 
         assertThrows(AccessDeniedException.class, () -> {
             turmaService.getMinhasTurmas(PageRequest.of(0, 10));
