@@ -21,13 +21,16 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.ifsp.lms_api.controller.TurmaController;
+import br.ifsp.lms_api.dto.CursoDto.CursoParaTurmaResponseDto;
+import br.ifsp.lms_api.dto.professorDto.ProfessorParaTurmaResponseDto;
+// IMPORT CORRIGIDO/ADICIONADO
+import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaParaTurmaResponseDto; 
 import br.ifsp.lms_api.dto.TurmaDto.TurmaRequestDto;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaResponseDto;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaUpdateDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.service.TurmaService;
-import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaResponseDto; 
 
 @WebMvcTest(TurmaController.class)
 public class TurmaControllerTest {
@@ -47,11 +50,17 @@ public class TurmaControllerTest {
 
     @BeforeEach
     void setUp() {
-        // CORRIGIDO: Adicionado idProfessor (1L) como 5º argumento
         requestDto = new TurmaRequestDto("Turma A", "2025/2", 1L, 1L, 1L); 
         
-        // Esta linha está OK por enquanto, pois o erro não é nela
-        responseDto = new TurmaResponseDto(1L, "Turma A", "2025/2", (DisciplinaResponseDto) null); 
+        // CORRIGIDO: Chamando o construtor de 6 argumentos com o DTO correto
+        responseDto = new TurmaResponseDto(
+            1L, 
+            "Turma A", 
+            "2025/2", 
+            (CursoParaTurmaResponseDto) null,
+            (ProfessorParaTurmaResponseDto) null,
+            (DisciplinaParaTurmaResponseDto) null // <- MUDOU AQUI
+        ); 
 
         updateDto = new TurmaUpdateDto(
             Optional.of("Novo Semestre"),
@@ -105,8 +114,14 @@ public class TurmaControllerTest {
 
     @Test
     void testUpdateTurma_Success() throws Exception {
+        // CORRIGIDO: Chamando o construtor de 6 argumentos com o DTO correto
         TurmaResponseDto updatedResponse = new TurmaResponseDto(
-            1L, "Turma A", "Novo Semestre", (DisciplinaResponseDto) null
+            1L, 
+            "Turma A", 
+            "Novo Semestre", 
+            (CursoParaTurmaResponseDto) null,
+            (ProfessorParaTurmaResponseDto) null,
+            (DisciplinaParaTurmaResponseDto) null // <- MUDOU AQUI
         );
         
         when(turmaService.updateTurma(eq(1L), any(TurmaUpdateDto.class)))
