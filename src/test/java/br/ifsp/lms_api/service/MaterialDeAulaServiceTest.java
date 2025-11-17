@@ -6,6 +6,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -20,14 +21,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
-import org.springframework.mock.web.MockMultipartFile; 
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import br.ifsp.lms_api.dto.MaterialDeAulaDto.MaterialDeAulaResponseDto;
+import br.ifsp.lms_api.exception.AccessDeniedException;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
 import br.ifsp.lms_api.model.MaterialDeAula;
+import br.ifsp.lms_api.model.Professor;
 import br.ifsp.lms_api.model.Topicos;
+import br.ifsp.lms_api.model.Turma;
 import br.ifsp.lms_api.repository.MaterialDeAulaRepository;
 import br.ifsp.lms_api.repository.TopicosRepository;
 
@@ -52,31 +56,56 @@ class MaterialDeAulaServiceTest {
     @InjectMocks
     private MaterialDeAulaService materialService;
 
+    // Objetos auxiliares para o teste
+    private Long idProfessorDono = 1L;
+    private Long idOutroProfessor = 99L;
+    private Professor professor;
+    private Turma turma;
+    private Topicos topico;
+    private MaterialDeAula materialMock;
+
+    @BeforeEach
+    void setUp() {
+        // Monta a cadeia de dependências para a validação de segurança
+        professor = new Professor();
+        professor.setIdUsuario(idProfessorDono);
+        
+        turma = new Turma();
+        turma.setProfessor(professor);
+        
+        topico = new Topicos();
+        topico.setIdTopico(1L);
+        topico.setTurma(turma);
+
+        materialMock = new MaterialDeAula();
+        materialMock.setIdMaterialDeAula(1L);
+        materialMock.setTopico(topico);
+    }
+
     @Test
     void testCreateMaterial_Success() {
         MockMultipartFile file = new MockMultipartFile(
             "arquivo", "documento.pdf", "application/pdf", "conteudo".getBytes()
         );
-        Long idTopico = 1L;
         String urlMock = "http://storage.com/uuid_documento.pdf";
 
-        Topicos topicoMock = new Topicos();
         MaterialDeAula materialSalvo = new MaterialDeAula();
         materialSalvo.setIdMaterialDeAula(10L);
         MaterialDeAulaResponseDto responseDto = new MaterialDeAulaResponseDto();
         responseDto.setIdMaterialDeAula(10L);
 
-        when(topicosRepository.findById(idTopico)).thenReturn(Optional.of(topicoMock));
+        when(topicosRepository.findById(1L)).thenReturn(Optional.of(topico));
         when(storageService.createArquivo(any(MultipartFile.class))).thenReturn(urlMock);
         when(materialRepository.save(any(MaterialDeAula.class))).thenReturn(materialSalvo);
         when(modelMapper.map(materialSalvo, MaterialDeAulaResponseDto.class)).thenReturn(responseDto);
 
-        MaterialDeAulaResponseDto result = materialService.createMaterial(file, idTopico);
+        // CORRIGIDO: Passando idProfessorDono
+        MaterialDeAulaResponseDto result = materialService.createMaterial(file, 1L, idProfessorDono);
 
         assertNotNull(result);
         assertEquals(10L, result.getIdMaterialDeAula());
 
-        verify(topicosRepository).findById(idTopico);
+        verify(topicosRepository).findById(1L);
         verify(storageService).createArquivo(file);
         
         ArgumentCaptor<MaterialDeAula> captor = ArgumentCaptor.forClass(MaterialDeAula.class);
@@ -86,7 +115,21 @@ class MaterialDeAulaServiceTest {
         assertEquals("documento.pdf", materialCapturado.getNomeArquivo());
         assertEquals("application/pdf", materialCapturado.getTipoArquivo());
         assertEquals(urlMock, materialCapturado.getUrlArquivo());
-        assertEquals(topicoMock, materialCapturado.getTopico());
+        assertEquals(topico, materialCapturado.getTopico());
+    }
+
+    @Test
+    void testCreateMaterial_AccessDenied() {
+        MockMultipartFile file = new MockMultipartFile("f", "f.pdf", "type", "c".getBytes());
+        when(topicosRepository.findById(1L)).thenReturn(Optional.of(topico));
+
+        // Tenta criar com o ID errado
+        assertThrows(AccessDeniedException.class, () -> {
+            materialService.createMaterial(file, 1L, idOutroProfessor);
+        });
+
+        verify(storageService, never()).createArquivo(any());
+        verify(materialRepository, never()).save(any());
     }
 
     @Test
@@ -98,7 +141,7 @@ class MaterialDeAulaServiceTest {
             .thenThrow(new ResourceNotFoundException("Tópico com ID " + idTopicoInexistente + " não encontrado"));
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
-            materialService.createMaterial(file, idTopicoInexistente);
+            materialService.createMaterial(file, idTopicoInexistente, idProfessorDono);
         });
 
         assertEquals("Tópico com ID 99 não encontrado", exception.getMessage());
@@ -112,8 +155,6 @@ class MaterialDeAulaServiceTest {
         String nomeArquivoUnico = "uuid_arquivo.pdf";
         String urlArquivoMock = "http://localhost/uploads/" + nomeArquivoUnico;
 
-        MaterialDeAula materialMock = new MaterialDeAula();
-        materialMock.setIdMaterialDeAula(idMaterial);
         materialMock.setUrlArquivo(urlArquivoMock);
         
         MaterialDeAulaResponseDto responseDto = new MaterialDeAulaResponseDto();
@@ -124,7 +165,8 @@ class MaterialDeAulaServiceTest {
         doNothing().when(materialRepository).delete(materialMock);
         when(modelMapper.map(materialMock, MaterialDeAulaResponseDto.class)).thenReturn(responseDto);
 
-        MaterialDeAulaResponseDto result = materialService.deleteMaterial(idMaterial);
+        // CORRIGIDO: Passando idProfessorDono
+        MaterialDeAulaResponseDto result = materialService.deleteMaterial(idMaterial, idProfessorDono);
 
         assertNotNull(result);
         assertEquals(idMaterial, result.getIdMaterialDeAula());
@@ -133,6 +175,22 @@ class MaterialDeAulaServiceTest {
         verify(storageService).deleteFile(nomeArquivoUnico); 
         verify(materialRepository).delete(materialMock);     
     }
+    
+@Test
+    // ADICIONE 'throws Exception' AQUI
+    void testDeleteMaterial_AccessDenied() throws Exception { 
+        Long idMaterial = 1L;
+        when(materialRepository.findById(idMaterial)).thenReturn(Optional.of(materialMock));
+
+        assertThrows(AccessDeniedException.class, () -> {
+            materialService.deleteMaterial(idMaterial, idOutroProfessor);
+        });
+
+        verify(materialRepository, never()).delete(any());
+        
+        // Agora essa linha vai parar de dar erro
+        verify(storageService, never()).deleteFile(anyString());
+    }
 
     @Test
     void testDeleteMaterial_StorageFails_ShouldThrowException() throws Exception {
@@ -140,15 +198,14 @@ class MaterialDeAulaServiceTest {
         String nomeArquivoUnico = "uuid_arquivo.pdf";
         String urlArquivoMock = "http://localhost/uploads/" + nomeArquivoUnico;
 
-        MaterialDeAula materialMock = new MaterialDeAula();
-        materialMock.setIdMaterialDeAula(idMaterial);
         materialMock.setUrlArquivo(urlArquivoMock);
 
         when(materialRepository.findById(idMaterial)).thenReturn(Optional.of(materialMock));
         doThrow(new IOException("Falha de IO")).when(storageService).deleteFile(nomeArquivoUnico);
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            materialService.deleteMaterial(idMaterial);
+            // CORRIGIDO: Passando idProfessorDono
+            materialService.deleteMaterial(idMaterial, idProfessorDono);
         });
         
         assertEquals("Nao foi possivel deletar o arquivo fisico. Rollback.", exception.getMessage());
@@ -163,7 +220,7 @@ class MaterialDeAulaServiceTest {
             .thenThrow(new ResourceNotFoundException("Material com ID " + idInexistente + " nao encontrado"));
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
-            materialService.deleteMaterial(idInexistente);
+            materialService.deleteMaterial(idInexistente, idProfessorDono);
         });
 
         assertEquals("Material com ID 99 nao encontrado", exception.getMessage());
@@ -181,22 +238,22 @@ class MaterialDeAulaServiceTest {
         
         String nomeArquivoAntigo = "antigo_uuid.pdf";
         String urlArquivoAntigo = "http://storage.com/" + nomeArquivoAntigo;
-        MaterialDeAula materialAntigo = new MaterialDeAula();
-        materialAntigo.setIdMaterialDeAula(idMaterial);
-        materialAntigo.setUrlArquivo(urlArquivoAntigo);
+        
+        materialMock.setUrlArquivo(urlArquivoAntigo);
         
         MaterialDeAulaResponseDto responseDto = new MaterialDeAulaResponseDto();
         responseDto.setIdMaterialDeAula(idMaterial);
         responseDto.setNomeArquivo("novo.pdf");
         responseDto.setUrlArquivo(urlNovoArquivo);
 
-        when(materialRepository.findById(idMaterial)).thenReturn(Optional.of(materialAntigo));
+        when(materialRepository.findById(idMaterial)).thenReturn(Optional.of(materialMock));
         when(storageService.createArquivo(novoArquivo)).thenReturn(urlNovoArquivo);
-        when(materialRepository.save(any(MaterialDeAula.class))).thenReturn(materialAntigo); 
+        when(materialRepository.save(any(MaterialDeAula.class))).thenReturn(materialMock); 
         doNothing().when(storageService).deleteFile(nomeArquivoAntigo); 
-        when(modelMapper.map(materialAntigo, MaterialDeAulaResponseDto.class)).thenReturn(responseDto);
+        when(modelMapper.map(materialMock, MaterialDeAulaResponseDto.class)).thenReturn(responseDto);
 
-        MaterialDeAulaResponseDto result = materialService.updateMaterial(idMaterial, novoArquivo);
+        // CORRIGIDO: Passando idProfessorDono
+        MaterialDeAulaResponseDto result = materialService.updateMaterial(idMaterial, novoArquivo, idProfessorDono);
 
         assertNotNull(result);
         assertEquals(urlNovoArquivo, result.getUrlArquivo()); 
@@ -212,4 +269,3 @@ class MaterialDeAulaServiceTest {
         verify(storageService).deleteFile(nomeArquivoAntigo);
     }
 }
-
