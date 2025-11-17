@@ -42,66 +42,55 @@ public class AtividadeArquivosController {
     }
 
     @PreAuthorize("hasRole('ROLE_PROFESSOR')")
-    @Operation(
-        summary = "Criar nova atividade de arquivo",
-        description = "Cria uma nova atividade onde a resposta esperada é o upload de um ou mais arquivos."
-    )
-    @ApiResponse(
-        responseCode = "201",
-        description = "Atividade de arquivo criada com sucesso",
-        content = @Content(schema = @Schema(implementation = AtividadeArquivosResponseDto.class))
-    )
-    @ApiResponse(responseCode = "400", description = "Entrada inválida")
+    @Operation(summary = "Criar nova atividade de arquivo")
+    @ApiResponse(responseCode = "201", description = "Criado com sucesso")
     @PostMapping
     public ResponseEntity<AtividadeArquivosResponseDto> create(
-            @Valid @RequestBody AtividadeArquivosRequestDto atividadeArquivosRequestDto) {
+            @Valid @RequestBody AtividadeArquivosRequestDto atividadeArquivosRequestDto,
+            @AuthenticationPrincipal CustomUserDetails usuarioLogado) {
         
-        AtividadeArquivosResponseDto responseDto = atividadeArquivosService.createAtividadeArquivos(atividadeArquivosRequestDto);
+        AtividadeArquivosResponseDto responseDto = atividadeArquivosService.createAtividadeArquivos(
+            atividadeArquivosRequestDto, 
+            usuarioLogado.getId()
+        );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
     @PreAuthorize("hasRole('ROLE_PROFESSOR')")
-    @Operation(
-        summary = "Listar todas as atividades de arquivo",
-        description = "Retorna uma lista paginada de todas as atividades do tipo 'Envio de Arquivo'."
-    )
-    @ApiResponse(responseCode = "200", description = "Lista paginada de atividades")
+    @Operation(summary = "Listar todas as atividades")
     @GetMapping
     public ResponseEntity<PagedResponse<AtividadeArquivosResponseDto>> getAll(
-            @Parameter(description = "Parâmetros de paginação (page, size, sort)") Pageable pageable) {
+            @Parameter(description = "Paginação") Pageable pageable) {
         return ResponseEntity.ok(atividadeArquivosService.getAllAtividadesArquivos(pageable));
     }
 
-
     @PreAuthorize("hasRole('ROLE_PROFESSOR')")
-    @Operation(summary = "Atualizar uma atividade de arquivo (PATCH)")
-    @ApiResponse(
-        responseCode = "200",
-        description = "Atividade atualizada com sucesso",
-        content = @Content(schema = @Schema(implementation = AtividadeArquivosResponseDto.class))
-    )
-    @ApiResponse(responseCode = "404", description = "Atividade não encontrada")
+    @Operation(summary = "Atualizar atividade")
     @PatchMapping("/{idAtividade}")
     public ResponseEntity<AtividadeArquivosResponseDto> update(
-            @Parameter(description = "ID da atividade a ser atualizada") @PathVariable Long idAtividade, 
+            @Parameter(description = "ID da atividade") @PathVariable Long idAtividade, 
             @Valid @RequestBody AtividadeArquivosUpdateDto atividadeArquivosUpdateDto,
             @AuthenticationPrincipal CustomUserDetails usuarioLogado) {
         
-        
-        AtividadeArquivosResponseDto responseDto = atividadeArquivosService.updateAtividadeArquivos(idAtividade, atividadeArquivosUpdateDto, usuarioLogado.getId());
+        AtividadeArquivosResponseDto responseDto = atividadeArquivosService.updateAtividadeArquivos(
+            idAtividade, 
+            atividadeArquivosUpdateDto, 
+            usuarioLogado.getId()
+        );
         return ResponseEntity.ok(responseDto);
     }
 
-
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @Operation(summary = "Deletar uma atividade de arquivo")
-    @ApiResponse(responseCode = "204", description = "Atividade deletada com sucesso")
-    @ApiResponse(responseCode = "404", description = "Atividade não encontrada")
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
+    @Operation(summary = "Deletar atividade")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @Parameter(description = "ID da atividade a ser deletada") @PathVariable Long id) {
-        atividadeArquivosService.deleteAtividadeArquivos(id);
+            @Parameter(description = "ID da atividade") @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails usuarioLogado) { // <-- ADICIONADO O USUÁRIO
+        
+        // CORREÇÃO: Passando o ID do usuário para o serviço
+        atividadeArquivosService.deleteAtividadeArquivos(id, usuarioLogado.getId());
+        
         return ResponseEntity.noContent().build();
     }
 }
