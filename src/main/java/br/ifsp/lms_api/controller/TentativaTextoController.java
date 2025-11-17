@@ -67,15 +67,17 @@ public class TentativaTextoController {
         return tentativaTextoService.updateTentativaTextoAluno(tentativaUpdate, idTentativa, idAlunoLogado);
     }
     
-
+    @PreAuthorize("hasRole('PROFESSOR')")
     @GetMapping
     public PagedResponse<TentativaTextoResponseDto> getAllTentativasTexto(@PageableDefault(page = 0, size = 10) Pageable pageable) {
         return tentativaTextoService.getAllTentativasTexto(pageable);
     }
     
+    @PreAuthorize("hasRole('ALUNO')")
     @DeleteMapping("/{idTentativa}")
-    public TentativaTextoResponseDto deleteTentativaTexto(@PathVariable Long idTentativa) {
-        return tentativaTextoService.deleteTentativaTexto(idTentativa);
+    public TentativaTextoResponseDto deleteTentativaTexto(@PathVariable Long idTentativa, @AuthenticationPrincipal CustomUserDetails usuarioLogado) {
+        Long idAlunoLogado = usuarioLogado.getId();
+        return tentativaTextoService.deleteTentativaTexto(idTentativa, idAlunoLogado);
     }
     
 }
