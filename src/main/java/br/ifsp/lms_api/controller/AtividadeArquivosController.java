@@ -61,7 +61,7 @@ public class AtividadeArquivosController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Listar todas as atividades de arquivo",
         description = "Retorna uma lista paginada de todas as atividades do tipo 'Envio de Arquivo'."
@@ -93,6 +93,8 @@ public class AtividadeArquivosController {
         return ResponseEntity.ok(responseDto);
     }
 
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Deletar uma atividade de arquivo")
     @ApiResponse(responseCode = "204", description = "Atividade deletada com sucesso")
     @ApiResponse(responseCode = "404", description = "Atividade não encontrada")
