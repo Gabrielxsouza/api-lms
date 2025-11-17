@@ -4,7 +4,7 @@ package br.ifsp.lms_api.service;
 import br.ifsp.lms_api.model.AtividadeArquivos;
 
 import br.ifsp.lms_api.model.Tag;
-
+import br.ifsp.lms_api.model.Topicos;
 
 import java.util.List;
 
@@ -53,10 +53,10 @@ public class AtividadeArquivosService {
 
     @Transactional
     public AtividadeArquivosResponseDto createAtividadeArquivos(AtividadeArquivosRequestDto dto, Long idUsuarioLogado) {
-        
+
         Topicos topico = topicosRepository.findById(dto.getIdTopico())
             .orElseThrow(() -> new ResourceNotFoundException(String.format(TOPICO_NOT_FOUND_MSG, dto.getIdTopico())));
-        
+
         checkProfessorOwnership(topico, idUsuarioLogado);
 
         AtividadeArquivos atividade = modelMapper.map(dto, AtividadeArquivos.class);
@@ -85,17 +85,17 @@ public class AtividadeArquivosService {
 
     @Transactional
     public AtividadeArquivosResponseDto updateAtividadeArquivos(
-            Long idAtividade, 
-            AtividadeArquivosUpdateDto dto, 
+            Long idAtividade,
+            AtividadeArquivosUpdateDto dto,
             Long idUsuarioLogado
     ) {
-        
+
         AtividadeArquivos atividade = findEntityById(idAtividade);
-        
+
         checkProfessorOwnership(atividade.getTopico(), idUsuarioLogado);
 
-        applyUpdateFromDto(atividade, dto); 
-        
+        applyUpdateFromDto(atividade, dto);
+
         AtividadeArquivos updatedAtividade = atividadeArquivosRepository.save(atividade);
         return modelMapper.map(updatedAtividade, AtividadeArquivosResponseDto.class);
     }
@@ -103,9 +103,9 @@ public class AtividadeArquivosService {
     @Transactional
     public void deleteAtividadeArquivos(Long id, Long idUsuarioLogado) {
         AtividadeArquivos atividade = findEntityById(id);
-        
+
         checkProfessorOwnership(atividade.getTopico(), idUsuarioLogado);
-        
+
         atividadeArquivosRepository.delete(atividade);
     }
 
@@ -113,7 +113,7 @@ public class AtividadeArquivosService {
         return atividadeArquivosRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(NOT_FOUND_MSG, id)));
     }
-    
+
     private void checkProfessorOwnership(Topicos topico, Long idUsuarioLogado) {
         if (topico.getTurma().getProfessor().getIdUsuario() != idUsuarioLogado) {
             throw new AccessDeniedException("O professor logado não é o dono da turma deste tópico.");
