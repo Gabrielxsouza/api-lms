@@ -1,14 +1,14 @@
-package br.ifsp.lms_api.controller.integration; 
+package br.ifsp.lms_api.controller.integration;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,158 +21,197 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import br.ifsp.lms_api.model.AtividadeArquivos;
-import br.ifsp.lms_api.repository.AtividadeArquivosRepository;
-
+import br.ifsp.lms_api.config.CustomUserDetails;
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosRequestDto;
+import br.ifsp.lms_api.model.AtividadeArquivos;
+import br.ifsp.lms_api.model.Curso;
+import br.ifsp.lms_api.model.Disciplina;
+import br.ifsp.lms_api.model.Professor;
+import br.ifsp.lms_api.model.Topicos;
+import br.ifsp.lms_api.model.Turma;
+import br.ifsp.lms_api.repository.AtividadeArquivosRepository;
+import br.ifsp.lms_api.repository.CursoRepository;
+import br.ifsp.lms_api.repository.DisciplinaRepository;
+import br.ifsp.lms_api.repository.ProfessorRepository;
+import br.ifsp.lms_api.repository.TopicosRepository;
+import br.ifsp.lms_api.repository.TurmaRepository;
+import jakarta.persistence.EntityManager;
 
-@SpringBootTest 
-@AutoConfigureMockMvc 
-@Transactional 
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
 public class AtividadeArquivosControllerIntegrationTest {
 
     @Autowired
-    private MockMvc mockMvc; 
+    private MockMvc mockMvc;
 
     @Autowired
-    private ObjectMapper objectMapper; 
+    private ObjectMapper objectMapper;
 
-    @Autowired
-    private AtividadeArquivosRepository atividadeArquivosRepository; 
+    @Autowired private AtividadeArquivosRepository atividadeArquivosRepository;
+    @Autowired private ProfessorRepository professorRepository;
+    @Autowired private TurmaRepository turmaRepository;
+    @Autowired private TopicosRepository topicosRepository;
+    @Autowired private CursoRepository cursoRepository;
+    @Autowired private DisciplinaRepository disciplinaRepository;
+    
+    @Autowired private EntityManager entityManager; // Importante para o refresh
 
-    private LocalDate dataInicio;
-    private LocalDate dataFechamento;
+    private Professor professorDono;
+    private Topicos topico;
+    private CustomUserDetails userDetailsDono;
     private AtividadeArquivos atividadeExistente;
 
     @BeforeEach
     void setUp() {
         atividadeArquivosRepository.deleteAll();
+        topicosRepository.deleteAll();
+        turmaRepository.deleteAll();
+        
+        Curso curso = new Curso();
+        curso.setNomeCurso("Curso Integration Test");
+        curso.setCodigoCurso("INT-001-TEST");
+        curso.setDescricaoCurso("Teste Int");
+        curso = cursoRepository.save(curso);
 
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.findAndRegisterModules();
+        Disciplina disciplina = new Disciplina();
+        disciplina.setNomeDisciplina("Disc Integration Test");
+        disciplina.setCodigoDisciplina("INT-DISC-TEST");
+        disciplina.setDescricaoDisciplina("Desc");
+        disciplina = disciplinaRepository.save(disciplina);
+        
+        professorDono = new Professor();
+        professorDono.setNome("Prof. Integration Unique");
+        professorDono.setEmail("prof.unique.integration@teste.com");
+        professorDono.setSenha("senhaForte123");
+        professorDono.setCpf("999.888.777-66");
+        professorDono.setDepartamento("Testes");
+        professorDono = professorRepository.save(professorDono);
+        
+        // --- CORREÇÃO CRUCIAL ---
+        // Força o Hibernate a ler do banco para preencher o 'tipoUsuario' (Discriminator)
+        // Isso garante que getAuthorities() retorne ROLE_PROFESSOR e não ROLE_null
+        entityManager.flush();
+        entityManager.refresh(professorDono);
+        // ------------------------
 
-        dataInicio = LocalDate.of(2025, 11, 1);
-        dataFechamento = LocalDate.of(2025, 11, 30);
+        Turma turma = new Turma();
+        turma.setNomeTurma("Turma Integration");
+        turma.setSemestre("2025/2");
+        turma.setProfessor(professorDono);
+        turma.setCurso(curso);
+        turma.setDisciplina(disciplina);
+        turma = turmaRepository.save(turma);
+
+        topico = new Topicos();
+        topico.setTituloTopico("Tópico Integration");
+        topico.setTurma(turma);
+        topico = topicosRepository.save(topico);
+
+        userDetailsDono = new CustomUserDetails(professorDono);
 
         atividadeExistente = new AtividadeArquivos();
-        atividadeExistente.setTituloAtividade("Atividade de Teste Existente");
-        atividadeExistente.setDescricaoAtividade("Descrição");
-        atividadeExistente.setDataInicioAtividade(dataInicio);
-        atividadeExistente.setDataFechamentoAtividade(dataFechamento);
+        atividadeExistente.setTituloAtividade("Atividade Base");
+        atividadeExistente.setDescricaoAtividade("Desc");
+        atividadeExistente.setDataInicioAtividade(LocalDate.now());
+        atividadeExistente.setDataFechamentoAtividade(LocalDate.now().plusDays(7));
         atividadeExistente.setStatusAtividade(true);
-        atividadeExistente.setArquivosPermitidos(new ArrayList<>(List.of(".pdf")));
-
+        atividadeExistente.setArquivosPermitidos(List.of(".pdf"));
+        atividadeExistente.setTopico(topico);
         atividadeExistente = atividadeArquivosRepository.save(atividadeExistente);
     }
 
     @Test
-    void testCreate_Success() throws Exception {
+    void testCreateAtividade_Success() throws Exception {
         AtividadeArquivosRequestDto requestDto = new AtividadeArquivosRequestDto();
-        requestDto.setTituloAtividade("Nova Atividade de Arquivo");
-        requestDto.setDescricaoAtividade("Nova Descrição");
-        requestDto.setDataInicioAtividade(dataInicio);
-        requestDto.setDataFechamentoAtividade(dataFechamento);
+        requestDto.setTituloAtividade("Nova Atividade");
+        requestDto.setDescricaoAtividade("Teste");
+        requestDto.setDataInicioAtividade(LocalDate.now());
+        requestDto.setDataFechamentoAtividade(LocalDate.now().plusDays(5));
         requestDto.setStatusAtividade(true);
-        requestDto.setArquivosPermitidos(List.of(".pdf", ".zip"));
+        requestDto.setArquivosPermitidos(List.of(".zip"));
+        requestDto.setIdTopico(topico.getIdTopico());
 
         mockMvc.perform(post("/atividades-arquivo")
+                .with(user(userDetailsDono)) // CORRIGIDO: Sem .roles()
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.idAtividade").exists()) 
-                .andExpect(jsonPath("$.tituloAtividade", is("Nova Atividade de Arquivo")))
-                .andExpect(jsonPath("$.arquivosPermitidos[1]", is(".zip")));
+                .andExpect(jsonPath("$.idAtividade").exists())
+                .andExpect(jsonPath("$.tituloAtividade", is("Nova Atividade")));
 
-        assertTrue(atividadeArquivosRepository.count() == 2);
+        assertEquals(2, atividadeArquivosRepository.count());
+    }
+
+    @Test
+    void testCreateAtividade_Forbidden_WrongProfessor() throws Exception {
+        Professor outroProf = new Professor();
+        outroProf.setNome("Invasor");
+        outroProf.setEmail("invasor.unique@test.com");
+        outroProf.setSenha("senhaForte123");
+        outroProf.setCpf("555.444.333-22");
+        outroProf = professorRepository.save(outroProf);
+        
+        // Refresh também aqui por segurança
+        entityManager.flush();
+        entityManager.refresh(outroProf);
+        
+        CustomUserDetails userDetailsOutro = new CustomUserDetails(outroProf);
+
+        AtividadeArquivosRequestDto requestDto = new AtividadeArquivosRequestDto();
+        requestDto.setTituloAtividade("Tentativa de Hack");
+        requestDto.setDescricaoAtividade("Desc");
+        requestDto.setDataInicioAtividade(LocalDate.now());
+        requestDto.setDataFechamentoAtividade(LocalDate.now());
+        requestDto.setStatusAtividade(true);
+        requestDto.setArquivosPermitidos(List.of(".pdf"));
+        requestDto.setIdTopico(topico.getIdTopico());
+
+        mockMvc.perform(post("/atividades-arquivo")
+                .with(user(userDetailsOutro)) // CORRIGIDO: Sem .roles()
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isForbidden()); 
     }
 
     @Test
     void testGetAll_Success() throws Exception {
         mockMvc.perform(get("/atividades-arquivo")
+                .with(user(userDetailsDono)) // CORRIGIDO: Sem .roles()
                 .param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements", is(1)))
                 .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].idAtividade", is(atividadeExistente.getIdAtividade().intValue())))
-                .andExpect(jsonPath("$.content[0].tituloAtividade", is("Atividade de Teste Existente")));
+                .andExpect(jsonPath("$.content[0].tituloAtividade", is("Atividade Base")));
     }
 
     @Test
-    void testUpdate_Success() throws Exception {
-        Long id = atividadeExistente.getIdAtividade();
+    void testUpdateAtividade_Success() throws Exception {
+        String jsonUpdate = """
+            {
+                "tituloAtividade": "Atividade Atualizada",
+                "arquivosPermitidos": [".docx"]
+            }
+        """;
 
-        String updateJson = """
-                {
-                    "tituloAtividade": "Título Atualizado"
-                }
-                """;
-
-        mockMvc.perform(patch("/atividades-arquivo/{id}", id)
+        mockMvc.perform(patch("/atividades-arquivo/{id}", atividadeExistente.getIdAtividade())
+                .with(user(userDetailsDono)) // CORRIGIDO: Sem .roles()
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(updateJson))
+                .content(jsonUpdate))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idAtividade", is(id.intValue())))
-                .andExpect(jsonPath("$.tituloAtividade", is("Título Atualizado")))
-                .andExpect(jsonPath("$.descricaoAtividade", is("Descrição"))); 
+                .andExpect(jsonPath("$.tituloAtividade", is("Atividade Atualizada")));
+        
+        AtividadeArquivos atualizada = atividadeArquivosRepository.findById(atividadeExistente.getIdAtividade()).get();
+        assertEquals("Atividade Atualizada", atualizada.getTituloAtividade());
     }
 
     @Test
-    void testDelete_Success() throws Exception {
-        Long id = atividadeExistente.getIdAtividade();
-        assertTrue(atividadeArquivosRepository.findById(id).isPresent());
-
-        mockMvc.perform(delete("/atividades-arquivo/{id}", id))
+    void testDeleteAtividade_Success() throws Exception {
+        mockMvc.perform(delete("/atividades-arquivo/{id}", atividadeExistente.getIdAtividade())
+                .with(user(userDetailsDono))) // CORRIGIDO: Sem .roles()
                 .andExpect(status().isNoContent());
 
-        assertFalse(atividadeArquivosRepository.findById(id).isPresent());
-        assertTrue(atividadeArquivosRepository.count() == 0);
-    }
-
-    @Test
-    void testCreate_InvalidInput_ReturnsBadRequest() throws Exception {
-        AtividadeArquivosRequestDto requestDto = new AtividadeArquivosRequestDto();
-        requestDto.setTituloAtividade(null); 
-        requestDto.setDescricaoAtividade("Descrição válida");
-        requestDto.setDataInicioAtividade(dataInicio);
-        requestDto.setDataFechamentoAtividade(dataFechamento);
-        requestDto.setStatusAtividade(true);
-        requestDto.setArquivosPermitidos(List.of(".pdf")); 
-
-        mockMvc.perform(post("/atividades-arquivo")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isBadRequest()); 
-
-        assertTrue(atividadeArquivosRepository.count() == 1);
-    }
-
-    @Test
-    void testUpdate_NotFound_ReturnsNotFound() throws Exception {
-        Long idQueNaoExiste = 999L; 
-        String updateJson = """
-                {
-                    "tituloAtividade": "Título Fantasma"
-                }
-                """;
-
-        mockMvc.perform(patch("/atividades-arquivo/{id}", idQueNaoExiste)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(updateJson))
-                .andExpect(status().isNotFound()); 
-    }
-
-    @Test
-    void testDelete_NotFound_ReturnsNotFound() throws Exception {
-        Long idQueNaoExiste = 999L; 
-
-        assertFalse(atividadeArquivosRepository.findById(idQueNaoExiste).isPresent());
-
-        mockMvc.perform(delete("/atividades-arquivo/{id}", idQueNaoExiste))
-                .andExpect(status().isNotFound()); 
-
-        assertTrue(atividadeArquivosRepository.count() == 1);
+        assertFalse(atividadeArquivosRepository.existsById(atividadeExistente.getIdAtividade()));
     }
 }

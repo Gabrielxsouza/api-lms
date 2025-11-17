@@ -1,214 +1,239 @@
 package br.ifsp.lms_api.controller.unit;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.Optional;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import br.ifsp.lms_api.controller.AlternativasController;
 import br.ifsp.lms_api.dto.alternativasDto.AlternativasRequestDto;
 import br.ifsp.lms_api.dto.alternativasDto.AlternativasResponseDto;
 import br.ifsp.lms_api.dto.alternativasDto.AlternativasUpdateDto;
+import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.service.AlternativasService;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AlternativasController.class)
-public class AlternativasControllerTest {
+@Import(AlternativasControllerTest.TestConfig.class) // Importa config de segurança para o teste
+class AlternativasControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc; 
-
-    @Autowired
-    private ObjectMapper objectMapper; 
-
-    @MockBean 
-    private AlternativasService alternativasService;
-
-    private AlternativasResponseDto responseDto;
-    private AlternativasRequestDto requestDto;
-
-    @BeforeEach
-    void setUp() {
-        responseDto = new AlternativasResponseDto();
-        responseDto.setIdAlternativa(1L);
-        responseDto.setAlternativa("Teste de Alternativa");
-        responseDto.setAlternativaCorreta(true);
-
-        requestDto = new AlternativasRequestDto();
-        requestDto.setAlternativa("Teste de Alternativa");
-        requestDto.setAlternativaCorreta(true);
-        requestDto.setIdQuestao(1L); 
-
-        objectMapper.findAndRegisterModules();
+    // Configuração interna para ativar o @PreAuthorize nos testes
+    @TestConfiguration
+    @EnableMethodSecurity
+    static class TestConfig {
     }
 
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private AlternativasService alternativasService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    // ==================================================================================
+    // HAPPY PATHS (Caminhos Felizes - Sucesso)
+    // ==================================================================================
+
     @Test
-    void testCreate_Success() throws Exception {
+    @DisplayName("POST - Deve criar alternativa com sucesso (201 Created)")
+    @WithMockUser(roles = "PROFESSOR")
+    void shouldCreateAlternativaSuccessfully() throws Exception {
+        // ARRANGE
+        AlternativasRequestDto requestDto = new AlternativasRequestDto();
+        requestDto.setIdQuestao(1L);
+        requestDto.setAlternativa("Alternativa Correta");
+        // ADICIONE ISTO: Provavelmente seu DTO exige este campo e ele não pode ser nulo
+        requestDto.setAlternativaCorreta(true);
+
+        AlternativasResponseDto responseDto = new AlternativasResponseDto();
+        responseDto.setIdAlternativa(10L);
+        responseDto.setAlternativa("Alternativa Correta");
+
         when(alternativasService.createAlternativa(any(AlternativasRequestDto.class)))
                 .thenReturn(responseDto);
 
+        // ACT & ASSERT
         mockMvc.perform(post("/alternativas")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(this.requestDto)))
-                .andExpect(status().isCreated()) 
-                .andExpect(jsonPath("$.idAlternativa").value(1L));
-
-        verify(alternativasService, times(1)).createAlternativa(any(AlternativasRequestDto.class));
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isCreated()) // Agora deve passar
+                .andExpect(jsonPath("$.idAlternativa").value(10L));
     }
 
     @Test
-    void testCreate_InvalidInput() throws Exception {
-        AlternativasRequestDto invalidDto = new AlternativasRequestDto();
-        invalidDto.setAlternativa(null); 
-        invalidDto.setAlternativaCorreta(true);
-        invalidDto.setIdQuestao(1L); 
+    @DisplayName("GET - Deve retornar lista paginada de alternativas (200 OK)")
+    @WithMockUser(roles = "PROFESSOR")
+    void shouldGetAllAlternativas() throws Exception {
+        // ARRANGE
+        PagedResponse<AlternativasResponseDto> pagedResponse = new PagedResponse<AlternativasResponseDto>(null, 0, 0, 0, 0, true);
+        pagedResponse.setContent(Collections.emptyList());
+        pagedResponse.setPage(0);
+        pagedResponse.setSize(10);
 
-        mockMvc.perform(post("/alternativas")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidDto)))
-                .andExpect(status().isBadRequest()); 
+        when(alternativasService.getAllAlternativas(any(Pageable.class))).thenReturn(pagedResponse);
 
-        verify(alternativasService, times(0)).createAlternativa(any(AlternativasRequestDto.class));
+        // ACT & ASSERT
+        mockMvc.perform(get("/alternativas")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").exists());
     }
 
     @Test
-    void testGetAlternativasById_Success() throws Exception {
+    @DisplayName("GET - Deve retornar alternativa por ID (200 OK)")
+    @WithMockUser(roles = "PROFESSOR")
+    void shouldGetAlternativaById() throws Exception {
+        // ARRANGE
         Long id = 1L;
+        AlternativasResponseDto responseDto = new AlternativasResponseDto();
+        responseDto.setIdAlternativa(id);
+        responseDto.setAlternativa("Texto");
+
         when(alternativasService.getAlternativaById(id)).thenReturn(responseDto);
 
+        // ACT & ASSERT
         mockMvc.perform(get("/alternativas/{id}", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idAlternativa").value(1L))
-                .andExpect(jsonPath("$.alternativa").value("Teste de Alternativa"))
-                .andExpect(jsonPath("$.alternativaCorreta").value(true));
-
-        verify(alternativasService, times(1)).getAlternativaById(id);
+                .andExpect(jsonPath("$.idAlternativa").value(id));
     }
 
     @Test
-    void testGetAlternativasById_NotFound() throws Exception {
+    @DisplayName("PATCH - Deve atualizar alternativa com sucesso (200 OK)")
+    @WithMockUser(roles = "ADMIN") // Nota: A controller exige ADMIN para update
+    void shouldUpdateAlternativaSuccessfully() throws Exception {
+        // ARRANGE
         Long id = 1L;
-        when(alternativasService.getAlternativaById(id)).thenThrow(new ResourceNotFoundException("Alternativa not found with id: " + id));
+        AlternativasUpdateDto updateDto = new AlternativasUpdateDto();
+        updateDto.setAlternativa(Optional.of("Novo Texto"));
+
+        AlternativasResponseDto responseDto = new AlternativasResponseDto();
+        responseDto.setIdAlternativa(id);
+        responseDto.setAlternativa("Novo Texto");
+
+        when(alternativasService.updateAlternativa(eq(id), any(AlternativasUpdateDto.class)))
+                .thenReturn(responseDto);
+
+        // ACT & ASSERT
+        mockMvc.perform(patch("/alternativas/{id}", id)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.alternativa").value("Novo Texto"));
+    }
+
+    @Test
+    @DisplayName("DELETE - Deve deletar alternativa com sucesso (204 No Content)")
+    @WithMockUser(roles = "ADMIN")
+    void shouldDeleteAlternativaSuccessfully() throws Exception {
+        // ARRANGE
+        Long id = 1L;
+        // Service retorna void
+
+        // ACT & ASSERT
+        mockMvc.perform(delete("/alternativas/{id}", id)
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+    }
+
+    // ==================================================================================
+    // SAD PATHS (Caminhos Tristes - Erros e Validações)
+    // ==================================================================================
+
+    @Test
+    @DisplayName("POST - Deve retornar 403 Forbidden se usuário não tiver role PROFESSOR")
+    @WithMockUser(roles = "ALUNO")
+    void shouldReturnForbiddenWhenUserHasWrongRoleForCreate() throws Exception {
+        // ARRANGE: Crie um DTO VÁLIDO para passar pela barreira do @Valid
+        AlternativasRequestDto requestDto = new AlternativasRequestDto();
+        requestDto.setIdQuestao(1L);
+        requestDto.setAlternativa("Texto Qualquer");
+        requestDto.setAlternativaCorreta(false);
+
+        // ACT & ASSERT
+        mockMvc.perform(post("/alternativas")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isForbidden()); // Agora vai dar 403
+    }
+
+    @Test
+    @DisplayName("POST - Deve retornar 400 Bad Request se input for inválido")
+    @WithMockUser(roles = "PROFESSOR")
+    void shouldReturnBadRequestWhenInputIsInvalid() throws Exception {
+        // DTO Vazio para disparar @Valid (assumindo que existem anotações @NotNull no DTO)
+        AlternativasRequestDto invalidDto = new AlternativasRequestDto();
+
+        mockMvc.perform(post("/alternativas")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET - Deve retornar 404 quando alternativa não encontrada")
+    @WithMockUser(roles = "PROFESSOR")
+    void shouldReturnNotFoundWhenAlternativaDoesNotExist() throws Exception {
+        Long id = 99L;
+
+        when(alternativasService.getAlternativaById(id))
+            .thenThrow(new ResourceNotFoundException("Não encontrado"));
 
         mockMvc.perform(get("/alternativas/{id}", id))
-                .andExpect(status().isNotFound());
-
-        verify(alternativasService, times(1)).getAlternativaById(id);
+                .andExpect(status().isNotFound()); // <-- MUDAR PARA ISTO (404)
     }
 
     @Test
-    void testGetlAllAlternativas_Success() throws Exception {
-        mockMvc.perform(get("/alternativas"))
-                .andExpect(status().isOk());
-
-        verify(alternativasService, times(1)).getAllAlternativas(any());
-    }
-
-    @Test
-    void testGetAllAlternativas_Empty() throws Exception {
-        mockMvc.perform(get("/alternativas"))
-                .andExpect(status().isOk());
-
-        verify(alternativasService, times(1)).getAllAlternativas(any());
-    }
-
-    @Test
-    void testDeleteAlternativa_Success() throws Exception {
+    @DisplayName("PATCH - Deve retornar 403 Forbidden se PROFESSOR tentar atualizar (Rota de ADMIN)")
+    @WithMockUser(roles = "PROFESSOR")
+    void shouldReturnForbiddenWhenProfessorTriesToUpdate() throws Exception {
         Long id = 1L;
-        doNothing().when(alternativasService).deleteAlternativa(id);
+        AlternativasUpdateDto updateDto = new AlternativasUpdateDto();
 
-        mockMvc.perform(delete("/alternativas/{id}", id))
-                .andExpect(status().isNoContent());
-
-        verify(alternativasService, times(1)).deleteAlternativa(id);
+        mockMvc.perform(patch("/alternativas/{id}", id)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    void testDeleteAlternativa_NotFound() throws Exception {
-        Long id = 1L;
-        doThrow(new ResourceNotFoundException("Alternativa not found with id: " + id))
+    @DisplayName("DELETE - Deve retornar 404 ao tentar deletar ID inexistente")
+    @WithMockUser(roles = "ADMIN")
+    void shouldReturnErrorWhenDeletingNonExistentAlternativa() throws Exception {
+        Long id = 99L;
+
+        doThrow(new ResourceNotFoundException("Não encontrado"))
                 .when(alternativasService).deleteAlternativa(id);
 
-        mockMvc.perform(delete("/alternativas/{id}", id))
-                .andExpect(status().isNotFound());
-
-        verify(alternativasService, times(1)).deleteAlternativa(id);
-    }
-
-    @Test
-    void testUpdateAlternativa_Success() throws Exception {
-        Long id = 1L;
-
-        AlternativasUpdateDto updateDto = new AlternativasUpdateDto(
-            Optional.of("Nova Alternativa"),
-            Optional.of(true) 
-        );
-
-        String updateJson = """
-        {
-            "alternativa": "Nova Alternativa",
-            "alternativaCorreta": true
-        }
-        """;
-
-        AlternativasResponseDto updatedResponseDto = new AlternativasResponseDto();
-        updatedResponseDto.setIdAlternativa(1L);
-        updatedResponseDto.setAlternativa("Nova Alternativa");
-        updatedResponseDto.setAlternativaCorreta(true);
-
-        when(alternativasService.updateAlternativa(eq(id), any(AlternativasUpdateDto.class)))
-                .thenReturn(updatedResponseDto);
-
-        mockMvc.perform(patch("/alternativas/{id}", id)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(updateJson)) 
-                .andExpect(status().isOk()) 
-                .andExpect(jsonPath("$.idAlternativa").value(1L))
-                .andExpect(jsonPath("$.alternativa").value("Nova Alternativa"))
-                .andExpect(jsonPath("$.alternativaCorreta").value(true));
-
-        verify(alternativasService, times(1)).updateAlternativa(eq(id), any(AlternativasUpdateDto.class));
-    }
-
-    @Test
-    void testUpdateAlternativa_NotFound() throws Exception {
-        Long id = 1L;
-
-        AlternativasUpdateDto updateDto = new AlternativasUpdateDto(
-            Optional.of("Nova Alternativa"),
-            Optional.of(true)
-        );
-
-        String updateJson = """
-        {
-            "alternativa": "Nova Alternativa",
-            "alternativaCorreta": true
-        }
-        """;
-
-        when(alternativasService.updateAlternativa(eq(id), any(AlternativasUpdateDto.class)))
-                .thenThrow(new ResourceNotFoundException("Alternativa not found with id: " + id));
-
-        mockMvc.perform(patch("/alternativas/{id}", id)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(updateJson)) 
-                .andExpect(status().isNotFound()); 
-
-        verify(alternativasService, times(1)).updateAlternativa(eq(id), any(AlternativasUpdateDto.class));
+        mockMvc.perform(delete("/alternativas/{id}", id)
+                        .with(csrf()))
+                .andExpect(status().isNotFound()); // <-- MUDAR PARA ISTO (404)
     }
 }

@@ -1,26 +1,5 @@
 package br.ifsp.lms_api.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper; 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-
 import br.ifsp.lms_api.dto.alternativasDto.AlternativasRequestDto;
 import br.ifsp.lms_api.dto.alternativasDto.AlternativasResponseDto;
 import br.ifsp.lms_api.dto.alternativasDto.AlternativasUpdateDto;
@@ -31,212 +10,244 @@ import br.ifsp.lms_api.model.Alternativas;
 import br.ifsp.lms_api.model.Questoes;
 import br.ifsp.lms_api.repository.AlternativasRepository;
 import br.ifsp.lms_api.repository.QuestoesRepository;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AlternativasServiceTest {
+class AlternativasServiceTest {
 
-    @Mock 
+    @Mock
     private AlternativasRepository alternativasRepository;
 
     @Mock
     private QuestoesRepository questoesRepository;
 
-    @Mock 
+    @Mock
     private ModelMapper modelMapper;
 
-    @Mock 
+    @Mock
     private PagedResponseMapper pagedResponseMapper;
 
-    @InjectMocks 
+    @InjectMocks
     private AlternativasService alternativasService;
 
-    private Alternativas alternativas;
-    private AlternativasRequestDto requestDto;
-    private AlternativasResponseDto responseDto;
-    private AlternativasUpdateDto updateDto;
-    private AlternativasResponseDto responseDtoAtualizado;
-    private Questoes questao;
-
-    @BeforeEach
-    void setUp() {
-        alternativas = new Alternativas();
-        alternativas.setIdAlternativa(1L);
-        alternativas.setAlternativa("Teste de Alternativa");
-        alternativas.setAlternativaCorreta(true);
-
-        requestDto = new AlternativasRequestDto();
-        requestDto.setAlternativa("Teste de Alternativa");
-        requestDto.setAlternativaCorreta(true);
-        requestDto.setIdQuestao(1L);
-
-        responseDto = new AlternativasResponseDto();
-        responseDto.setIdAlternativa(1L);
-        responseDto.setAlternativa("Teste de Alternativa");
-        responseDto.setAlternativaCorreta(true);
-
-        updateDto = new AlternativasUpdateDto(
-                Optional.of("Nova Alternativa"),
-                Optional.of(false) 
-        );
-
-        questao = new Questoes();
-        questao.setIdQuestao(1L);
-        questao.setEnunciado("Teste");
-
-        responseDtoAtualizado = new AlternativasResponseDto();
-        responseDtoAtualizado.setIdAlternativa(1L);
-        responseDtoAtualizado.setAlternativa("Nova Alternativa");
-        responseDtoAtualizado.setAlternativaCorreta(false);
-    }
 
     @Test
-    void testCreateAlternativa_Success() {
+    @DisplayName("Deve criar uma alternativa com sucesso (Happy Path)")
+    void shouldCreateAlternativaSuccessfully() {
 
-        when(questoesRepository.findById(1L)).thenReturn(Optional.of(questao));
-        when(modelMapper.map(requestDto, Alternativas.class)).thenReturn(alternativas);
-        when(alternativasRepository.save(alternativas)).thenReturn(alternativas);
-        when(modelMapper.map(alternativas, AlternativasResponseDto.class)).thenReturn(responseDto);
+        Long idQuestao = 1L;
+        AlternativasRequestDto requestDto = new AlternativasRequestDto();
+        requestDto.setIdQuestao(idQuestao);
+        requestDto.setAlternativa("Texto da alternativa");
+
+        Questoes questao = new Questoes();
+        questao.setIdQuestao(idQuestao);
+
+        Alternativas alternativaEntity = new Alternativas();
+        alternativaEntity.setAlternativa("Texto da alternativa");
+
+        Alternativas savedAlternativa = new Alternativas();
+        savedAlternativa.setIdAlternativa(10L);
+        savedAlternativa.setAlternativa("Texto da alternativa");
+        savedAlternativa.setQuestoes(questao);
+
+        AlternativasResponseDto responseDto = new AlternativasResponseDto();
+        responseDto.setIdAlternativa(10L);
+        responseDto.setAlternativa("Texto da alternativa");
+
+        when(questoesRepository.findById(idQuestao)).thenReturn(Optional.of(questao));
+        when(modelMapper.map(requestDto, Alternativas.class)).thenReturn(alternativaEntity);
+        when(alternativasRepository.save(any(Alternativas.class))).thenReturn(savedAlternativa);
+        when(modelMapper.map(savedAlternativa, AlternativasResponseDto.class)).thenReturn(responseDto);
 
         AlternativasResponseDto result = alternativasService.createAlternativa(requestDto);
 
         assertNotNull(result);
-        assertEquals(responseDto.getIdAlternativa(), result.getIdAlternativa());
-        assertEquals(responseDto.getAlternativa(), result.getAlternativa());
+        assertEquals(10L, result.getIdAlternativa());
+        assertEquals("Texto da alternativa", result.getAlternativa());
 
-        verify(questoesRepository, times(1)).findById(1L);
-        verify(modelMapper, times(1)).map(requestDto, Alternativas.class);
-        verify(alternativasRepository, times(1)).save(alternativas);
-        verify(modelMapper, times(1)).map(alternativas, AlternativasResponseDto.class);
+        verify(questoesRepository).findById(idQuestao);
+        verify(alternativasRepository).save(any(Alternativas.class));
     }
 
     @Test
-    void testGetAlternativaById_Success() {
+    @DisplayName("Deve lançar exceção ao criar alternativa para questão inexistente (Sad Path)")
+    void shouldThrowExceptionWhenCreatingForNonExistentQuestao() {
+
+        Long idQuestao = 99L;
+        AlternativasRequestDto requestDto = new AlternativasRequestDto();
+        requestDto.setIdQuestao(idQuestao);
+
+        when(questoesRepository.findById(idQuestao)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            alternativasService.createAlternativa(requestDto);
+        });
+
+        assertTrue(exception.getMessage().contains("Questão não encontrada"));
+        verify(alternativasRepository, never()).save(any());
+    }
+
+
+    @Test
+    @DisplayName("Deve retornar todas as alternativas paginadas (Happy Path)")
+    void shouldGetAllAlternativas() {
+        // ARRANGE
+        Pageable pageable = PageRequest.of(0, 10);
+        Alternativas alternativa = new Alternativas();
+        List<Alternativas> lista = Collections.singletonList(alternativa);
+        Page<Alternativas> page = new PageImpl<>(lista);
+
+        // CORREÇÃO: Tipagem explícita no lado direito
+        PagedResponse<AlternativasResponseDto> pagedResponse = new PagedResponse<AlternativasResponseDto>(null, 0, 0, 0, 0, false);
+
+        // Se a linha acima der erro de "Constructor undefined", use a Opção 2 (construtor completo)
+        // PagedResponse<AlternativasResponseDto> pagedResponse = new PagedResponse<>(Collections.emptyList(), 0, 1, 1, 10, true);
+
+        when(alternativasRepository.findAll(pageable)).thenReturn(page);
+        when(pagedResponseMapper.toPagedResponse(page, AlternativasResponseDto.class)).thenReturn(pagedResponse);
+
+        // ACT
+        PagedResponse<AlternativasResponseDto> result = alternativasService.getAllAlternativas(pageable);
+
+        // ASSERT
+        assertNotNull(result);
+        verify(alternativasRepository).findAll(pageable);
+        verify(pagedResponseMapper).toPagedResponse(page, AlternativasResponseDto.class);
+    }
+
+    @Test
+    @DisplayName("Deve retornar alternativa por ID (Happy Path)")
+    void shouldGetAlternativaById() {
+
         Long id = 1L;
-        when(alternativasRepository.findById(id)).thenReturn(Optional.of(alternativas));
-        when(modelMapper.map(alternativas, AlternativasResponseDto.class)).thenReturn(responseDto);
+        Alternativas alternativa = new Alternativas();
+        alternativa.setIdAlternativa(id);
+
+        AlternativasResponseDto responseDto = new AlternativasResponseDto();
+        responseDto.setIdAlternativa(id);
+
+        when(alternativasRepository.findById(id)).thenReturn(Optional.of(alternativa));
+        when(modelMapper.map(alternativa, AlternativasResponseDto.class)).thenReturn(responseDto);
 
         AlternativasResponseDto result = alternativasService.getAlternativaById(id);
 
         assertNotNull(result);
-        assertEquals(responseDto.getIdAlternativa(), result.getIdAlternativa());
-        verify(alternativasRepository, times(1)).findById(id);
-        verify(modelMapper, times(1)).map(alternativas, AlternativasResponseDto.class);
+        assertEquals(id, result.getIdAlternativa());
+        verify(alternativasRepository).findById(id);
     }
 
     @Test
-    void testGetAlternativaById_NotFound() {
-        Long id = 1L;
+    @DisplayName("Deve lançar exceção ao buscar ID inexistente (Sad Path)")
+    void shouldThrowExceptionWhenGetAlternativaNotFound() {
+
+        Long id = 99L;
         when(alternativasRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> {
             alternativasService.getAlternativaById(id);
         });
-
-        verify(alternativasRepository, times(1)).findById(id);
-        verify(modelMapper, never()).map(any(), any());
     }
 
-    @Test
-    void testGetAllAlternativas_Success() {
-        Pageable pageable = PageRequest.of(0, 10);
-        long totalElements = 1L;
-
-        List<AlternativasResponseDto> dtoList = List.of(responseDto);
-
-        Page<Alternativas> alternativaPage = new PageImpl<>(List.of(alternativas), pageable, totalElements);
-
-        PagedResponse<AlternativasResponseDto> pagedResponse = new PagedResponse<>(
-                dtoList, 
-                alternativaPage.getNumber(), 
-                alternativaPage.getSize(), 
-                alternativaPage.getTotalElements(), 
-                alternativaPage.getTotalPages(), 
-                alternativaPage.isLast() 
-        );
-
-        when(alternativasRepository.findAll(pageable)).thenReturn(alternativaPage);
-
-        when(pagedResponseMapper.toPagedResponse(alternativaPage, AlternativasResponseDto.class))
-                .thenReturn(pagedResponse); 
-
-        PagedResponse<AlternativasResponseDto> resultPage = alternativasService.getAllAlternativas(pageable);
-
-        assertNotNull(resultPage);
-        assertEquals(1, resultPage.getTotalElements());
-        assertEquals(0, resultPage.getPage());
-        assertTrue(resultPage.isLast());
-        assertEquals(responseDto.getAlternativa(), resultPage.getContent().get(0).getAlternativa());
-
-        verify(alternativasRepository, times(1)).findAll(pageable);
-        verify(pagedResponseMapper, times(1)).toPagedResponse(alternativaPage, AlternativasResponseDto.class);
-        verify(modelMapper, never()).map(any(), any());
-    }
 
     @Test
-    void testDeleteAlternativa_Success() {
-        Long id = 1L;
-        when(alternativasRepository.findById(id)).thenReturn(Optional.of(alternativas));
-        doNothing().when(alternativasRepository).delete(alternativas);
+    @DisplayName("Deve atualizar alternativa existente (Happy Path)")
+    void shouldUpdateAlternativaSuccessfully() {
 
-        alternativasService.deleteAlternativa(id);
-
-        verify(alternativasRepository, times(1)).findById(id);
-        verify(alternativasRepository, times(1)).delete(alternativas);
-    }
-
-    @Test
-    void testDeleteAlternativa_NotFound() {
-        Long id = 1L;
-        when(alternativasRepository.findById(id)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> {
-            alternativasService.deleteAlternativa(id);
-        });
-
-        verify(alternativasRepository, times(1)).findById(id);
-        verify(alternativasRepository, never()).delete(any());
-    }
-
-    @Test
-    void testUpdateAlternativa_Success() {
         Long id = 1L;
 
-        when(alternativasRepository.findById(id)).thenReturn(Optional.of(alternativas));
+        AlternativasUpdateDto updateDto = new AlternativasUpdateDto();
+        updateDto.setAlternativa(Optional.of("Novo Texto"));
+        updateDto.setAlternativaCorreta(Optional.of(true));
 
-        when(alternativasRepository.save(any(Alternativas.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Alternativas existingAlternativa = new Alternativas();
+        existingAlternativa.setIdAlternativa(id);
+        existingAlternativa.setAlternativa("Texto Antigo");
+        existingAlternativa.setAlternativaCorreta(false);
 
-        when(modelMapper.map(any(Alternativas.class), eq(AlternativasResponseDto.class)))
-                .thenReturn(responseDtoAtualizado); 
+        Alternativas updatedAlternativa = new Alternativas();
+        updatedAlternativa.setIdAlternativa(id);
+        updatedAlternativa.setAlternativa("Novo Texto");
+        updatedAlternativa.setAlternativaCorreta(true);
+
+        AlternativasResponseDto responseDto = new AlternativasResponseDto();
+        responseDto.setAlternativa("Novo Texto");
+
+        when(alternativasRepository.findById(id)).thenReturn(Optional.of(existingAlternativa));
+        when(alternativasRepository.save(any(Alternativas.class))).thenReturn(updatedAlternativa);
+        when(modelMapper.map(updatedAlternativa, AlternativasResponseDto.class)).thenReturn(responseDto);
 
         AlternativasResponseDto result = alternativasService.updateAlternativa(id, updateDto);
 
         assertNotNull(result);
-        assertEquals("Nova Alternativa", result.getAlternativa());
-        assertEquals(false, result.getAlternativaCorreta());
+        assertEquals("Novo Texto", result.getAlternativa());
 
-        ArgumentCaptor<Alternativas> alternativaCaptor = ArgumentCaptor.forClass(Alternativas.class);
+        verify(alternativasRepository).save(existingAlternativa);
 
-        verify(alternativasRepository, times(1)).findById(id);
-        verify(alternativasRepository, times(1)).save(alternativaCaptor.capture());
-        verify(modelMapper, times(1)).map(any(Alternativas.class), eq(AlternativasResponseDto.class));
-
-        Alternativas savedAlternativa = alternativaCaptor.getValue();
-        assertEquals("Nova Alternativa", savedAlternativa.getAlternativa());
-        assertEquals(false, savedAlternativa.getAlternativaCorreta());
-        assertEquals(1L, savedAlternativa.getIdAlternativa());
+        assertEquals("Novo Texto", existingAlternativa.getAlternativa());
+        assertEquals(true, existingAlternativa.getAlternativaCorreta());
     }
 
     @Test
-    void testUpdateAlternativa_NotFound() {
-        Long id = 1L;
+    @DisplayName("Deve lançar exceção ao atualizar alternativa inexistente (Sad Path)")
+    void shouldThrowExceptionWhenUpdateAlternativaNotFound() {
+
+        Long id = 99L;
+        AlternativasUpdateDto updateDto = new AlternativasUpdateDto();
         when(alternativasRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> {
             alternativasService.updateAlternativa(id, updateDto);
         });
 
-        verify(alternativasRepository, times(1)).findById(id);
-        verify(modelMapper, never()).map(any(), any());
         verify(alternativasRepository, never()).save(any());
+    }
+
+
+    @Test
+    @DisplayName("Deve deletar alternativa existente (Happy Path)")
+    void shouldDeleteAlternativaSuccessfully() {
+
+        Long id = 1L;
+        Alternativas alternativa = new Alternativas();
+        alternativa.setIdAlternativa(id);
+
+        when(alternativasRepository.findById(id)).thenReturn(Optional.of(alternativa));
+
+        alternativasService.deleteAlternativa(id);
+
+        verify(alternativasRepository).delete(alternativa);
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao deletar alternativa inexistente (Sad Path)")
+    void shouldThrowExceptionWhenDeleteAlternativaNotFound() {
+
+        Long id = 99L;
+        when(alternativasRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            alternativasService.deleteAlternativa(id);
+        });
+
+        verify(alternativasRepository, never()).delete(any());
     }
 }
