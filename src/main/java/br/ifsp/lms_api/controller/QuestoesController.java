@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.ifsp.lms_api.dto.page.PagedResponse;
@@ -58,14 +59,20 @@ public class QuestoesController {
 
     @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
-        summary = "Listar todas as questões",
+        summary = "Listar todas as questões (com filtros)",
         description = "Retorna uma lista paginada de todas as questões."
     )
     @ApiResponse(responseCode = "200", description = "Lista paginada de questões")
     @GetMapping
     public ResponseEntity<PagedResponse<QuestoesResponseDto>> getAllQuestoes(
-            @Parameter(description = "Parâmetros de paginação (page, size, sort)") Pageable pageable) {
-        return ResponseEntity.ok(questoesService.getAllQuestoes(pageable));
+            @Parameter(description = "Parâmetros de paginação (page, size, sort)") Pageable pageable,
+
+            @Parameter(description = "Filtrar por nome exato da tag (case-insensitive)") 
+            @RequestParam(required = false) String tagNome,
+            @Parameter(description = "Filtrar por palavra-chave contida no enunciado (case-insensitive)") 
+            @RequestParam(required = false) String palavraChave) {
+
+        return ResponseEntity.ok(questoesService.getAllQuestoes(pageable, tagNome, palavraChave)); 
     }
 
     @PreAuthorize("hasRole('ROLE_PROFESSOR')")
