@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -52,6 +53,9 @@ class AtividadeTextoControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -113,19 +117,32 @@ class AtividadeTextoControllerIntegrationTest {
 
     @Test
     void testGetAll_Success() throws Exception {
+
+        try {
+            jdbcTemplate.execute("DELETE FROM tentativa_texto");
+        } catch (Exception e) {
+
+        }
         atividadeTextoRepository.deleteAll();
+
+        Professor professor = createProfessor();
+        Topicos topico = createHierarchy(professor);
+
 
         AtividadeTexto at1 = new AtividadeTexto();
         at1.setTituloAtividade("Atividade 1");
         at1.setStatusAtividade(true);
         at1.setDataInicioAtividade(LocalDate.now());
         at1.setDataFechamentoAtividade(LocalDate.now().plusDays(1));
+        at1.setNumeroMaximoCaracteres(1000L);
 
         AtividadeTexto at2 = new AtividadeTexto();
         at2.setTituloAtividade("Atividade 2");
         at2.setStatusAtividade(true);
         at2.setDataInicioAtividade(LocalDate.now());
         at2.setDataFechamentoAtividade(LocalDate.now().plusDays(2));
+        at2.setNumeroMaximoCaracteres(500L);
+        at2.setTopico(topico);
 
         atividadeTextoRepository.saveAll(List.of(at1, at2));
 

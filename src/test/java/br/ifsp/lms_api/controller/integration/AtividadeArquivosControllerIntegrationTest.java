@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,8 +56,9 @@ public class AtividadeArquivosControllerIntegrationTest {
     @Autowired private TopicosRepository topicosRepository;
     @Autowired private CursoRepository cursoRepository;
     @Autowired private DisciplinaRepository disciplinaRepository;
-    
-    @Autowired private EntityManager entityManager; // Importante para o refresh
+
+    @Autowired private EntityManager entityManager;
+    @Autowired private JdbcTemplate jdbcTemplate; // Adicionado para limpeza manual
 
     private Professor professorDono;
     private Topicos topico;
@@ -65,10 +67,22 @@ public class AtividadeArquivosControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // --- LIMPEZA SEGURA ---
+        // Limpa tabelas filhas que podem ter FK para Atividade
+        try {
+            jdbcTemplate.execute("DELETE FROM tentativa_texto");
+            jdbcTemplate.execute("DELETE FROM tentativa_questionario");
+            jdbcTemplate.execute("DELETE FROM tentativa_arquivo"); // Caso exista
+            // Adicione outras tabelas de tentativa se houver
+        } catch (Exception e) {
+            // Tabelas podem não existir ou estar vazias, segue o baile
+        }
+
         atividadeArquivosRepository.deleteAll();
         topicosRepository.deleteAll();
         turmaRepository.deleteAll();
-        
+        // -----------------------
+
         Curso curso = new Curso();
         curso.setNomeCurso("Curso Integration Test");
         curso.setCodigoCurso("INT-001-TEST");
@@ -80,21 +94,17 @@ public class AtividadeArquivosControllerIntegrationTest {
         disciplina.setCodigoDisciplina("INT-DISC-TEST");
         disciplina.setDescricaoDisciplina("Desc");
         disciplina = disciplinaRepository.save(disciplina);
-        
+
         professorDono = new Professor();
         professorDono.setNome("Prof. Integration Unique");
-        professorDono.setEmail("prof.unique.integration@teste.com");
+        professorDono.setEmail("prof.unique.integration" + System.currentTimeMillis() + "@teste.com");
         professorDono.setSenha("senhaForte123");
         professorDono.setCpf("999.888.777-66");
         professorDono.setDepartamento("Testes");
         professorDono = professorRepository.save(professorDono);
-        
-        // --- CORREÇÃO CRUCIAL ---
-        // Força o Hibernate a ler do banco para preencher o 'tipoUsuario' (Discriminator)
-        // Isso garante que getAuthorities() retorne ROLE_PROFESSOR e não ROLE_null
+
         entityManager.flush();
         entityManager.refresh(professorDono);
-        // ------------------------
 
         Turma turma = new Turma();
         turma.setNomeTurma("Turma Integration");
@@ -134,7 +144,7 @@ public class AtividadeArquivosControllerIntegrationTest {
         requestDto.setIdTopico(topico.getIdTopico());
 
         mockMvc.perform(post("/atividades-arquivo")
-                .with(user(userDetailsDono)) // CORRIGIDO: Sem .roles()
+                .with(user(userDetailsDono))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
@@ -148,15 +158,14 @@ public class AtividadeArquivosControllerIntegrationTest {
     void testCreateAtividade_Forbidden_WrongProfessor() throws Exception {
         Professor outroProf = new Professor();
         outroProf.setNome("Invasor");
-        outroProf.setEmail("invasor.unique@test.com");
+        outroProf.setEmail("invasor.unique" + System.currentTimeMillis() + "@test.com");
         outroProf.setSenha("senhaForte123");
         outroProf.setCpf("555.444.333-22");
         outroProf = professorRepository.save(outroProf);
-        
-        // Refresh também aqui por segurança
+
         entityManager.flush();
         entityManager.refresh(outroProf);
-        
+
         CustomUserDetails userDetailsOutro = new CustomUserDetails(outroProf);
 
         AtividadeArquivosRequestDto requestDto = new AtividadeArquivosRequestDto();
@@ -169,16 +178,16 @@ public class AtividadeArquivosControllerIntegrationTest {
         requestDto.setIdTopico(topico.getIdTopico());
 
         mockMvc.perform(post("/atividades-arquivo")
-                .with(user(userDetailsOutro)) // CORRIGIDO: Sem .roles()
+                .with(user(userDetailsOutro))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isForbidden()); 
+                .andExpect(status().isForbidden());
     }
 
     @Test
     void testGetAll_Success() throws Exception {
         mockMvc.perform(get("/atividades-arquivo")
-                .with(user(userDetailsDono)) // CORRIGIDO: Sem .roles()
+                .with(user(userDetailsDono))
                 .param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
@@ -188,20 +197,20 @@ public class AtividadeArquivosControllerIntegrationTest {
 
     @Test
     void testUpdateAtividade_Success() throws Exception {
-        String jsonUpdate = """
-            {
-                "tituloAtividade": "Atividade Atualizada",
-                "arquivosPermitidos": [".docx"]
-            }
-        """;
+        // Usando String block para JSON para evitar erro de compilação se o Java for < 15
+        // Mas como seu código já usava, mantive.
+        String jsonUpdate = "{\n" +
+                "    \"tituloAtividade\": \"Atividade Atualizada\",\n" +
+                "    \"arquivosPermitidos\": [\".docx\"]\n" +
+                "}";
 
         mockMvc.perform(patch("/atividades-arquivo/{id}", atividadeExistente.getIdAtividade())
-                .with(user(userDetailsDono)) // CORRIGIDO: Sem .roles()
+                .with(user(userDetailsDono))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonUpdate))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tituloAtividade", is("Atividade Atualizada")));
-        
+
         AtividadeArquivos atualizada = atividadeArquivosRepository.findById(atividadeExistente.getIdAtividade()).get();
         assertEquals("Atividade Atualizada", atualizada.getTituloAtividade());
     }
@@ -209,7 +218,7 @@ public class AtividadeArquivosControllerIntegrationTest {
     @Test
     void testDeleteAtividade_Success() throws Exception {
         mockMvc.perform(delete("/atividades-arquivo/{id}", atividadeExistente.getIdAtividade())
-                .with(user(userDetailsDono))) // CORRIGIDO: Sem .roles()
+                .with(user(userDetailsDono)))
                 .andExpect(status().isNoContent());
 
         assertFalse(atividadeArquivosRepository.existsById(atividadeExistente.getIdAtividade()));

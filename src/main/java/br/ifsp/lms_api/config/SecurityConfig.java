@@ -23,7 +23,7 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 public class SecurityConfig {
 
     private CustomLoginSuccessHandler customLoginSuccessHandler;
-    
+
 
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
@@ -41,33 +41,34 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) 
-            
+            .csrf(csrf -> csrf.disable())
+
             .headers(headers -> headers
                 .frameOptions(frameOptions -> frameOptions.disable())
             )
-            
+
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                        "/login", 
+                        "/",
+                        "/login",
                         "/publico/**",
                         "/swagger-ui/**",
-                        "/swagger-ui.html/**",    
-                        "/v3/api-docs/**", 
+                        "/swagger-ui.html/**",
+                        "/v3/api-docs/**",
                         "/h2-console/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                .loginPage("/login") 
+                .loginPage("/login")
                 .permitAll()
-                .successHandler(customLoginSuccessHandler) 
+                .successHandler(customLoginSuccessHandler)
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .permitAll()
             )
-            
+
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(customAuthenticationEntryPoint)
             );
@@ -79,7 +80,7 @@ public class SecurityConfig {
     public RoleHierarchy roleHierarchy() {
         String hierarchy = "ROLE_ADMIN > ROLE_PROFESSOR \n" +
                         "ROLE_ADMIN > ROLE_ALUNO";
-    return RoleHierarchyImpl.fromHierarchy(hierarchy); 
+    return RoleHierarchyImpl.fromHierarchy(hierarchy);
 }
 
 

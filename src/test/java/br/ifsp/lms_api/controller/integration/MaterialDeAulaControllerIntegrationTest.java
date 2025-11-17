@@ -3,14 +3,15 @@ package br.ifsp.lms_api.controller.integration;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue; // Adicionado
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.List;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,15 +19,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.NestedServletException; // Importante
+import org.springframework.web.util.NestedServletException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.ifsp.lms_api.config.CustomUserDetails;
-import br.ifsp.lms_api.exception.AccessDeniedException; // Sua exceção
+import br.ifsp.lms_api.exception.AccessDeniedException;
 import br.ifsp.lms_api.model.Curso;
 import br.ifsp.lms_api.model.Disciplina;
 import br.ifsp.lms_api.model.MaterialDeAula;
@@ -58,6 +59,8 @@ public class MaterialDeAulaControllerIntegrationTest {
     @Autowired private DisciplinaRepository disciplinaRepository;
     @Autowired private EntityManager entityManager;
 
+    @Autowired private JdbcTemplate jdbcTemplate; // Essencial para limpar tabelas filhas
+
     @MockBean
     private StorageService storageService;
 
@@ -70,10 +73,27 @@ public class MaterialDeAulaControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // --- LIMPEZA SEGURA DAS DEPENDÊNCIAS ---
+        // Como Turma e Tópico são pais de Atividade, e Atividade é pai de Tentativa,
+        // precisamos limpar tudo que possa referenciar Turma/Tópico antes de deletá-los.
+        try {
+            jdbcTemplate.execute("DELETE FROM tentativa_texto");
+            jdbcTemplate.execute("DELETE FROM tentativa_questionario");
+            jdbcTemplate.execute("DELETE FROM tentativa_arquivo");
+
+            // Se houver relacionamento entre Atividade e Questao (tabela de junção)
+            jdbcTemplate.execute("DELETE FROM atividade_questoes");
+
+            jdbcTemplate.execute("DELETE FROM atividade");
+        } catch (Exception e) {
+            // Ignora tabelas inexistentes
+        }
+
         materialRepository.deleteAll();
         topicosRepository.deleteAll();
         turmaRepository.deleteAll();
-        
+        // ---------------------------------------
+
         Curso curso = new Curso();
         curso.setNomeCurso("Curso Mat");
         curso.setCodigoCurso("MAT10-UNIQUE");
@@ -88,27 +108,27 @@ public class MaterialDeAulaControllerIntegrationTest {
 
         professorDono = new Professor();
         professorDono.setNome("Prof. Dono Material");
-        professorDono.setEmail("dono.material.unique@test.com");
+        professorDono.setEmail("dono.material.unique" + System.currentTimeMillis() + "@test.com");
         professorDono.setSenha("123456");
         professorDono.setCpf("111.222.999-88");
         professorDono.setDepartamento("Exatas");
         professorDono = professorRepository.save(professorDono);
-        
+
         entityManager.flush();
         entityManager.refresh(professorDono);
-        
+
         userDetailsDono = new CustomUserDetails(professorDono);
 
         professorIntruso = new Professor();
         professorIntruso.setNome("Prof. Intruso");
-        professorIntruso.setEmail("intruso.material.unique@test.com");
+        professorIntruso.setEmail("intruso.material.unique" + System.currentTimeMillis() + "@test.com");
         professorIntruso.setSenha("123456");
         professorIntruso.setCpf("999.888.111-00");
         professorIntruso = professorRepository.save(professorIntruso);
-        
+
         entityManager.flush();
         entityManager.refresh(professorIntruso);
-        
+
         userDetailsIntruso = new CustomUserDetails(professorIntruso);
 
         Turma turma = new Turma();
@@ -130,7 +150,7 @@ public class MaterialDeAulaControllerIntegrationTest {
         materialExistente.setUrlArquivo("http://fake-url.com/existente.pdf");
         materialExistente.setTopico(topico);
         materialExistente = materialRepository.save(materialExistente);
-        
+
         when(storageService.createArquivo(any())).thenReturn("http://fake-s3-url.com/novo.pdf");
     }
 
@@ -142,7 +162,7 @@ public class MaterialDeAulaControllerIntegrationTest {
 
         mockMvc.perform(multipart("/materiais/topico/{id}", topico.getIdTopico())
                 .file(file)
-                .with(user(userDetailsDono))) 
+                .with(user(userDetailsDono)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nomeArquivo", is("teste.pdf")))
                 .andExpect(jsonPath("$.urlArquivo", is("http://fake-s3-url.com/novo.pdf")));
@@ -156,13 +176,11 @@ public class MaterialDeAulaControllerIntegrationTest {
             "arquivo", "hack.pdf", "application/pdf", "conteudo".getBytes()
         );
 
-        // CORREÇÃO: Verificar a exceção, não o status 403
         try {
             mockMvc.perform(multipart("/materiais/topico/{id}", topico.getIdTopico())
                     .file(file)
                     .with(user(userDetailsIntruso)));
         } catch (NestedServletException e) {
-            // Verifica se a causa raiz foi a nossa AccessDeniedException
             assertTrue(e.getCause() instanceof AccessDeniedException);
         }
 
@@ -190,7 +208,6 @@ public class MaterialDeAulaControllerIntegrationTest {
 
     @Test
     void testDeleteMaterial_Forbidden() throws Exception {
-        // CORREÇÃO: Verificar a exceção, não o status 403
         try {
             mockMvc.perform(delete("/materiais/{id}", materialExistente.getIdMaterialDeAula())
                     .with(user(userDetailsIntruso)));
