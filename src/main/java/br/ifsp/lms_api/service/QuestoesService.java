@@ -3,6 +3,11 @@ package br.ifsp.lms_api.service;
 import java.util.HashSet;
 import java.util.List;
 
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,9 +57,32 @@ public class QuestoesService {
         return modelMapper.map(savedQuestao, QuestoesResponseDto.class);
     }
 
-    public PagedResponse<QuestoesResponseDto> getAllQuestoes(Pageable pageable) {
-        Page<Questoes> questoes = questoesRepository.findAll(pageable);
-        return pagedResponseMapper.toPagedResponse(questoes, QuestoesResponseDto.class);
+    public PagedResponse<QuestoesResponseDto> getAllQuestoes(Pageable pageable, String tagNome, String palavraChave) {
+        Specification<Questoes> spec = (root, query, criteriaBuilder) -> {
+
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (palavraChave != null && !palavraChave.isEmpty()) {
+                predicates.add(criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("enunciado")),
+                    "%" + palavraChave.toLowerCase() + "%"
+                ));
+            }
+
+            if (tagNome != null && !tagNome.isEmpty()) {
+                Join<Questoes, Tag> tagJoin = root.join("tags");
+                predicates.add(criteriaBuilder.equal(
+                    criteriaBuilder.lower(tagJoin.get("nome")),
+                    tagNome.toLowerCase()
+                ));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Questoes> questoesPage = questoesRepository.findAll(spec, pageable);
+
+        return pagedResponseMapper.toPagedResponse(questoesPage, QuestoesResponseDto.class);
     }
 
     public QuestoesResponseDto updateQuestao(Long id, QuestoesUpdateDto updateDto) {

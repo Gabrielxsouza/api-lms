@@ -80,15 +80,15 @@ class QuestoesControllerTest {
         when(pagedResponse.getTotalElements()).thenReturn(1L);
         when(pagedResponse.getTotalPages()).thenReturn(1);
         
-        when(questoesService.getAllQuestoes(any(Pageable.class))).thenReturn(pagedResponse);
+        when(questoesService.getAllQuestoes(any(Pageable.class), any(), any())).thenReturn(pagedResponse);
 
         mockMvc.perform(get("/questoes")) 
                 .andExpect(status().isOk()) 
                 .andExpect(jsonPath("$.content[0].idQuestao").value(1L))
                 .andExpect(jsonPath("$.page").value(0))
                 .andExpect(jsonPath("$.totalElements").value(1));
-        
-        verify(questoesService, times(1)).getAllQuestoes(any(Pageable.class));
+
+        verify(questoesService, times(1)).getAllQuestoes(any(Pageable.class), any(), any());
     }
 
      }
