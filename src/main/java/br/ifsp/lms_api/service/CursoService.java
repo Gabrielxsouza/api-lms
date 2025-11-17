@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.ifsp.lms_api.dto.CursoDto.CursoRequestDto;
 import br.ifsp.lms_api.dto.CursoDto.CursoResponseDto;
 import br.ifsp.lms_api.dto.CursoDto.CursoUpdateDto;
-import br.ifsp.lms_api.dto.TurmaDto.TurmaResponseDto; 
+import br.ifsp.lms_api.dto.TurmaDto.TurmaResponseDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
@@ -22,16 +22,16 @@ import br.ifsp.lms_api.repository.CursoRepository;
 @Service
 public class CursoService {
     private final CursoRepository cursoRepository;
-    // O DisciplinaRepository foi removido das dependências
+
     private final ModelMapper modelMapper;
-    private final PagedResponseMapper pagedResponseMapper; 
+    private final PagedResponseMapper pagedResponseMapper;
 
     private static final String NOT_FOUND_MSG = "Curso com ID %d não encontrado.";
-    // O DISC_NOT_FOUND_MSG foi removido
 
-    public CursoService(CursoRepository cursoRepository, 
-                        // DisciplinaRepository removido do construtor
-                        ModelMapper modelMapper, 
+
+    public CursoService(CursoRepository cursoRepository,
+
+                        ModelMapper modelMapper,
                         PagedResponseMapper pagedResponseMapper) {
         this.cursoRepository = cursoRepository;
         this.modelMapper = modelMapper;
@@ -40,30 +40,18 @@ public class CursoService {
 
     @Transactional
     public CursoResponseDto createCurso(CursoRequestDto cursoRequestDto) {
-        
-        // --- MÉTODO DE CRIAÇÃO SIMPLIFICADO ---
+
         Curso curso = modelMapper.map(cursoRequestDto, Curso.class);
-        
-        // Toda a lógica de 'List<Turma> turmas = ...' foi REMOVIDA.
 
         Curso savedCurso = cursoRepository.save(curso);
-        
-        // O savedCurso terá uma lista de turmas vazia.
-        // O helper 'convertCursoToDto' vai lidar com isso corretamente.
+
         return convertCursoToDto(savedCurso);
     }
-
-    //
-    // O RESTO DO SEU SERVICE (getAllCursos, getCursoById, etc.)
-    // CONTINUA EXATAMENTE IGUAL.
-    // O método 'convertCursoToDto' que criamos continua o mesmo
-    // e vai funcionar perfeitamente.
-    //
 
     @Transactional(readOnly = true)
     public PagedResponse<CursoResponseDto> getAllCursos(Pageable pageable) {
         Page<Curso> cursoPage = cursoRepository.findAll(pageable);
-        
+
         List<CursoResponseDto> dtoList = cursoPage.getContent().stream()
             .map(this::convertCursoToDto)
             .collect(Collectors.toList());
@@ -106,7 +94,7 @@ public class CursoService {
         return cursoRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(String.format(NOT_FOUND_MSG, id)));
     }
-    
+
     private CursoResponseDto convertCursoToDto(Curso curso) {
         CursoResponseDto responseDto = new CursoResponseDto();
         responseDto.setIdCurso(curso.getIdCurso());
@@ -114,14 +102,14 @@ public class CursoService {
         responseDto.setDescricaoCurso(curso.getDescricaoCurso());
         responseDto.setCodigoCurso(curso.getCodigoCurso());
 
-        if (curso.getTurmas() != null) { // Adiciona verificação de nulo por segurança
+        if (curso.getTurmas() != null) { 
             List<TurmaResponseDto> turmaDtos = curso.getTurmas()
                 .stream()
-                .map(turma -> modelMapper.map(turma, TurmaResponseDto.class)) 
+                .map(turma -> modelMapper.map(turma, TurmaResponseDto.class))
                 .collect(Collectors.toList());
             responseDto.setTurmas(turmaDtos);
         }
-        
+
         return responseDto;
     }
 }
