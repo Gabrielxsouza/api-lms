@@ -20,4 +20,9 @@ public class TurmaRequestDto {
     @NotNull(message = "O ID da disciplina é obrigatório")
     private Long idDisciplina;
 
+    @NotNull(message = "O ID do curso é obrigatório")
+    private Long idCurso;
+
+    @NotNull(message = "O ID do professor é obrigatório")
+    private Long idProfessor; // <-- CAMPO ADICIONADO
 }

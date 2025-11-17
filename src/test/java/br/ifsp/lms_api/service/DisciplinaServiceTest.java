@@ -122,7 +122,7 @@ public class DisciplinaServiceTest {
 
         when(modelMapper.map(eq(requestDto), eq(Disciplina.class))).thenReturn(disciplinaSemTurmas);
 
-       when(modelMapper.map(eq(turmaRequestDto), eq(Turma.class))).thenReturn(new Turma(null, "Turma A", "2025/2", null, null, null, null));
+       when(modelMapper.map(eq(turmaRequestDto), eq(Turma.class))).thenReturn(new Turma(null, "Turma A", "2025/2", null, null, null, null, null));
 //                                                                                             (disciplina) (curso) (topicos) (matriculas)
 
         ArgumentCaptor<Disciplina> disciplinaCaptor = ArgumentCaptor.forClass(Disciplina.class);

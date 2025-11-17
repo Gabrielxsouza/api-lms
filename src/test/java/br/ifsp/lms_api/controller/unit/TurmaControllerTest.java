@@ -27,6 +27,7 @@ import br.ifsp.lms_api.dto.TurmaDto.TurmaUpdateDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.service.TurmaService;
+import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaResponseDto; 
 
 @WebMvcTest(TurmaController.class)
 public class TurmaControllerTest {
@@ -46,9 +47,11 @@ public class TurmaControllerTest {
 
     @BeforeEach
     void setUp() {
-        requestDto = new TurmaRequestDto("Turma A", "2025/2", 1L);
+        // CORRIGIDO: Adicionado idProfessor (1L) como 5º argumento
+        requestDto = new TurmaRequestDto("Turma A", "2025/2", 1L, 1L, 1L); 
         
-        responseDto = new TurmaResponseDto(1L, "Turma A", "2025/2", null); 
+        // Esta linha está OK por enquanto, pois o erro não é nela
+        responseDto = new TurmaResponseDto(1L, "Turma A", "2025/2", (DisciplinaResponseDto) null); 
 
         updateDto = new TurmaUpdateDto(
             Optional.of("Novo Semestre"),
@@ -103,7 +106,7 @@ public class TurmaControllerTest {
     @Test
     void testUpdateTurma_Success() throws Exception {
         TurmaResponseDto updatedResponse = new TurmaResponseDto(
-            1L, "Turma A", "Novo Semestre", null
+            1L, "Turma A", "Novo Semestre", (DisciplinaResponseDto) null
         );
         
         when(turmaService.updateTurma(eq(1L), any(TurmaUpdateDto.class)))
