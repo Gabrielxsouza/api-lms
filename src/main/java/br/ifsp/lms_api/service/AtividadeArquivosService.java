@@ -1,14 +1,23 @@
 package br.ifsp.lms_api.service;
 
+import br.ifsp.lms_api.model.Atividade;
 import br.ifsp.lms_api.model.AtividadeArquivos;
+import br.ifsp.lms_api.model.Professor;
 import br.ifsp.lms_api.model.Tag;
+import br.ifsp.lms_api.model.Topicos;
+import br.ifsp.lms_api.model.Turma;
+import br.ifsp.lms_api.model.Usuario;
+
 import java.util.List;
+import java.util.Optional;
+
 import br.ifsp.lms_api.repository.AtividadeArquivosRepository;
 import br.ifsp.lms_api.repository.TagRepository;
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosRequestDto;
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosResponseDto;
 import br.ifsp.lms_api.dto.atividadeArquivosDto.AtividadeArquivosUpdateDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
+import br.ifsp.lms_api.exception.AccessDeniedException;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
 
@@ -66,10 +75,33 @@ public class AtividadeArquivosService {
         return modelMapper.map(atividade, AtividadeArquivosResponseDto.class);
     }
 
-    @Transactional
-    public AtividadeArquivosResponseDto updateAtividadeArquivos(Long id, AtividadeArquivosUpdateDto dto) {
-        AtividadeArquivos atividade = findEntityById(id);
-        applyUpdateFromDto(atividade, dto);
+   @Transactional
+    public AtividadeArquivosResponseDto updateAtividadeArquivos(
+            Long idAtividade, 
+            AtividadeArquivosUpdateDto dto, 
+            Long idUsuarioLogado
+    ) {
+        
+        // 1. Busca a atividade
+        AtividadeArquivos atividade = atividadeArquivosRepository.findById(idAtividade)
+            .orElseThrow(() -> new ResourceNotFoundException("Atividade não encontrada"));
+
+        // 2. VERIFICAÇÃO DE DONO
+        Optional<Long> idProfessorDaAtividade = Optional.of(atividade)
+            .map(Atividade::getTopico)
+            .map(Topicos::getTurma)
+            .map(Turma::getProfessor)
+            .map(Professor::getIdUsuario);
+
+        // Se o professor não for encontrado OU o ID dele for DIFERENTE do usuário logado...
+        if (!idProfessorDaAtividade.isPresent() || !idProfessorDaAtividade.get().equals(idUsuarioLogado)) {
+            // Lança a exceção de Acesso Negado (403)
+            throw new AccessDeniedException("Acesso Negado. Você não é o professor desta turma.");
+        }
+
+        // 3. Se passou, ele é o dono. Pode atualizar.
+        applyUpdateFromDto(atividade, dto); // <---- !! ADICIONE ESTA LINHA !!
+        
         AtividadeArquivos updatedAtividade = atividadeArquivosRepository.save(atividade);
         return modelMapper.map(updatedAtividade, AtividadeArquivosResponseDto.class);
     }

@@ -33,6 +33,7 @@ public class AlunoController {
         this.alunoService = alunoService;
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(
         summary = "Criar novo aluno",
         description = "Cria um novo usuário do tipo Aluno no sistema. A senha deve ser criptografada."
@@ -53,6 +54,7 @@ public class AlunoController {
     }
 
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(
         summary = "Listar todos os alunos (Admin)",
         description = "Retorna uma lista paginada de todos os alunos. Requer permissão de ROLE_ADMIN."
@@ -60,12 +62,13 @@ public class AlunoController {
     @ApiResponse(responseCode = "200", description = "Lista paginada de alunos")
     @ApiResponse(responseCode = "403", description = "Acesso negado")
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    
     public ResponseEntity<PagedResponse<AlunoResponseDto>> getAll(
             @Parameter(description = "Parâmetros de paginação (page, size, sort)") Pageable pageable) {
         return ResponseEntity.ok(alunoService.getAllAlunos(pageable));
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Buscar aluno por ID")
     @ApiResponse(
         responseCode = "200",
@@ -79,6 +82,7 @@ public class AlunoController {
         return ResponseEntity.ok(alunoService.getAlunoById(id));
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Atualizar um aluno (PATCH)")
     @ApiResponse(
         responseCode = "200",

@@ -29,4 +29,6 @@ public class Professor extends Usuario {
     )
     @JsonManagedReference
     private List<Turma> turmas;
+
+
 }

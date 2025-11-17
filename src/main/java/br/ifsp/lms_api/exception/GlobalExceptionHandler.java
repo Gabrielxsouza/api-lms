@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.access.AccessDeniedException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -66,12 +67,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
     }
 
-    @ExceptionHandler(AccessDeniedException.class)
+    @ExceptionHandler(AccessDeniedException.class) 
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ResponseEntity<Map<String, String>> handleAccessDeniedException(AccessDeniedException exception) {
+    public ResponseEntity<Map<String, String>> handleAccessDeniedException(
+            AccessDeniedException exception 
+    ) {
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("erro", "Acesso Negado");
-        errorResponse.put("mensagem", exception.getMessage());
+
+        String mensagem = (exception.getMessage() != null) 
+                            ? exception.getMessage() 
+                            : "Você não tem permissão para executar esta ação.";
+
+        errorResponse.put("mensagem", mensagem);
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
     

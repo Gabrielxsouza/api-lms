@@ -19,6 +19,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +41,7 @@ public class AlternativasController {
         this.alternativasService = alternativasService;
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Criar nova alternativa",
         description = "Cria uma nova alternativa vinculada a uma questão existente."
@@ -57,6 +59,7 @@ public class AlternativasController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAlternativa);
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Listar todas as alternativas",
         description = "Retorna uma lista paginada de todas as alternativas no sistema."
@@ -68,6 +71,7 @@ public class AlternativasController {
         return ResponseEntity.ok(alternativasService.getAllAlternativas(pageable));
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(summary = "Buscar alternativa por ID")
     @ApiResponse(
         responseCode = "200",
@@ -82,6 +86,7 @@ public class AlternativasController {
         return ResponseEntity.ok(alternativa);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Atualizar uma alternativa (PATCH)")
     @ApiResponse(
         responseCode = "200",
@@ -98,6 +103,7 @@ public class AlternativasController {
         return ResponseEntity.ok(updatedAlternativa);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Deletar uma alternativa")
     @ApiResponse(responseCode = "204", description = "Alternativa deletada com sucesso")
     @ApiResponse(responseCode = "404", description = "Alternativa não encontrada")
