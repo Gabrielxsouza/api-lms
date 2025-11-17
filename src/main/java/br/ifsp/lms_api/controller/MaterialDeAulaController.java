@@ -3,6 +3,8 @@ package br.ifsp.lms_api.controller;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated; 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import br.ifsp.lms_api.config.CustomUserDetails;
 import br.ifsp.lms_api.dto.MaterialDeAulaDto.MaterialDeAulaResponseDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.service.MaterialDeAulaService;
@@ -37,6 +40,7 @@ public class MaterialDeAulaController {
         this.materialService = materialService;
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Fazer upload de novo material",
         description = "Faz o upload de um arquivo (PDF, mídia, etc.) e o vincula a um tópico existente."
@@ -50,12 +54,14 @@ public class MaterialDeAulaController {
     @PostMapping(value = "/topico/{idTopico}", consumes = "multipart/form-data")
     public ResponseEntity<MaterialDeAulaResponseDto> uploadMaterial(
             @Parameter(description = "ID do tópico ao qual o material será vinculado") @Valid @PathVariable Long idTopico,
-            @Parameter(description = "O arquivo a ser enviado") @RequestParam("arquivo") MultipartFile arquivo) {
+            @Parameter(description = "O arquivo a ser enviado") @RequestParam("arquivo") MultipartFile arquivo,
+            @AuthenticationPrincipal CustomUserDetails usuarioLogado) {
 
-        MaterialDeAulaResponseDto responseDto = materialService.createMaterial(arquivo, idTopico);
+        MaterialDeAulaResponseDto responseDto = materialService.createMaterial(arquivo, idTopico, usuarioLogado.getId());
         return ResponseEntity.ok(responseDto);
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Listar todos os materiais",
         description = "Retorna uma lista paginada de todos os materiais de aula no sistema."
@@ -67,6 +73,7 @@ public class MaterialDeAulaController {
         return ResponseEntity.ok(materialService.getAllMaterialDeAula(pageable));
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(summary = "Buscar material por ID")
     @ApiResponse(
         responseCode = "200",
@@ -81,6 +88,7 @@ public class MaterialDeAulaController {
     }
 
 
+   @PreAuthorize("hasRole('ROLE_PROFESSOR')")
    @Operation(
        summary = "Deletar um material",
        description = "Deleta um material de aula (registro no banco) e seu arquivo físico correspondente no storage."
@@ -93,12 +101,14 @@ public class MaterialDeAulaController {
    @ApiResponse(responseCode = "404", description = "Material não encontrado")
    @DeleteMapping("/{id}")
     public ResponseEntity<MaterialDeAulaResponseDto> deleteMaterial(
-            @Parameter(description = "ID do material a ser deletado") @PathVariable Long id) {
-        MaterialDeAulaResponseDto deletedMaterial = materialService.deleteMaterial(id);
+            @Parameter(description = "ID do material a ser deletado") @PathVariable Long id, 
+            @AuthenticationPrincipal CustomUserDetails usuarioLogado) {
+        MaterialDeAulaResponseDto deletedMaterial = materialService.deleteMaterial(id, usuarioLogado.getId());
         return ResponseEntity.ok(deletedMaterial); 
     }
 
     
+    @PreAuthorize("hasAnyRole('ROLE_PROFESSOR', 'ROLE_ALUNO')")
     @Operation(
         summary = "Listar materiais por tópico",
         description = "Retorna uma lista paginada de todos os materiais de aula vinculados a um tópico específico."
@@ -112,7 +122,8 @@ public class MaterialDeAulaController {
         
         return ResponseEntity.ok(materialService.getMaterialByTopico(idTopico, pageable));
     }
-    
+
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Atualizar arquivo de um material",
         description = "Substitui o arquivo físico de um material de aula existente por um novo."
@@ -126,8 +137,9 @@ public class MaterialDeAulaController {
     @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     public ResponseEntity<MaterialDeAulaResponseDto> updateMaterial(
             @Parameter(description = "ID do material a ser atualizado") @PathVariable Long id, 
-            @Parameter(description = "O novo arquivo") @Valid @RequestParam("arquivo") MultipartFile arquivo) { 
+            @Parameter(description = "O novo arquivo") @Valid @RequestParam("arquivo") MultipartFile arquivo,
+            @AuthenticationPrincipal CustomUserDetails usuarioLogado) { 
 
-        return ResponseEntity.ok(materialService.updateMaterial(id, arquivo));
+        return ResponseEntity.ok(materialService.updateMaterial(id, arquivo, usuarioLogado.getId()));
     }
 }

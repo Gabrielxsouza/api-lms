@@ -74,9 +74,13 @@ public class AtividadeTextoService {
     }
 
     @Transactional
-    public AtividadeTextoResponseDto updateAtividadeTexto(Long id, AtividadeTextoUpdateDto dto) {
+    public AtividadeTextoResponseDto updateAtividadeTexto(Long id, AtividadeTextoUpdateDto dto, Long userId) {
 
         AtividadeTexto atividade = findEntityById(id);
+
+        if (atividade.getTopico().getTurma().getProfessor().getIdUsuario() != userId) {
+            throw new ResourceNotFoundException("Acesso negado");
+        }
 
         applyUpdateFromDto(atividade, dto);
 

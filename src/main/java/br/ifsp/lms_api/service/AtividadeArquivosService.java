@@ -1,15 +1,12 @@
 package br.ifsp.lms_api.service;
 
-import br.ifsp.lms_api.model.Atividade;
+
 import br.ifsp.lms_api.model.AtividadeArquivos;
-import br.ifsp.lms_api.model.Professor;
+
 import br.ifsp.lms_api.model.Tag;
-import br.ifsp.lms_api.model.Topicos;
-import br.ifsp.lms_api.model.Turma;
-import br.ifsp.lms_api.model.Usuario;
+
 
 import java.util.List;
-import java.util.Optional;
 
 import br.ifsp.lms_api.repository.AtividadeArquivosRepository;
 import br.ifsp.lms_api.repository.TagRepository;

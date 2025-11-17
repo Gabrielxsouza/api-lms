@@ -100,6 +100,7 @@ public class AlunoController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Deletar um aluno")
     @ApiResponse(responseCode = "204", description = "Aluno deletado com sucesso")
     @ApiResponse(responseCode = "404", description = "Aluno não encontrado")

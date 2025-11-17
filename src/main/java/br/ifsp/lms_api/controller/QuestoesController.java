@@ -3,6 +3,7 @@ package br.ifsp.lms_api.controller;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +39,7 @@ public class QuestoesController {
         this.questoesService = questoesService;
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Criar nova questão",
         description = "Cria uma nova questão, incluindo sua lista de alternativas aninhadas."
@@ -54,6 +56,7 @@ public class QuestoesController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdQuestao);
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Listar todas as questões",
         description = "Retorna uma lista paginada de todas as questões."
@@ -65,6 +68,7 @@ public class QuestoesController {
         return ResponseEntity.ok(questoesService.getAllQuestoes(pageable));
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(summary = "Atualizar uma questão (PATCH)")
     @ApiResponse(
         responseCode = "200",
@@ -80,6 +84,7 @@ public class QuestoesController {
         return ResponseEntity.ok(updatedQuestao);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Deletar uma questão")
     @ApiResponse(responseCode = "204", description = "Questão deletada com sucesso")
     @ApiResponse(responseCode = "404", description = "Questão não encontrada")

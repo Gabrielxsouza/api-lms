@@ -15,6 +15,7 @@ import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioRespons
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioUpdateDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.dto.questoesDto.QuestoesResponseDto;
+import br.ifsp.lms_api.exception.AccessDeniedException;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
 import br.ifsp.lms_api.model.AtividadeQuestionario;
@@ -76,8 +77,12 @@ public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestiona
     }
 
     @Transactional
-    public AtividadeQuestionarioResponseDto updateAtividadeQuestionario(Long id, AtividadeQuestionarioUpdateDto atividadeQuestionarioUpdateDto) {
+    public AtividadeQuestionarioResponseDto updateAtividadeQuestionario(Long id, AtividadeQuestionarioUpdateDto atividadeQuestionarioUpdateDto, Long idProfessor) {
         AtividadeQuestionario atividadeQuestionario = findEntityById(id);
+
+        if (atividadeQuestionario.getTopico().getTurma().getProfessor().getIdUsuario() != idProfessor) {
+            throw new AccessDeniedException("Acesso negado");
+        }
 
         applyUpdateFromDto(atividadeQuestionario, atividadeQuestionarioUpdateDto);
 
@@ -86,10 +91,13 @@ public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestiona
 
 
    @Transactional
-    public AtividadeQuestionarioResponseDto adicionarQuestoes(Long idQuestionario, List<Long> idsDasQuestoes) {
+    public AtividadeQuestionarioResponseDto adicionarQuestoes(Long idQuestionario, List<Long> idsDasQuestoes, Long idProfessor) {
         AtividadeQuestionario questionario = atividadeQuestionarioRepository.findById(idQuestionario)
                 .orElseThrow(() -> new RuntimeException("Questionário não encontrado com ID: " + idQuestionario));
 
+        if (questionario.getTopico().getTurma().getProfessor().getIdUsuario() != idProfessor) {
+            throw new AccessDeniedException("Acesso negado");
+        }
 
         List<Questoes> questoesParaAdicionar = questoesRepository.findAllById(idsDasQuestoes);
 
@@ -117,11 +125,14 @@ public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestiona
 
 
     @Transactional
-    public AtividadeQuestionarioResponseDto removerQuestoes(Long idQuestionario, List<Long> idsDasQuestoes) {
+    public AtividadeQuestionarioResponseDto removerQuestoes(Long idQuestionario, List<Long> idsDasQuestoes, Long idProfessor) {
 
         AtividadeQuestionario questionario = atividadeQuestionarioRepository.findById(idQuestionario)
                 .orElseThrow(() -> new RuntimeException("Questionário não encontrado com ID: " + idQuestionario));
 
+        if (questionario.getTopico().getTurma().getProfessor().getIdUsuario() != idProfessor) {
+            throw new AccessDeniedException("Acesso negado");
+        }
 
         List<Questoes> questoesParaRemover = questoesRepository.findAllById(idsDasQuestoes);
 
@@ -139,10 +150,15 @@ public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestiona
     }
 
 
-    public AtividadeQuestionarioResponseDto removerQuestoes(long idQuestionario) {
+    public AtividadeQuestionarioResponseDto removerQuestoes(long idQuestionario, Long idProfessor) {
         AtividadeQuestionario questionario = atividadeQuestionarioRepository.findById(idQuestionario)
                 .orElseThrow(() -> new RuntimeException("Questionário nao encontrado com ID: " + idQuestionario));
         questionario.getQuestoes().clear();
+
+        if (questionario.getTopico().getTurma().getProfessor().getIdUsuario() != idProfessor) {
+            throw new AccessDeniedException("Acesso negado");
+        }
+
         return modelMapper.map(atividadeQuestionarioRepository.save(questionario), AtividadeQuestionarioResponseDto.class);
 
 

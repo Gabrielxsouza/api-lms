@@ -61,6 +61,7 @@ public class QuestoesService {
         Questoes existingQuestao = questoesRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Questão not found with id: " + id));
 
+
         updateDto.getEnunciado().ifPresent(existingQuestao::setEnunciado);
 
         updateDto.getTagIds().ifPresent(tagIds -> {

@@ -39,8 +39,8 @@ public class ProfessorController {
         this.professorService = professorService;
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Criar um novo professor (Somente ADMIN)")
     @ApiResponse(responseCode = "201", description = "Professor criado com sucesso")
     public ResponseEntity<ProfessorResponseDto> create(
@@ -51,7 +51,7 @@ public class ProfessorController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Listar todos os professores (Somente ADMIN)")
     @ApiResponse(responseCode = "200", description = "Lista paginada de professores")
     public ResponseEntity<PagedResponse<ProfessorResponseDto>> getAll(
@@ -60,7 +60,7 @@ public class ProfessorController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Buscar professor por ID (Somente ADMIN)")
     @ApiResponse(responseCode = "200", description = "Professor encontrado")
     @ApiResponse(responseCode = "404", description = "Professor não encontrado")
@@ -70,7 +70,7 @@ public class ProfessorController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_PROFESSOR', 'ROLE_ALUNO')")
     @Operation(summary = "Atualizar um professor (Somente ADMIN)")
     @ApiResponse(responseCode = "200", description = "Professor atualizado com sucesso")
     @ApiResponse(responseCode = "404", description = "Professor não encontrado")
@@ -83,7 +83,7 @@ public class ProfessorController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Deletar um professor (Somente ADMIN)")
     @ApiResponse(responseCode = "204", description = "Professor deletado com sucesso")
     @ApiResponse(responseCode = "404", description = "Professor não encontrado")
