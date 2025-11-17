@@ -35,10 +35,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AlternativasController.class)
-@Import(AlternativasControllerTest.TestConfig.class) // Importa config de segurança para o teste
+@Import(AlternativasControllerTest.TestConfig.class)
 class AlternativasControllerTest {
 
-    // Configuração interna para ativar o @PreAuthorize nos testes
     @TestConfiguration
     @EnableMethodSecurity
     static class TestConfig {
@@ -53,19 +52,16 @@ class AlternativasControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // ==================================================================================
-    // HAPPY PATHS (Caminhos Felizes - Sucesso)
-    // ==================================================================================
 
     @Test
     @DisplayName("POST - Deve criar alternativa com sucesso (201 Created)")
     @WithMockUser(roles = "PROFESSOR")
     void shouldCreateAlternativaSuccessfully() throws Exception {
-        // ARRANGE
+
         AlternativasRequestDto requestDto = new AlternativasRequestDto();
         requestDto.setIdQuestao(1L);
         requestDto.setAlternativa("Alternativa Correta");
-        // ADICIONE ISTO: Provavelmente seu DTO exige este campo e ele não pode ser nulo
+
         requestDto.setAlternativaCorreta(true);
 
         AlternativasResponseDto responseDto = new AlternativasResponseDto();
@@ -75,12 +71,11 @@ class AlternativasControllerTest {
         when(alternativasService.createAlternativa(any(AlternativasRequestDto.class)))
                 .thenReturn(responseDto);
 
-        // ACT & ASSERT
         mockMvc.perform(post("/alternativas")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isCreated()) // Agora deve passar
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.idAlternativa").value(10L));
     }
 
@@ -88,7 +83,7 @@ class AlternativasControllerTest {
     @DisplayName("GET - Deve retornar lista paginada de alternativas (200 OK)")
     @WithMockUser(roles = "PROFESSOR")
     void shouldGetAllAlternativas() throws Exception {
-        // ARRANGE
+
         PagedResponse<AlternativasResponseDto> pagedResponse = new PagedResponse<AlternativasResponseDto>(null, 0, 0, 0, 0, true);
         pagedResponse.setContent(Collections.emptyList());
         pagedResponse.setPage(0);
@@ -96,7 +91,6 @@ class AlternativasControllerTest {
 
         when(alternativasService.getAllAlternativas(any(Pageable.class))).thenReturn(pagedResponse);
 
-        // ACT & ASSERT
         mockMvc.perform(get("/alternativas")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -107,7 +101,7 @@ class AlternativasControllerTest {
     @DisplayName("GET - Deve retornar alternativa por ID (200 OK)")
     @WithMockUser(roles = "PROFESSOR")
     void shouldGetAlternativaById() throws Exception {
-        // ARRANGE
+
         Long id = 1L;
         AlternativasResponseDto responseDto = new AlternativasResponseDto();
         responseDto.setIdAlternativa(id);
@@ -115,7 +109,6 @@ class AlternativasControllerTest {
 
         when(alternativasService.getAlternativaById(id)).thenReturn(responseDto);
 
-        // ACT & ASSERT
         mockMvc.perform(get("/alternativas/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.idAlternativa").value(id));
@@ -123,9 +116,9 @@ class AlternativasControllerTest {
 
     @Test
     @DisplayName("PATCH - Deve atualizar alternativa com sucesso (200 OK)")
-    @WithMockUser(roles = "ADMIN") // Nota: A controller exige ADMIN para update
+    @WithMockUser(roles = "ADMIN")
     void shouldUpdateAlternativaSuccessfully() throws Exception {
-        // ARRANGE
+
         Long id = 1L;
         AlternativasUpdateDto updateDto = new AlternativasUpdateDto();
         updateDto.setAlternativa(Optional.of("Novo Texto"));
@@ -137,7 +130,6 @@ class AlternativasControllerTest {
         when(alternativasService.updateAlternativa(eq(id), any(AlternativasUpdateDto.class)))
                 .thenReturn(responseDto);
 
-        // ACT & ASSERT
         mockMvc.perform(patch("/alternativas/{id}", id)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -150,43 +142,37 @@ class AlternativasControllerTest {
     @DisplayName("DELETE - Deve deletar alternativa com sucesso (204 No Content)")
     @WithMockUser(roles = "ADMIN")
     void shouldDeleteAlternativaSuccessfully() throws Exception {
-        // ARRANGE
-        Long id = 1L;
-        // Service retorna void
 
-        // ACT & ASSERT
+        Long id = 1L;
+
         mockMvc.perform(delete("/alternativas/{id}", id)
                         .with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
-    // ==================================================================================
-    // SAD PATHS (Caminhos Tristes - Erros e Validações)
-    // ==================================================================================
 
     @Test
     @DisplayName("POST - Deve retornar 403 Forbidden se usuário não tiver role PROFESSOR")
     @WithMockUser(roles = "ALUNO")
     void shouldReturnForbiddenWhenUserHasWrongRoleForCreate() throws Exception {
-        // ARRANGE: Crie um DTO VÁLIDO para passar pela barreira do @Valid
+
         AlternativasRequestDto requestDto = new AlternativasRequestDto();
         requestDto.setIdQuestao(1L);
         requestDto.setAlternativa("Texto Qualquer");
         requestDto.setAlternativaCorreta(false);
 
-        // ACT & ASSERT
         mockMvc.perform(post("/alternativas")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isForbidden()); // Agora vai dar 403
+                .andExpect(status().isForbidden());
     }
 
     @Test
     @DisplayName("POST - Deve retornar 400 Bad Request se input for inválido")
     @WithMockUser(roles = "PROFESSOR")
     void shouldReturnBadRequestWhenInputIsInvalid() throws Exception {
-        // DTO Vazio para disparar @Valid (assumindo que existem anotações @NotNull no DTO)
+
         AlternativasRequestDto invalidDto = new AlternativasRequestDto();
 
         mockMvc.perform(post("/alternativas")
@@ -206,7 +192,7 @@ class AlternativasControllerTest {
             .thenThrow(new ResourceNotFoundException("Não encontrado"));
 
         mockMvc.perform(get("/alternativas/{id}", id))
-                .andExpect(status().isNotFound()); // <-- MUDAR PARA ISTO (404)
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -234,6 +220,6 @@ class AlternativasControllerTest {
 
         mockMvc.perform(delete("/alternativas/{id}", id)
                         .with(csrf()))
-                .andExpect(status().isNotFound()); // <-- MUDAR PARA ISTO (404)
+                .andExpect(status().isNotFound()); 
     }
 }

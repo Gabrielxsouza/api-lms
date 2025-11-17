@@ -110,25 +110,18 @@ class AlternativasServiceTest {
     @Test
     @DisplayName("Deve retornar todas as alternativas paginadas (Happy Path)")
     void shouldGetAllAlternativas() {
-        // ARRANGE
+     
         Pageable pageable = PageRequest.of(0, 10);
         Alternativas alternativa = new Alternativas();
         List<Alternativas> lista = Collections.singletonList(alternativa);
         Page<Alternativas> page = new PageImpl<>(lista);
-
-        // CORREÇÃO: Tipagem explícita no lado direito
         PagedResponse<AlternativasResponseDto> pagedResponse = new PagedResponse<AlternativasResponseDto>(null, 0, 0, 0, 0, false);
-
-        // Se a linha acima der erro de "Constructor undefined", use a Opção 2 (construtor completo)
-        // PagedResponse<AlternativasResponseDto> pagedResponse = new PagedResponse<>(Collections.emptyList(), 0, 1, 1, 10, true);
 
         when(alternativasRepository.findAll(pageable)).thenReturn(page);
         when(pagedResponseMapper.toPagedResponse(page, AlternativasResponseDto.class)).thenReturn(pagedResponse);
 
-        // ACT
         PagedResponse<AlternativasResponseDto> result = alternativasService.getAllAlternativas(pageable);
 
-        // ASSERT
         assertNotNull(result);
         verify(alternativasRepository).findAll(pageable);
         verify(pagedResponseMapper).toPagedResponse(page, AlternativasResponseDto.class);

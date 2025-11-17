@@ -105,10 +105,13 @@ class AdministradorServiceTest {
 
         Long id = 1L;
 
+        when(administradorRepository.existsById(id)).thenReturn(true);
+
         doNothing().when(administradorRepository).deleteById(id);
 
         administradorService.deleteAdmin(id);
 
+        verify(administradorRepository, times(1)).existsById(id);
         verify(administradorRepository, times(1)).deleteById(id);
     }
 
@@ -161,7 +164,9 @@ class AdministradorServiceTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             administradorService.updateAdmin(id, updateDto);
         });
-        assertEquals("Administrador com id 99 nao encontrado", exception.getMessage());
+
+        assertEquals("Administrador não encontrado", exception.getMessage());
+
         verify(administradorRepository, times(1)).findById(id);
         verify(administradorRepository, never()).save(any());
     }
