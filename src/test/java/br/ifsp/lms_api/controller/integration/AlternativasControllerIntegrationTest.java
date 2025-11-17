@@ -1,6 +1,5 @@
 package br.ifsp.lms_api.controller.integration;
 
-
 import br.ifsp.lms_api.dto.alternativasDto.AlternativasRequestDto;
 import br.ifsp.lms_api.dto.alternativasDto.AlternativasUpdateDto;
 import br.ifsp.lms_api.model.Alternativas;
@@ -16,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,22 +42,33 @@ class AlternativasControllerIntegrationTest {
     private QuestoesRepository questoesRepository;
 
     @Autowired
+    private AtividadeRepository atividadeRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     private Questoes questaoSalva;
 
-    @Autowired
-    private AtividadeRepository atividadeRepository;
-
     @BeforeEach
     void setUp() {
+        // Limpeza manual via SQL para garantir a ordem correta das FKs e evitar DataIntegrityViolation
+        // Tenta limpar tabelas dependentes que podem ter sido populadas por outros testes ou data.sql
+        try {
+            jdbcTemplate.execute("DELETE FROM tentativa_texto");
+            jdbcTemplate.execute("DELETE FROM tentativa_questionario");
+        } catch (Exception e) {
+            // Ignora se as tabelas não existirem ou já estiverem vazias
+        }
 
         alternativasRepository.deleteAll();
+        questoesRepository.deleteAll();
+
         if(atividadeRepository != null) {
              atividadeRepository.deleteAll();
         }
-
-        questoesRepository.deleteAll();
 
         Questoes questao = new Questoes();
         questao.setEnunciado("Questão Teste Integração");
@@ -213,7 +224,7 @@ class AlternativasControllerIntegrationTest {
         Alternativas alt = new Alternativas();
         alt.setAlternativa(texto);
         alt.setAlternativaCorreta(correta);
-        alt.setQuestoes(questaoSalva); 
+        alt.setQuestoes(questaoSalva);
         return alternativasRepository.save(alt);
     }
 }

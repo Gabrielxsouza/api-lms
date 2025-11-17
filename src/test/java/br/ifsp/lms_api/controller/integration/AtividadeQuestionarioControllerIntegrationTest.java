@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -52,6 +53,9 @@ import br.ifsp.lms_api.repository.TurmaRepository;
 @ActiveProfiles("test")
 @Transactional
 class AtividadeQuestionarioControllerIntegrationTest {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
     private MockMvc mockMvc;
@@ -231,21 +235,35 @@ class AtividadeQuestionarioControllerIntegrationTest {
 
     @Test
     void testGetAll_Success() throws Exception {
+
+        try {
+            jdbcTemplate.execute("DELETE FROM tentativa_questionario");
+
+        } catch (Exception e) {
+
+        }
         atividadeQuestionarioRepository.deleteAll();
+
+        Professor professor = createProfessor();
+        Topicos topico = createHierarchy(professor);
 
         AtividadeQuestionario aq1 = new AtividadeQuestionario();
         aq1.setTituloAtividade("Questionário 1");
         aq1.setStatusAtividade(true);
         aq1.setDataInicioAtividade(LocalDate.now());
         aq1.setDataFechamentoAtividade(LocalDate.now().plusDays(1));
+        aq1.setTopico(topico);
+        aq1.setQuestoes(new ArrayList<>());
 
         AtividadeQuestionario aq2 = new AtividadeQuestionario();
         aq2.setTituloAtividade("Questionário 2");
         aq2.setStatusAtividade(true);
         aq2.setDataInicioAtividade(LocalDate.now());
         aq2.setDataFechamentoAtividade(LocalDate.now().plusDays(2));
+        aq2.setTopico(topico);
+        aq2.setQuestoes(new ArrayList<>());
 
-        atividadeQuestionarioRepository.saveAll(new ArrayList<>(List.of(aq1, aq2)));
+        atividadeQuestionarioRepository.saveAll(List.of(aq1, aq2));
 
         mockMvc.perform(get("/atividades-questionario")
                 .with(user("professor").roles("PROFESSOR")))
@@ -324,7 +342,6 @@ class AtividadeQuestionarioControllerIntegrationTest {
         Topicos topico = new Topicos();
         topico.setTurma(turma);
 
-        // --- CORREÇÃO AQUI: Adicionado o Título do Tópico para passar na validação ---
         topico.setTituloTopico("Tópico Geral de Teste");
 
         return topicoRepository.save(topico);

@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class PrincipalController {
 
     @GetMapping
-    public String getMethodName(@RequestParam String param) {
+    public String getMethodName() {
         return "Bem vindos ao LMS API";
     }
-    
-    
+
+
 }
