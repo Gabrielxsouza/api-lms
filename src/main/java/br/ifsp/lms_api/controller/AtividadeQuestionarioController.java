@@ -5,10 +5,13 @@ import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.ifsp.lms_api.config.CustomUserDetails;
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioRequestDto;
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioResponseDto;
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioUpdateDto;
@@ -40,6 +43,7 @@ public class AtividadeQuestionarioController {
         this.atividadeQuestionarioService = atividadeQuestionarioService;
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Criar novo questionário",
         description = "Cria uma nova atividade do tipo questionário, opcionalmente com questões já vinculadas."
@@ -59,6 +63,7 @@ public class AtividadeQuestionarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Listar todos os questionários",
         description = "Retorna uma lista paginada de todas as atividades do tipo 'Questionário'."
@@ -83,6 +88,7 @@ public class AtividadeQuestionarioController {
         return ResponseEntity.ok(atividadeQuestionarioService.getAtividadeQuestionarioById(id));
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(summary = "Atualizar um questionário (PATCH)")
     @ApiResponse(
         responseCode = "200",
@@ -93,12 +99,14 @@ public class AtividadeQuestionarioController {
     @PatchMapping("/{id}")
     public ResponseEntity<AtividadeQuestionarioResponseDto> update(
             @Parameter(description = "ID do questionário a ser atualizado") @PathVariable Long id, 
-            @Valid @RequestBody AtividadeQuestionarioUpdateDto atividadeQuestionarioUpdateDto) {
+            @Valid @RequestBody AtividadeQuestionarioUpdateDto atividadeQuestionarioUpdateDto,
+            @AuthenticationPrincipal CustomUserDetails usuarioLogado) {
         
-        AtividadeQuestionarioResponseDto responseDto = atividadeQuestionarioService.updateAtividadeQuestionario(id, atividadeQuestionarioUpdateDto);
+        AtividadeQuestionarioResponseDto responseDto = atividadeQuestionarioService.updateAtividadeQuestionario(id, atividadeQuestionarioUpdateDto, usuarioLogado.getId());
         return ResponseEntity.ok(responseDto);
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Adicionar questões a um questionário",
         description = "Vincula uma lista de questões existentes a um questionário existente, baseado em seus IDs."
@@ -108,34 +116,38 @@ public class AtividadeQuestionarioController {
     @PostMapping("/{idQuestionario}/questoes")
     public ResponseEntity<AtividadeQuestionarioResponseDto> adicionarQuestoesAoQuestionario(
             @Parameter(description = "ID do questionário") @PathVariable Long idQuestionario,
-            @Parameter(description = "Lista de IDs das questões a serem adicionadas") @RequestBody List<Long> idsDasQuestoes) {
+            @Parameter(description = "Lista de IDs das questões a serem adicionadas") @RequestBody List<Long> idsDasQuestoes,
+            @AuthenticationPrincipal CustomUserDetails usuarioLogado) {
 
         AtividadeQuestionarioResponseDto questionarioAtualizado =
-                atividadeQuestionarioService.adicionarQuestoes(idQuestionario, idsDasQuestoes);
+                atividadeQuestionarioService.adicionarQuestoes(idQuestionario, idsDasQuestoes, usuarioLogado.getId());
 
         return ResponseEntity.ok(questionarioAtualizado);
     }
 
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Remover questões de um questionário",
         description = "Desvincula uma lista de questões específicas de um questionário."
     )
     @ApiResponse(responseCode = "200", description = "Questões removidas com sucesso")
     @ApiResponse(responseCode = "404", description = "Questionário não encontrado")
-    @DeleteMapping("/{idQuestionario}/questoes")
+    @PatchMapping("/{idQuestionario}/questoes")
     public ResponseEntity<AtividadeQuestionarioResponseDto> removerQuestoesDoQuestionario(
             @Parameter(description = "ID do questionário") @PathVariable Long idQuestionario,
-            @Parameter(description = "Lista de IDs das questões a serem removidas") @RequestBody List<Long> idsDasQuestoes) {
+            @Parameter(description = "Lista de IDs das questões a serem removidas") @RequestBody List<Long> idsDasQuestoes, 
+            @AuthenticationPrincipal CustomUserDetails usuarioLogado) {
 
         try {
-            AtividadeQuestionarioResponseDto questionarioAtualizado = atividadeQuestionarioService.removerQuestoes(idQuestionario, idsDasQuestoes);
+            AtividadeQuestionarioResponseDto questionarioAtualizado = atividadeQuestionarioService.removerQuestoes(idQuestionario, idsDasQuestoes, usuarioLogado.getId());
             return ResponseEntity.ok(questionarioAtualizado);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Remover TODAS as questões de um questionário",
         description = "Desvincula todas as questões atualmente associadas a um questionário."
@@ -144,10 +156,11 @@ public class AtividadeQuestionarioController {
     @ApiResponse(responseCode = "404", description = "Questionário não encontrado")
     @DeleteMapping("/{idQuestionario}/questoes/todas")
     public ResponseEntity<AtividadeQuestionarioResponseDto> removerQuestoesDoQuestionario(
-            @Parameter(description = "ID do questionário") @PathVariable Long idQuestionario) {
+            @Parameter(description = "ID do questionário") @PathVariable Long idQuestionario, 
+            @AuthenticationPrincipal CustomUserDetails usuarioLogado) {
 
         try {
-            AtividadeQuestionarioResponseDto questionarioAtualizado = atividadeQuestionarioService.removerQuestoes(idQuestionario);
+            AtividadeQuestionarioResponseDto questionarioAtualizado = atividadeQuestionarioService.removerQuestoes(idQuestionario, usuarioLogado.getId());
             return ResponseEntity.ok(questionarioAtualizado);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();

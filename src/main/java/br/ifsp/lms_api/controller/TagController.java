@@ -9,6 +9,7 @@ import br.ifsp.lms_api.service.TagService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +33,7 @@ public class TagController {
         this.tagService = tagService;
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Criar nova tag",
         description = "Cria uma nova tag de conteúdo. O nome da tag deve ser único."
@@ -51,6 +53,7 @@ public class TagController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
+    @PreAuthorize("permitAll()")
     @Operation(
         summary = "Listar todas as tags",
         description = "Retorna uma lista paginada de todas as tags de conteúdo cadastradas."
@@ -62,6 +65,7 @@ public class TagController {
         return ResponseEntity.ok(tagService.getAllTags(pageable));
     }
 
+    @PreAuthorize("permitAll()")
     @Operation(summary = "Buscar tag por ID")
     @ApiResponse(
         responseCode = "200",
@@ -75,6 +79,7 @@ public class TagController {
         return ResponseEntity.ok(tagService.getTagById(id));
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(summary = "Atualizar uma tag (PATCH)")
     @ApiResponse(
         responseCode = "200",
@@ -92,6 +97,7 @@ public class TagController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Deletar uma tag")
     @ApiResponse(responseCode = "204", description = "Tag deletada com sucesso")
     @ApiResponse(responseCode = "404", description = "Tag não encontrada")

@@ -3,6 +3,7 @@ package br.ifsp.lms_api.controller;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,8 +29,8 @@ import jakarta.validation.Valid;
 
 @RestController
 @Validated
-@RequestMapping("/cursos") // Alterado de /disciplinas para /cursos
-@Tag(name = "Cursos", description = "Endpoints para gerenciar cursos e suas turmas") // Tag Swagger
+@RequestMapping("/cursos") 
+@Tag(name = "Cursos", description = "Endpoints para gerenciar cursos e suas turmas") 
 public class CursoController {
     private final CursoService cursoService;
 
@@ -37,6 +38,7 @@ public class CursoController {
         this.cursoService = cursoService;
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(
         summary = "Criar novo curso",
         description = "Cria um novo curso e, opcionalmente, cria turmas aninhadas na mesma requisição."
@@ -53,6 +55,7 @@ public class CursoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCurso);
     }
 
+    @PreAuthorize("permitAll()")
     @Operation(
         summary = "Listar todos os cursos",
         description = "Retorna uma lista paginada de todos os cursos."
@@ -64,6 +67,7 @@ public class CursoController {
         return ResponseEntity.ok(cursoService.getAllCursos(pageable));
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")  
     @Operation(summary = "Atualizar um curso (PATCH)")
     @ApiResponse(
         responseCode = "200",
@@ -80,6 +84,7 @@ public class CursoController {
         return ResponseEntity.ok(updatedCurso);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Deletar um curso")
     @ApiResponse(responseCode = "204", description = "Curso deletado com sucesso")
     @ApiResponse(responseCode = "404", description = "Curso não encontrado")

@@ -3,6 +3,7 @@ package br.ifsp.lms_api.controller;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,6 +38,7 @@ public class MatriculaController {
         this.matriculaService = matriculaService;
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Criar nova matrícula", description = "Cria uma nova matrícula para um aluno em uma turma específico.")
     @ApiResponse(responseCode = "201", description = "Matrícula criada com sucesso")
     @ApiResponse(responseCode = "400", description = "Entrada inválida (campos obrigatórios faltando ou mal formatados)")
@@ -47,6 +49,7 @@ public class MatriculaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(summary = "Listar todas as matrículas", description = "Retorna uma lista paginada de todas as matrículas de alunos em turmas.")
     @ApiResponse(responseCode = "200", description = "Lista paginada de matrículas")
     @GetMapping
@@ -55,6 +58,7 @@ public class MatriculaController {
         return ResponseEntity.ok(matriculaService.getAllMatriculas(pageable));
     }
 
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(summary = "Obter matrícula por ID", description = "Retorna os detalhes de uma matrícula específica com base no seu ID.")
     @ApiResponse(responseCode = "200", description = "Detalhes da matrícula")
     @ApiResponse(responseCode = "404", description = "Matrícula não encontrada")
@@ -64,6 +68,7 @@ public class MatriculaController {
         return ResponseEntity.ok(matriculaService.getMatriculaById(id));
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Deletar uma matrícula", description = "Deleta uma matrícula existente com base no seu ID.")
     @ApiResponse(responseCode = "204", description = "Matrícula deletada com sucesso")
     @ApiResponse(responseCode = "404", description = "Matrícula não encontrada")
@@ -74,6 +79,7 @@ public class MatriculaController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Atualizar uma matrícula", description = "Atualiza os detalhes de uma matrícula existente.")
     @ApiResponse(responseCode = "200", description = "Matrícula atualizada com sucesso")
     @ApiResponse(responseCode = "400", description = "Entrada inválida (campos obrigatórios faltando ou mal formatados)")

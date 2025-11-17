@@ -3,6 +3,7 @@ package br.ifsp.lms_api.controller;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +39,7 @@ public class TurmaController {
         this.turmaService = turmaService;
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(
         summary = "Criar nova turma",
         description = "Cria uma nova turma vinculada a um curso e disciplina existentes. O professor é pego automaticamente do usuário logado."
@@ -57,6 +59,7 @@ public class TurmaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTurma);
     }
 
+    @PreAuthorize("permitAll()")
     @Operation(
         summary = "Listar todas as turmas (Apenas ADMIN)",
         description = "Retorna uma lista paginada de todas as turmas cadastradas no sistema."
@@ -68,6 +71,7 @@ public class TurmaController {
         return ResponseEntity.ok(turmaService.getAllTurmas(pageable));
     }
     
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @Operation(
         summary = "Listar minhas turmas (Professor)",
         description = "Retorna uma lista paginada de todas as turmas vinculadas ao professor logado."
@@ -79,6 +83,7 @@ public class TurmaController {
         return ResponseEntity.ok(turmaService.getMinhasTurmas(pageable));
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Atualizar uma turma (PATCH)")
     @ApiResponse(
         responseCode = "200",
@@ -95,6 +100,7 @@ public class TurmaController {
         return ResponseEntity.ok(updatedTurma);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Deletar uma turma")
     @ApiResponse(responseCode = "204", description = "Turma deletada com sucesso")
     @ApiResponse(responseCode = "404", description = "Turma não encontrada")

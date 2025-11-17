@@ -93,4 +93,5 @@ public class AtividadeArquivosController {
         
         return ResponseEntity.noContent().build();
     }
+
 }

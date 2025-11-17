@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import br.ifsp.lms_api.config.CustomUserDetails; // <-- Importe a nova classe
+import br.ifsp.lms_api.config.CustomUserDetails; 
 import br.ifsp.lms_api.model.Aluno;
 import br.ifsp.lms_api.model.Usuario;
 import br.ifsp.lms_api.repository.AlunoRepository;
@@ -14,10 +14,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import br.ifsp.lms_api.model.Usuario;
-import br.ifsp.lms_api.repository.AlunoRepository;
-import br.ifsp.lms_api.repository.UsuarioRepository;
-import java.util.Optional;
+
 
 @Service
 public class AutentificacaoService implements UserDetailsService {
@@ -47,12 +44,6 @@ public class AutentificacaoService implements UserDetailsService {
         throw new UsernameNotFoundException("Usuário não encontrado: " + username);
     }
 
-    // --- MÉTODO ADICIONADO ---
-    /**
-     * Busca a entidade Usuario (Professor, Aluno ou Admin) que está 
-     * atualmente autenticada no contexto de segurança do Spring.
-     * * @return A entidade Usuario logada.
-     */
     public Usuario getUsuarioLogado() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -60,8 +51,6 @@ public class AutentificacaoService implements UserDetailsService {
              throw new UsernameNotFoundException("Nenhum usuário autenticado na sessão.");
         }
         
-        // O "Principal" é o objeto UserDetails que retornamos no loadUserByUsername,
-        // que no nosso caso é a própria entidade Usuario.
         return (Usuario) authentication.getPrincipal();
     }
 }
