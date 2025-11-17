@@ -73,8 +73,6 @@ public class ProfessorService {
         professorRepository.delete(professor);
     }
 
-    // --- Métodos Auxiliares ---
-
     private Professor findEntityById(Long id) {
         return professorRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(String.format(NOT_FOUND_MSG, id)));

@@ -56,26 +56,14 @@ public class CustomUserDetails implements UserDetails {
         return usuario.isEnabled();
     }
 
-    // --- MÉTODOS CUSTOMIZADOS (O MOTIVO DE CRIARMOS A CLASSE) ---
-
-    /**
-     * Retorna o ID do usuário logado.
-     */
     public Long getId() {
         return usuario.getIdUsuario();
     }
 
-    /**
-     * Verifica se o usuário logado é um Aluno.
-     */
     public boolean isAluno() {
         return usuario instanceof Aluno;
     }
 
-    /**
-     * Retorna a entidade Usuario (para uso INTERNO no Service, se necessário).
-     * Evite usar isso no Controller.
-     */
     public Usuario getUsuario() {
         return usuario;
     }

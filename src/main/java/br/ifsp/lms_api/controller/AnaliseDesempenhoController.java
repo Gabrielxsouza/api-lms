@@ -28,7 +28,7 @@ public class AnaliseDesempenhoController {
         this.analiseService = analiseService;
     }
 
-    @PreAuthorize("hasRole('ALUNO')") // Aluno só pode ver o seu
+    @PreAuthorize("hasRole('ALUNO')")
     @Operation(summary = "Gerar meu relatório de desempenho (Aluno)")
     @ApiResponse(responseCode = "200", description = "Relatório gerado com sucesso.")
     @GetMapping("/aluno/meu-desempenho")
@@ -38,9 +38,4 @@ public class AnaliseDesempenhoController {
         Long idAlunoLogado = usuarioLogado.getId();
         return analiseService.gerarRelatorioAluno(idAlunoLogado);
     }
-    
-    // (Futuramente, aqui entraria o endpoint do Admin/Professor)
-    // @PreAuthorize("hasRole('PROFESSOR')")
-    // @GetMapping("/turma/{idTurma}")
-    // public RelatorioTurmaResponseDto getRelatorioTurma(...) { ... }
 }

@@ -76,7 +76,7 @@ public class MatriculaService {
         matriculaRepository.delete(matricula);
     }
 
-    // Com todo o respeito o gemini macheu aqui pq tava meio esquisito e ta mt feio
+    // Com todo o respeito o macheu aqui pq tava meio esquisito e ta mt feio
     // se precisar mexer me avisa q eu arrumo
     @Transactional
     public MatriculaResponseDto updateMatricula(long id, MatriculaUpdateDto dto) {

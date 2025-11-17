@@ -6,7 +6,6 @@ import br.ifsp.lms_api.dto.analise.NotaTagAgregada;
 import br.ifsp.lms_api.dto.analise.RelatorioDesempenhoResponseDto;
 import br.ifsp.lms_api.dto.analise.TagDesempenhoDto;
 
-// Modelos (Entidades do Banco)
 import br.ifsp.lms_api.model.Alternativas;
 import br.ifsp.lms_api.model.MaterialDeAula;
 import br.ifsp.lms_api.model.Questoes;
@@ -15,7 +14,7 @@ import br.ifsp.lms_api.model.TentativaArquivo;
 import br.ifsp.lms_api.model.TentativaQuestionario;
 import br.ifsp.lms_api.model.TentativaTexto;
 import br.ifsp.lms_api.model.Topicos;
-// Repositórios
+
 import br.ifsp.lms_api.repository.TentativaArquivoRepository;
 import br.ifsp.lms_api.repository.TentativaQuestionarioRepository;
 import br.ifsp.lms_api.repository.TentativaTextoRepository;

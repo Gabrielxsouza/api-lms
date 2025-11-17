@@ -12,7 +12,6 @@ import br.ifsp.lms_api.service.TentativaArquivoService;
 import br.ifsp.lms_api.dto.TentativaArquivoDto.TentativaArquivoResponseDto;
 import br.ifsp.lms_api.dto.TentativaArquivoDto.TentativaArquivoUpdateDto;
 
-// Imports do Swagger
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -27,14 +27,12 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        // Cria uma mensagem de erro JSON
         Map<String, String> erro = new HashMap<>();
         erro.put("status", "401");
         erro.put("erro", "Não autenticado");
         erro.put("mensagem", "Você precisa estar logado para acessar este recurso.");
         erro.put("path", request.getRequestURI());
 
-        // Escreve o JSON na resposta
         response.getWriter().write(objectMapper.writeValueAsString(erro));
     }
 }

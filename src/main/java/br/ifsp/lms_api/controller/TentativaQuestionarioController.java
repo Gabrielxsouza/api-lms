@@ -67,7 +67,7 @@ public class TentativaQuestionarioController {
     @GetMapping("/aluno/{alunoId}")
     public PagedResponse<TentativaQuestionarioResponseDto> getTentativasQuestionarioByAlunoId(
             @Parameter(description = "ID do aluno a ser buscado") @PathVariable Long alunoId, 
-            @PageableDefault(page = 0, size = 10) Pageable pageable) { // <-- Pageable ajustado
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
         
         return tentativaQuestionarioService.getTentativasQuestionarioByAlunoId(alunoId, pageable);
     }
