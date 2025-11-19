@@ -1,6 +1,6 @@
 # API de LMS para Cursos de Exatas
 
-Este projeto é a API back-end para um Sistema de Gerenciamento de Aprendizado (LMS) robusto e especializado, construído com Spring Boot. O foco do sistema é atender às necessidades específicas de cursos de ciências exatas, permitindo um gerenciamento detalhado de disciplinas, turmas, tópicos e atividades pedagógicas complexas.
+Este projeto é a API back-end para um Sistema de Gerenciamento de Aprendizado (LMS) robusto e especializado, construído com Spring Boot. O foco do sistema é atender às necessidades específicas de cursos de ciências exatas, permitindo um gerenciamento detalhado de disciplinas, turmas, tópicos, atividades pedagógicas e, principalmente, uma **análise de desempenho granular baseada em tags**.
 
 ## Contexto Acadêmico
 
@@ -16,90 +16,91 @@ Este projeto foi desenvolvido para as disciplinas de **GRUAPIM (APIs e Microsser
 
 ## ✨ Funcionalidades Principais
 
-A API suporta o CRUD (Create, Read, Update, Delete) completo e paginado para as principais entidades do sistema:
+A API suporta o CRUD completo, autenticação e regras de negócio complexas para as seguintes funcionalidades:
 
-* **Gerenciamento de Usuários:**
-    * Estrutura de herança (`SINGLE_TABLE`) para `Usuario` (Abstrato), `Aluno`, `Professor` e `Administrador`.
-    * Endpoints CRUD completos para Alunos e Professores.
-* **Segurança e Autenticação (Base):**
-    * Adição do Spring Security para gerenciamento de autenticação.
-    * Criptografia de senhas de usuários (usando `BCryptPasswordEncoder`) no banco de dados.
-* **Disciplinas:** Gerenciamento completo de disciplinas.
-* **Turmas:**
-    * Criação de turmas avulsas (vinculadas a uma disciplina existente).
-    * Criação aninhada (criação de turmas ao mesmo tempo em que se cria uma disciplina).
-    * Deleção em cascata (ao deletar uma disciplina, suas turmas são removidas).
-* **Gerenciamento de Tags (Análise de Erro):**
-    * Endpoints CRUD completos para criar e gerenciar um "dicionário" de tags (ex: "Cálculo 1", "Derivadas").
-    * Implementação dos pilares da "Análise de Erro" através de relacionamentos Many-to-Many:
-        * `Tags <-> Tópicos`
-        * `Tags <-> Atividades`
-        * `Tags <-> Questões`
-* **Tópicos:** Gerenciamento de tópicos de aula vinculados a uma turma.
-    * **Segurança:** Inclui sanitização de HTML (OWASP) para campos de "conteúdo".
-    * Permite a associação de Atividades e Tags já existentes.
+* **Gerenciamento de Usuários e Segurança:**
+    * Estrutura de herança (`SINGLE_TABLE`) para `Usuario`, `Aluno`, `Professor` e `Administrador`.
+    * Autenticação via **Spring Security** e **JWT (Tokens)**.
+    * Controle de acesso baseado em Roles (`hasRole('ALUNO')`, `hasRole('PROFESSOR')`, etc.).
+    * Criptografia de senhas com `BCrypt`.
+
+* **Estrutura Acadêmica:**
+    * **Disciplinas e Turmas:** Gerenciamento completo, incluindo criação aninhada e deleção em cascata.
+    * **Matrículas:** Vinculação de alunos às turmas (gerenciado por administradores).
+    * **Tópicos de Aula:** Organização do conteúdo, com sanitização de HTML (OWASP) para segurança.
+
 * **Material de Aula:**
-    * Upload de arquivos (`MultipartFile`) associados a um tópico.
-    * Integração com um serviço de armazenamento de arquivos.
-* **Atividades (Polimorfismo):**
-    * Estrutura de herança para `Atividade`.
-    * Endpoints separados para `AtividadeTexto`, `AtividadeArquivos` e `AtividadeQuestionario`.
-* **Questionários:** Estrutura completa para `AtividadeQuestionario` e seu relacionamento N:M com `Questoes` e `Alternativas`.
-* **População de Dados (Data Seeder):**
-    * Inclui um `CommandLineRunner` (`DataInitializer`) que popula o banco de dados em memória (H2) em toda inicialização, facilitando os testes da API.
-* **Documentação da API (Swagger):**
-    * Geração automática de documentação da API e interface de testes via **Springdoc (Swagger UI)**.
+    * Upload de arquivos (`MultipartFile`) vinculados a tópicos.
+    * Integração com o sistema de recomendação de estudos.
+
+* **Atividades e Avaliações (Polimorfismo):**
+    * Sistema flexível com herança para diferentes tipos de atividades:
+        * **Texto:** Aluno submete uma redação/resposta dissertativa.
+        * **Arquivo:** Aluno faz upload de um arquivo (PDF, ZIP, etc.).
+        * **Questionário:** Avaliação objetiva com correção automática.
+
+* **Tentativas e Correção:**
+    * Fluxo completo de submissão pelo Aluno.
+    * **Correção Automática:** Para questionários, a nota é calculada instantaneamente baseada nas alternativas corretas.
+    * **Correção Manual:** Para Texto e Arquivo, o Professor lança nota e feedback.
+    * Regras de negócio para reenvio e bloqueio de edição após correção.
+
+* **Banco de Questões Inteligente:**
+    * Cadastro de questões e alternativas.
+    * **Filtros Dinâmicos (JPA Specifications):** Professores podem buscar questões filtrando por **Tags** ou **Palavras-chave** no enunciado.
+
+* **📈 Análise de Desempenho e Recomendação (O Diferencial):**
+    * O sistema rastreia o desempenho do aluno por **Tags de Conteúdo** (ex: "Derivadas", "Cálculo 1").
+    * **Diagnóstico Automático:** Identifica "Pontos Fracos" (tags com média abaixo do limiar).
+    * **Sistema de Recomendação:** Sugere automaticamente **Materiais de Aula** específicos para reforçar os pontos fracos identificados.
+    * **Visão Hierárquica:** Relatórios disponíveis em três níveis:
+        1.  **Aluno:** Vê seu próprio desempenho e sugestões.
+        2.  **Professor:** Vê o desempenho agregado de uma **Turma**.
+        3.  **Coordenador:** Vê o desempenho agregado de uma **Disciplina**.
+
+* **População de Dados:**
+    * `DataInitializer` robusto que popula o banco (H2) com cenários complexos de teste (alunos, tentativas, notas e materiais) a cada inicialização.
 
 ---
 
 ## 🗺️ Endpoints da API
 
-A API segue os padrões RESTful. Os DTOs de `Update` utilizam `Optional` para permitir atualizações parciais (`PATCH`). Todas as listagens `GET` são paginadas.
+A API segue os padrões RESTful e utiliza Swagger (OpenAPI) para documentação.
 
-*(Acesse `http://localhost:8080/swagger-ui.html` para a documentação interativa completa)*
+*(Acesse `http://localhost:8080/swagger-ui.html` para testar)*
 
-### Usuários (Alunos / Professores)
-* `POST /alunos`, `GET /alunos`, `PATCH /alunos/{id}`, `DELETE /alunos/{id}`
-* `POST /professores`, `GET /professores`, `PATCH /professores/{id}`, `DELETE /professores/{id}`
+### 📊 Análise de Desempenho
+* `GET /analise/aluno/meu-desempenho`: Relatório pessoal do aluno (com sugestões de estudo).
+    * *Filtros opcionais:* `?disciplinaId=X`, `?dataInicio=YYYY-MM-DD`, `?dataFim=YYYY-MM-DD`.
+* `GET /analise/turma/{id}`: Relatório agregado da turma (Visão Professor).
+* `GET /analise/disciplina/{id}`: Relatório agregado da disciplina (Visão Coordenador).
 
-### Tags (Conteúdo)
-* `POST /tags`, `GET /tags`, `GET /tags/{id}`, `PATCH /tags/{id}`, `DELETE /tags/{id}`
+### 📝 Submissão de Tentativas
+* **Texto:**
+    * `POST /tentativaTexto/{idAtividade}`: Aluno envia resposta.
+    * `PATCH /tentativaTexto/professor/{id}`: Professor dá nota/feedback.
+* **Arquivo:**
+    * `POST /tentativaArquivo/{idAtividade}`: Aluno envia arquivo.
+    * `PUT /tentativaArquivo/aluno/{id}`: Aluno substitui arquivo.
+* **Questionário:**
+    * `POST /tentativaQuestionario`: Aluno submete respostas (correção automática).
 
-### Disciplinas
-* `POST /disciplinas`: Cria uma nova disciplina (com turmas aninhadas).
-* `GET /disciplinas`: Lista todas as disciplinas (paginado).
-* `PATCH /disciplinas/{id}`: Atualiza uma disciplina.
-* `DELETE /disciplinas/{id}`: Deleta uma disciplina (e suas turmas em cascata).
+### 📚 Gestão de Conteúdo (Professor)
+* **Questões:**
+    * `GET /questoes`: Listagem com filtros (`?tagNome=...&palavraChave=...`).
+    * `POST /questoes`: Criar questão com alternativas e tags.
+* **Atividades:**
+    * `POST /atividades-texto`, `/atividades-arquivo`, `/atividades-questionario`.
+* **Materiais:**
+    * `POST /materiais/topico/{id}`: Upload de material de aula.
 
-### Turmas
-* `POST /turmas`: Cria uma nova turma avulsa (vinculada a um `idDisciplina` existente).
-* `GET /turmas`: Lista todas as turmas (paginado).
-* `PATCH /turmas/{id}`: Atualiza uma turma.
-* `DELETE /turmas/{id}`: Deleta uma turma.
+### 🏫 Estrutura (Admin/Professor)
+* **Disciplinas:** `POST`, `GET`, `PATCH`, `DELETE`.
+* **Turmas:** `POST`, `GET`, `PATCH`, `DELETE`.
+* **Tópicos:** `POST`, `GET`, `PATCH`, `DELETE`.
+* **Tags:** `POST`, `GET`, `PATCH`, `DELETE`.
 
-### Tópicos
-* `POST /topicos`: Cria um novo tópico (vinculado a um `idTurma` e opcionalmente a `tagIds` e `idAtividade` existentes).
-* `GET /topicos/turma/{idTurma}`: Lista todos os tópicos de uma turma específica (paginado).
-* `GET /topicos/{id}`: Busca um tópico por ID (e exibe suas atividades e tags).
-* `PATCH /topicos/{id}`: Atualiza um tópico (incluindo suas tags ou atividades).
-* `DELETE /topicos/{id}`: Deleta um tópico.
-
-### Atividades
-* `POST /atividades-texto`: Cria uma nova atividade de texto (com `tagIds` opcionais).
-* `POST /atividades-arquivo`: Cria uma nova atividade de envio de arquivo (com `tagIds` opcionais).
-* `POST /atividades-questionario`: Cria um novo questionário (com `tagIds` opcionais).
-* `POST /atividades-questionario/{id}/questoes`: Associa questões a um questionário.
-* *(Endpoints `GET`, `PATCH`, `DELETE` seguem o mesmo padrão)*
-
-### Questões e Alternativas
-* `POST /questoes`: Cria uma nova questão (com alternativas aninhadas e `tagIds` opcionais).
-* `GET /questoes`: Lista todas as questões (paginado).
-* `PATCH /questoes/{id}`: Atualiza uma questão (enunciado ou tags).
-* `DELETE /questoes/{id}`: Deleta uma questão.
-* *(Endpoints CRUD para `/alternativas` também existem)*
-
-### Material de Aula
-* `POST /materiais/topico/{idTopico}`: Faz upload de um arquivo (`MultipartFile`) para um tópico.
-* `GET /materiais/topico/{idTopico}`: Lista os materiais de um tópico.
-* `PUT /materiais/{id}`: Atualiza o arquivo de um material.
-* `DELETE /materiais/{id}`: Deleta um material (e o arquivo físico).
+### 👥 Usuários e Acesso
+* **Autenticação:** `POST /auth/login` (Gera Token JWT).
+* **Alunos/Professores:** CRUD completo para gestão de usuários.
+* **Matrículas:** `POST /matriculas` (Admin vincula Aluno à Turma).
