@@ -33,9 +33,11 @@ import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
 import br.ifsp.lms_api.model.Atividade;
 import br.ifsp.lms_api.model.AtividadeTexto;
+import br.ifsp.lms_api.model.Professor;
 import br.ifsp.lms_api.model.Topicos;
 import br.ifsp.lms_api.model.Turma;
 import br.ifsp.lms_api.repository.AtividadeRepository;
+import br.ifsp.lms_api.repository.TagRepository;
 import br.ifsp.lms_api.repository.TopicosRepository;
 import br.ifsp.lms_api.repository.TurmaRepository;
 
@@ -57,21 +59,34 @@ class TopicosServiceTest {
     @Mock
     private ModelMapper modelMapper;
 
+    @Mock
+    private TagRepository tagRepository;
+
+    @Mock
+    private AutentificacaoService autentificacaoService;
+
     @InjectMocks
     private TopicosService topicosService;
 
     private Turma turmaPadrao;
+    private Professor professorDono;
     private TopicosRequestDto requestDto;
     private String htmlSuja;
     private String htmlLimpa;
 
     @BeforeEach
     void setUp() {
+        // Configura o Professor e a Turma para passar na validação de segurança
+        professorDono = new Professor();
+        professorDono.setIdUsuario(99L);
+        professorDono.setNome("Professor Teste");
+
         turmaPadrao = new Turma();
         turmaPadrao.setIdTurma(1L);
+        turmaPadrao.setProfessor(professorDono); // Associa o professor à turma
 
         htmlSuja = "<p onclick='alert(1)'>Conteúdo</p><script>alert('XSS')</script>";
-        htmlLimpa = "<p>Conteúdo</p>"; 
+        htmlLimpa = "<p>Conteúdo</p>";
 
         requestDto = new TopicosRequestDto();
         requestDto.setIdTurma(1L);
@@ -82,24 +97,23 @@ class TopicosServiceTest {
 
     @Test
     void testCreateTopico_Success_And_SanitizeHtml() {
-        Topicos topicoMapeado = new Topicos(); 
-        Topicos topicoSalvo = new Topicos();   
+        Topicos topicoSalvo = new Topicos();
         topicoSalvo.setIdTopico(1L);
-        topicoSalvo.setConteudoHtml(htmlLimpa); 
+        topicoSalvo.setConteudoHtml(htmlLimpa);
         topicoSalvo.setTurma(turmaPadrao);
 
         Atividade atividadeMock = new AtividadeTexto();
         atividadeMock.setIdAtividade(10L);
-        
+
         List<Atividade> atividadesAssociadas = new ArrayList<>();
         atividadesAssociadas.add(atividadeMock);
 
-        TopicosResponseDto responseDto = new TopicosResponseDto(); 
+        TopicosResponseDto responseDto = new TopicosResponseDto();
         responseDto.setIdTopico(1L);
 
         when(turmaRepository.findById(1L)).thenReturn(Optional.of(turmaPadrao));
         when(topicosRepository.save(any(Topicos.class))).thenReturn(topicoSalvo);
-        
+
         when(atividadeRepository.findById(10L)).thenReturn(Optional.of(atividadeMock));
         when(atividadeRepository.saveAll(any(List.class))).thenReturn(atividadesAssociadas);
 
@@ -116,10 +130,10 @@ class TopicosServiceTest {
 
         ArgumentCaptor<List<Atividade>> captor = ArgumentCaptor.forClass(List.class);
         verify(atividadeRepository).saveAll(captor.capture());
-        
+
         assertEquals(topicoSalvo, captor.getValue().get(0).getTopico());
     }
-    
+
     @Test
     void testCreateTopico_TurmaNotFound_ShouldThrowException() {
         when(turmaRepository.findById(1L)).thenReturn(Optional.empty());
@@ -129,7 +143,7 @@ class TopicosServiceTest {
         });
 
         assertEquals("Turma com ID 1 não encontrada", exception.getMessage());
-        verify(topicosRepository, never()).save(any()); 
+        verify(topicosRepository, never()).save(any());
     }
 
     @Test
@@ -142,18 +156,19 @@ class TopicosServiceTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             topicosService.createTopico(requestDto);
         });
-        
+
         assertEquals("Atividade com ID 10 nao encontrada", exception.getMessage());
     }
 
     @Test
     void testGetTopicoById_NotFound_ShouldThrowException() {
+        // O teste de NotFound não precisa de mock de Auth, pois falha antes da verificação de segurança
         when(topicosRepository.findById(99L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             topicosService.getTopicoById(99L);
         });
-        
+
         assertEquals("Topico com ID 99 nao encontrado", exception.getMessage());
     }
 
@@ -162,12 +177,12 @@ class TopicosServiceTest {
         Pageable pageable = Pageable.unpaged();
         Page<Topicos> page = new PageImpl<>(List.of(new Topicos()));
         when(topicosRepository.findAll(pageable)).thenReturn(page);
-        
+
         PagedResponse<TopicosResponseDto> pagedResponse = mock(PagedResponse.class);
         when(pagedResponseMapper.toPagedResponse(page, TopicosResponseDto.class)).thenReturn(pagedResponse);
 
         PagedResponse<TopicosResponseDto> result = topicosService.getAllTopicos(pageable);
-        
+
         assertNotNull(result);
         verify(topicosRepository).findAll(pageable);
         verify(pagedResponseMapper).toPagedResponse(page, TopicosResponseDto.class);
@@ -179,47 +194,61 @@ class TopicosServiceTest {
         Long idTurma = 1L;
         Page<Topicos> page = new PageImpl<>(List.of(new Topicos()));
         when(topicosRepository.findByTurmaIdTurma(idTurma, pageable)).thenReturn(page);
-        
+
         PagedResponse<TopicosResponseDto> pagedResponse = mock(PagedResponse.class);
         when(pagedResponseMapper.toPagedResponse(page, TopicosResponseDto.class)).thenReturn(pagedResponse);
 
         PagedResponse<TopicosResponseDto> result = topicosService.getTopicosByIdTurma(idTurma, pageable);
-        
+
         assertNotNull(result);
         verify(topicosRepository).findByTurmaIdTurma(idTurma, pageable);
         verify(pagedResponseMapper).toPagedResponse(page, TopicosResponseDto.class);
     }
 
     @Test
-    void testDeleteTopico() {
+    void testDeleteTopico_Success() {
+        // Configura o tópico existente com a turma e professor corretos
         Topicos topico = new Topicos();
+        topico.setTurma(turmaPadrao);
+
         when(topicosRepository.findById(1L)).thenReturn(Optional.of(topico));
+
+        // MOCK IMPORTANTE: Simula que o usuário logado é o dono da turma (Professor)
+        when(autentificacaoService.getUsuarioLogado()).thenReturn(professorDono);
+
         doNothing().when(topicosRepository).delete(topico);
         when(modelMapper.map(topico, TopicosResponseDto.class)).thenReturn(new TopicosResponseDto());
-        
+
         TopicosResponseDto result = topicosService.deleteTopico(1L);
-        
+
         assertNotNull(result);
         verify(topicosRepository).findById(1L);
         verify(topicosRepository).delete(topico);
+        // Verifica se o serviço de autenticação foi chamado
+        verify(autentificacaoService).getUsuarioLogado();
     }
-    
+
     @Test
     void testUpdateTopico_Success_And_SanitizeHtml() {
         Long idTopico = 1L;
         TopicosUpdateDto updateDto = new TopicosUpdateDto();
         updateDto.setConteudoHtml(Optional.of(htmlSuja));
         updateDto.setTituloTopico(Optional.of("Título Novo"));
-        
+
         Topicos topicoExistente = new Topicos();
         topicoExistente.setIdTopico(idTopico);
         topicoExistente.setTituloTopico("Título Antigo");
         topicoExistente.setConteudoHtml("HTML Antigo");
-        
+        topicoExistente.setTurma(turmaPadrao); // Importante para a validação de segurança
+
         TopicosResponseDto responseDto = new TopicosResponseDto();
         responseDto.setIdTopico(idTopico);
 
         when(topicosRepository.findById(idTopico)).thenReturn(Optional.of(topicoExistente));
+
+        // MOCK IMPORTANTE: Simula que o usuário logado é o dono da turma
+        when(autentificacaoService.getUsuarioLogado()).thenReturn(professorDono);
+
         when(topicosRepository.save(any(Topicos.class))).thenReturn(topicoExistente);
         when(modelMapper.map(topicoExistente, TopicosResponseDto.class)).thenReturn(responseDto);
 
@@ -227,11 +256,12 @@ class TopicosServiceTest {
 
         ArgumentCaptor<Topicos> captor = ArgumentCaptor.forClass(Topicos.class);
         verify(topicosRepository).save(captor.capture());
-        
+
         Topicos topicoSalvo = captor.getValue();
-        
+
         assertEquals("Título Novo", topicoSalvo.getTituloTopico());
         assertEquals(htmlLimpa, topicoSalvo.getConteudoHtml());
+
+        verify(autentificacaoService).getUsuarioLogado();
     }
 }
-

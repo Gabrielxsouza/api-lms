@@ -8,14 +8,16 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -23,12 +25,11 @@ import br.ifsp.lms_api.controller.TopicosController;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosRequestDto;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosResponseDto;
 import br.ifsp.lms_api.dto.TopicosDto.TopicosUpdateDto;
-import br.ifsp.lms_api.dto.atividadesDto.AtividadesResponseDto; 
+import br.ifsp.lms_api.dto.atividadesDto.AtividadesResponseDto;
 import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.service.TopicosService;
-import jakarta.persistence.EntityNotFoundException;
 
-import java.util.ArrayList; 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,12 +37,12 @@ import java.util.Optional;
 class TopicosControllerTest {
 
     @Autowired
-    private MockMvc mockMvc; 
+    private MockMvc mockMvc;
 
     @Autowired
-    private ObjectMapper objectMapper; 
+    private ObjectMapper objectMapper;
 
-    @MockBean 
+    @MockBean
     private TopicosService topicosService;
 
     private TopicosResponseDto responseDto;
@@ -53,34 +54,36 @@ class TopicosControllerTest {
         responseDto.setTituloTopico("Tópico de Teste");
         responseDto.setConteudoHtml("<p>Conteúdo</p>");
         responseDto.setAtividades(new ArrayList<AtividadesResponseDto>());
-        
-        objectMapper.findAndRegisterModules(); 
+
+        objectMapper.findAndRegisterModules();
     }
 
     @Test
+    @WithMockUser(roles = "PROFESSOR") // Controller exige ROLE_PROFESSOR
     void testCreateTopico_Success() throws Exception {
         TopicosRequestDto requestDto = new TopicosRequestDto();
         requestDto.setTituloTopico("Novo Tópico");
         requestDto.setIdTurma(1L);
         requestDto.setConteudoHtml("<p>HTML</p>");
-        requestDto.setIdAtividade(List.of(10L, 11L)); 
+        requestDto.setIdAtividade(List.of(10L, 11L));
 
         when(topicosService.createTopico(any(TopicosRequestDto.class)))
             .thenReturn(responseDto);
 
         mockMvc.perform(post("/topicos")
+                .with(csrf()) // Necessário para POST
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isOk()) 
+                .andExpect(status().isCreated()) // CORREÇÃO: Controller retorna 201 Created, não 200 OK
                 .andExpect(jsonPath("$.idTopico").value(1L))
                 .andExpect(jsonPath("$.tituloTopico").value("Tópico de Teste"))
                 .andExpect(jsonPath("$.atividades").exists());
-        
+
         verify(topicosService, times(1)).createTopico(any(TopicosRequestDto.class));
     }
 
-
     @Test
+    @WithMockUser(roles = "ADMIN") // Controller exige ROLE_ADMIN
     void testGetAllTopicos_Success() throws Exception {
         PagedResponse<TopicosResponseDto> pagedResponse = mock(PagedResponse.class);
         List<TopicosResponseDto> content = List.of(responseDto);
@@ -101,6 +104,7 @@ class TopicosControllerTest {
     }
 
     @Test
+    @WithMockUser // É permitAll(), mas precisa de usuário simulado para evitar 401 genérico
     void testGetTopicoById_Success() throws Exception {
         when(topicosService.getTopicoById(1L)).thenReturn(responseDto);
 
@@ -111,18 +115,20 @@ class TopicosControllerTest {
     }
 
     @Test
+    @WithMockUser
     void testGetTopicoById_NotFound_404() throws Exception {
         when(topicosService.getTopicoById(99L))
            .thenThrow(new ResourceNotFoundException("Topico com ID 99 nao encontrado"));
 
         mockMvc.perform(get("/topicos/{id}", 99L))
-                .andExpect(status().isNotFound()); 
+                .andExpect(status().isNotFound());
     }
 
     @Test
+    @WithMockUser // É permitAll(), mas boa prática manter o mock user
     void testGetTopicosByTurmaId_Success() throws Exception {
         Long idTurma = 5L;
-        
+
         PagedResponse<TopicosResponseDto> pagedResponse = mock(PagedResponse.class);
         List<TopicosResponseDto> content = List.of(responseDto);
 
@@ -138,20 +144,23 @@ class TopicosControllerTest {
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].idTopico").value(1L))
                 .andExpect(jsonPath("$.content[0].atividades").exists());
-        
+
         verify(topicosService, times(1)).getTopicosByIdTurma(eq(idTurma), any(Pageable.class));
     }
 
     @Test
+    @WithMockUser(roles = "PROFESSOR") // Controller exige ROLE_PROFESSOR
     void testDeleteTopico_Success() throws Exception {
         when(topicosService.deleteTopico(1L)).thenReturn(responseDto);
 
-        mockMvc.perform(delete("/topicos/{id}", 1L))
+        mockMvc.perform(delete("/topicos/{id}", 1L)
+                .with(csrf())) // Necessário para DELETE
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idTopico").value(1L)); 
+                .andExpect(jsonPath("$.idTopico").value(1L));
     }
 
     @Test
+    @WithMockUser(roles = "PROFESSOR") // Controller exige ROLE_PROFESSOR
     void testUpdateTopico_Success() throws Exception {
         Long id = 1L;
         TopicosUpdateDto updateDto = new TopicosUpdateDto();
@@ -162,13 +171,12 @@ class TopicosControllerTest {
             .thenReturn(responseDto);
 
         mockMvc.perform(patch("/topicos/{id}", id)
+                .with(csrf()) // Necessário para PATCH
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.idTopico").value(1L));
-        
+
         verify(topicosService, times(1)).updateTopico(eq(id), any(TopicosUpdateDto.class));
     }
-
 }
-
