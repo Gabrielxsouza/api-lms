@@ -2,9 +2,17 @@ package br.ifsp.lms_api.controller.unit;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,15 +24,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.ifsp.lms_api.controller.TurmaController;
 import br.ifsp.lms_api.dto.CursoDto.CursoParaTurmaResponseDto;
+import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaParaTurmaResponseDto;
 import br.ifsp.lms_api.dto.professorDto.ProfessorParaTurmaResponseDto;
-// IMPORT CORRIGIDO/ADICIONADO
-import br.ifsp.lms_api.dto.DisciplinaDto.DisciplinaParaTurmaResponseDto; 
 import br.ifsp.lms_api.dto.TurmaDto.TurmaRequestDto;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaResponseDto;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaUpdateDto;
@@ -50,17 +58,16 @@ public class TurmaControllerTest {
 
     @BeforeEach
     void setUp() {
-        requestDto = new TurmaRequestDto("Turma A", "2025/2", 1L, 1L, 1L); 
-        
-        // CORRIGIDO: Chamando o construtor de 6 argumentos com o DTO correto
+        requestDto = new TurmaRequestDto("Turma A", "2025/2", 1L, 1L, 1L); // Exemplo ajustado para TurmaRequestDto
+
         responseDto = new TurmaResponseDto(
-            1L, 
-            "Turma A", 
-            "2025/2", 
+            1L,
+            "Turma A",
+            "2025/2",
             (CursoParaTurmaResponseDto) null,
             (ProfessorParaTurmaResponseDto) null,
-            (DisciplinaParaTurmaResponseDto) null // <- MUDOU AQUI
-        ); 
+            (DisciplinaParaTurmaResponseDto) null
+        );
 
         updateDto = new TurmaUpdateDto(
             Optional.of("Novo Semestre"),
@@ -71,11 +78,13 @@ public class TurmaControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN") // Simula Admin para passar no @PreAuthorize
     void testCreateTurma_Success() throws Exception {
         when(turmaService.createTurma(any(TurmaRequestDto.class)))
             .thenReturn(responseDto);
 
         mockMvc.perform(post("/turmas")
+                .with(csrf()) // Necessário para métodos POST/PUT/DELETE
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
@@ -86,17 +95,20 @@ public class TurmaControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testCreateTurma_DisciplinaNotFound() throws Exception {
         when(turmaService.createTurma(any(TurmaRequestDto.class)))
             .thenThrow(new ResourceNotFoundException("Disciplina não encontrada"));
 
         mockMvc.perform(post("/turmas")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isNotFound()); 
+                .andExpect(status().isNotFound());
     }
 
     @Test
+    @WithMockUser(username = "user", roles = {"ALUNO", "PROFESSOR"}) // O endpoint é permitAll(), qualquer um acessa
     void testGetAllTurmas_Success() throws Exception {
         PagedResponse<TurmaResponseDto> pagedResponse = new PagedResponse<>(
             List.of(responseDto), 0, 10, 1L, 1, true
@@ -113,21 +125,38 @@ public class TurmaControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "PROFESSOR") // Requisito do Controller
+    void testGetMinhasTurmas_Success() throws Exception {
+        PagedResponse<TurmaResponseDto> pagedResponse = new PagedResponse<>(
+            List.of(responseDto), 0, 10, 1L, 1, true
+        );
+        when(turmaService.getMinhasTurmas(any(Pageable.class)))
+            .thenReturn(pagedResponse);
+
+        mockMvc.perform(get("/turmas/minhas-turmas"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].nomeTurma").value("Turma A"));
+
+        verify(turmaService, times(1)).getMinhasTurmas(any(Pageable.class));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
     void testUpdateTurma_Success() throws Exception {
-        // CORRIGIDO: Chamando o construtor de 6 argumentos com o DTO correto
         TurmaResponseDto updatedResponse = new TurmaResponseDto(
-            1L, 
-            "Turma A", 
-            "Novo Semestre", 
+            1L,
+            "Turma A",
+            "Novo Semestre",
             (CursoParaTurmaResponseDto) null,
             (ProfessorParaTurmaResponseDto) null,
-            (DisciplinaParaTurmaResponseDto) null // <- MUDOU AQUI
+            (DisciplinaParaTurmaResponseDto) null
         );
-        
+
         when(turmaService.updateTurma(eq(1L), any(TurmaUpdateDto.class)))
             .thenReturn(updatedResponse);
 
         mockMvc.perform(patch("/turmas/{id}", 1L)
+                .with(csrf()) // Necessário para PATCH
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
@@ -138,10 +167,12 @@ public class TurmaControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testDeleteTurma_Success() throws Exception {
         doNothing().when(turmaService).deleteTurma(1L);
 
-        mockMvc.perform(delete("/turmas/{id}", 1L))
+        mockMvc.perform(delete("/turmas/{id}", 1L)
+                .with(csrf())) // Necessário para DELETE
                 .andExpect(status().isNoContent());
 
         verify(turmaService, times(1)).deleteTurma(1L);
