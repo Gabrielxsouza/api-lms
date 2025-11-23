@@ -64,14 +64,14 @@ public class AtividadeArquivosControllerTest {
     void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        // Garante que o Jackson processe a herança corretamente
+     
         objectMapper.findAndRegisterModules(); 
 
         dataInicio = LocalDate.of(2025, 11, 1);
         dataFechamento = LocalDate.of(2025, 11, 30);
 
         mockUserDetails = mock(CustomUserDetails.class);
-        // CORREÇÃO: lenient() permite que este stub não seja usado em alguns testes (como getAll) sem dar erro
+      
         lenient().when(mockUserDetails.getId()).thenReturn(1L); 
 
         responseDto = new AtividadeArquivosResponseDto();
@@ -128,7 +128,7 @@ public class AtividadeArquivosControllerTest {
 
     @Test
     void testCreate_InvalidInput() throws Exception {
-        // Cria um DTO vazio propositalmente
+   
         AtividadeArquivosRequestDto invalidDto = new AtividadeArquivosRequestDto();
 
         mockMvc.perform(post("/atividades-arquivo")
@@ -188,16 +188,15 @@ public class AtividadeArquivosControllerTest {
         when(atividadeArquivosService.updateAtividadeArquivos(eq(id), any(AtividadeArquivosUpdateDto.class), eq(idUsuario)))
                 .thenThrow(new ResourceNotFoundException("Atividade não encontrada"));
 
-        // Nota: Como estamos em standalone sem ControllerAdvice global, a exceção "vaza"
-        // Podemos verificar que a requisição falha com o erro esperado
+ 
         try {
             mockMvc.perform(patch("/atividades-arquivo/{id}", id) 
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateDto)));
         } catch (Exception e) {
-             // Verifica se a causa raiz foi o ResourceNotFoundException
+       
              if (!(e.getCause() instanceof ResourceNotFoundException)) {
-                 throw e; // Se não for o erro esperado, relança
+                 throw e; 
              }
         }
         

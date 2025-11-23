@@ -56,7 +56,6 @@ class MaterialDeAulaServiceTest {
     @InjectMocks
     private MaterialDeAulaService materialService;
 
-    // Objetos auxiliares para o teste
     private Long idProfessorDono = 1L;
     private Long idOutroProfessor = 99L;
     private Professor professor;
@@ -66,7 +65,7 @@ class MaterialDeAulaServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Monta a cadeia de dependências para a validação de segurança
+
         professor = new Professor();
         professor.setIdUsuario(idProfessorDono);
         
@@ -99,7 +98,7 @@ class MaterialDeAulaServiceTest {
         when(materialRepository.save(any(MaterialDeAula.class))).thenReturn(materialSalvo);
         when(modelMapper.map(materialSalvo, MaterialDeAulaResponseDto.class)).thenReturn(responseDto);
 
-        // CORRIGIDO: Passando idProfessorDono
+    
         MaterialDeAulaResponseDto result = materialService.createMaterial(file, 1L, idProfessorDono);
 
         assertNotNull(result);
@@ -123,7 +122,7 @@ class MaterialDeAulaServiceTest {
         MockMultipartFile file = new MockMultipartFile("f", "f.pdf", "type", "c".getBytes());
         when(topicosRepository.findById(1L)).thenReturn(Optional.of(topico));
 
-        // Tenta criar com o ID errado
+    
         assertThrows(AccessDeniedException.class, () -> {
             materialService.createMaterial(file, 1L, idOutroProfessor);
         });
@@ -165,7 +164,7 @@ class MaterialDeAulaServiceTest {
         doNothing().when(materialRepository).delete(materialMock);
         when(modelMapper.map(materialMock, MaterialDeAulaResponseDto.class)).thenReturn(responseDto);
 
-        // CORRIGIDO: Passando idProfessorDono
+   
         MaterialDeAulaResponseDto result = materialService.deleteMaterial(idMaterial, idProfessorDono);
 
         assertNotNull(result);
@@ -177,7 +176,7 @@ class MaterialDeAulaServiceTest {
     }
     
 @Test
-    // ADICIONE 'throws Exception' AQUI
+   
     void testDeleteMaterial_AccessDenied() throws Exception { 
         Long idMaterial = 1L;
         when(materialRepository.findById(idMaterial)).thenReturn(Optional.of(materialMock));
@@ -188,7 +187,7 @@ class MaterialDeAulaServiceTest {
 
         verify(materialRepository, never()).delete(any());
         
-        // Agora essa linha vai parar de dar erro
+      
         verify(storageService, never()).deleteFile(anyString());
     }
 
@@ -204,7 +203,7 @@ class MaterialDeAulaServiceTest {
         doThrow(new IOException("Falha de IO")).when(storageService).deleteFile(nomeArquivoUnico);
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            // CORRIGIDO: Passando idProfessorDono
+    
             materialService.deleteMaterial(idMaterial, idProfessorDono);
         });
         
@@ -252,7 +251,7 @@ class MaterialDeAulaServiceTest {
         doNothing().when(storageService).deleteFile(nomeArquivoAntigo); 
         when(modelMapper.map(materialMock, MaterialDeAulaResponseDto.class)).thenReturn(responseDto);
 
-        // CORRIGIDO: Passando idProfessorDono
+     
         MaterialDeAulaResponseDto result = materialService.updateMaterial(idMaterial, novoArquivo, idProfessorDono);
 
         assertNotNull(result);

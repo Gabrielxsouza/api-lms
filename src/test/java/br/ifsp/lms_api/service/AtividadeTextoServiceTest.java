@@ -56,7 +56,7 @@ class AtividadeTextoServiceTest {
     @InjectMocks
     private AtividadeTextoService atividadeTextoService;
 
-    // --- Objetos de Teste ---
+
     private AtividadeTextoRequestDto requestDto;
     private AtividadeTexto atividadeEntity;
     private AtividadeTextoResponseDto responseDto;

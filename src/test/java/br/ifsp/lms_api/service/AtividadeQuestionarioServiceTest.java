@@ -49,13 +49,13 @@ class AtividadeQuestionarioServiceTest {
     @Test
     void testFindEntityById_WhenNotFound_ShouldThrowException() {
         long idInexistente = 99L;
-        long idProfessorQualquer = 1L; // ID arbitrário, pois falha antes da verificação
+        long idProfessorQualquer = 1L; 
         String expectedMessage = "Atividade de Texto com ID 99 não encontrada.";
 
         when(atividadeQuestionarioRepository.findById(idInexistente)).thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
-            // Atualizado para passar o idProfessor
+    
             atividadeQuestionarioService.updateAtividadeQuestionario(idInexistente, null, idProfessorQualquer);
         });
 
@@ -82,39 +82,39 @@ class AtividadeQuestionarioServiceTest {
 
         AtividadeQuestionario questionarioMock = new AtividadeQuestionario();
         questionarioMock.setIdAtividade(idQuestionario);
-        questionarioMock.setTopico(topicoMock); // Vincula a hierarquia
+        questionarioMock.setTopico(topicoMock); 
         questionarioMock.setQuestoes(new ArrayList<>());
 
-        // 2. Criar as questões
+
         Questoes questao1 = new Questoes();
         questao1.setIdQuestao(10L);
         Questoes questao2 = new Questoes();
         questao2.setIdQuestao(11L);
         List<Questoes> questoesListMock = List.of(questao1, questao2);
 
-        // 3. Preparar o DTO de resposta
+
         AtividadeQuestionarioResponseDto responseDtoMock = new AtividadeQuestionarioResponseDto();
         responseDtoMock.setIdAtividade(idQuestionario);
 
-        // 4. Configurar os Mocks
+
         when(atividadeQuestionarioRepository.findById(idQuestionario)).thenReturn(Optional.of(questionarioMock));
         when(questoesRepository.findAllById(idsDasQuestoes)).thenReturn(questoesListMock);
         when(atividadeQuestionarioRepository.save(any(AtividadeQuestionario.class))).thenReturn(questionarioMock);
 
-        // Mock do mapeamento da Entidade Principal
+  
         when(modelMapper.map(any(AtividadeQuestionario.class), eq(AtividadeQuestionarioResponseDto.class)))
                 .thenReturn(responseDtoMock);
 
-        // Mock do mapeamento das Questões individuais (necessário pois o service faz um
-        // stream.map agora)
+  
+       
         when(modelMapper.map(any(Questoes.class), eq(QuestoesResponseDto.class)))
                 .thenReturn(new QuestoesResponseDto());
 
-        // 5. Executar o método (passando idProfessor)
+
         AtividadeQuestionarioResponseDto result = atividadeQuestionarioService.adicionarQuestoes(idQuestionario,
                 idsDasQuestoes, idProfessor);
 
-        // 6. Asserções
+     
         assertNotNull(result);
         assertEquals(idQuestionario, result.getIdAtividade());
 
@@ -135,7 +135,7 @@ class AtividadeQuestionarioServiceTest {
         when(atividadeQuestionarioRepository.findById(idInexistente)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            // Atualizado para passar idProfessor
+      
             atividadeQuestionarioService.adicionarQuestoes(idInexistente, idsDasQuestoes, idProfessorQualquer);
         });
 

@@ -15,7 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver; // IMPORT IMPORTANTE
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver; 
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -57,12 +57,10 @@ public class AlunoControllerTest {
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
         
-        // --- CORREÇÃO AQUI ---
-        // Adicionamos o PageableHandlerMethodArgumentResolver para o MockMvc entender paginação
         mockMvc = MockMvcBuilders.standaloneSetup(alunoController)
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver()) 
                 .build();
-        // ---------------------
+
 
         responseDto = new AlunoResponseDto(
             1L, "Aluno Teste", "aluno@test.com", "123.456.789-00", "RA123456"
@@ -97,7 +95,7 @@ public class AlunoControllerTest {
             List.of(responseDto), 0, 10, 1L, 1, true
         );
         
-        // O ArgumentMatcher any(Pageable.class) agora vai funcionar
+       
         when(alunoService.getAllAlunos(any(Pageable.class))).thenReturn(pagedResponse);
 
         mockMvc.perform(get("/alunos")

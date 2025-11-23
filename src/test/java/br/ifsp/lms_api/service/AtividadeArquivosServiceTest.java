@@ -197,7 +197,6 @@ public class AtividadeArquivosServiceTest {
         when(modelMapper.map(any(AtividadeArquivos.class), eq(AtividadeArquivosResponseDto.class)))
             .thenReturn(updatedResponse);
 
-        // CORRIGIDO: Adicionado idProfessorDono
         AtividadeArquivosResponseDto result = atividadeArquivosService.updateAtividadeArquivos(id, updateDto, idProfessorDono);
 
         assertNotNull(result);
@@ -219,7 +218,6 @@ public class AtividadeArquivosServiceTest {
         when(atividadeArquivosRepository.findById(id)).thenReturn(Optional.of(atividadeArquivo));
         
         assertThrows(AccessDeniedException.class, () -> {
-            // CORRIGIDO: Adicionado idOutroProfessor
             atividadeArquivosService.updateAtividadeArquivos(id, updateDto, idOutroProfessor);
         });
         
@@ -233,7 +231,6 @@ public class AtividadeArquivosServiceTest {
         when(atividadeArquivosRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> {
-            // CORRIGIDO: Adicionado idProfessorDono
             atividadeArquivosService.updateAtividadeArquivos(id, updateDto, idProfessorDono);
         });
 
