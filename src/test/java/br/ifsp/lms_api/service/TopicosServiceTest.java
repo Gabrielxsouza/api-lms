@@ -206,7 +206,6 @@ class TopicosServiceTest {
 
     @Test
     void testDeleteTopico_Success() {
-
         Topicos topico = new Topicos();
         topico.setTurma(turmaPadrao);
 
@@ -222,7 +221,6 @@ class TopicosServiceTest {
         assertNotNull(result);
         verify(topicosRepository).findById(1L);
         verify(topicosRepository).delete(topico);
-
         verify(autentificacaoService).getUsuarioLogado();
     }
 

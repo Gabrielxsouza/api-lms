@@ -59,7 +59,7 @@ public class MaterialDeAulaControllerIntegrationTest {
     @Autowired private DisciplinaRepository disciplinaRepository;
     @Autowired private EntityManager entityManager;
 
-    @Autowired private JdbcTemplate jdbcTemplate; // Essencial para limpar tabelas filhas
+    @Autowired private JdbcTemplate jdbcTemplate; 
 
     @MockBean
     private StorageService storageService;
@@ -73,26 +73,24 @@ public class MaterialDeAulaControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // --- LIMPEZA SEGURA DAS DEPENDÊNCIAS ---
-        // Como Turma e Tópico são pais de Atividade, e Atividade é pai de Tentativa,
-        // precisamos limpar tudo que possa referenciar Turma/Tópico antes de deletá-los.
+    
         try {
             jdbcTemplate.execute("DELETE FROM tentativa_texto");
             jdbcTemplate.execute("DELETE FROM tentativa_questionario");
             jdbcTemplate.execute("DELETE FROM tentativa_arquivo");
 
-            // Se houver relacionamento entre Atividade e Questao (tabela de junção)
+         
             jdbcTemplate.execute("DELETE FROM atividade_questoes");
 
             jdbcTemplate.execute("DELETE FROM atividade");
         } catch (Exception e) {
-            // Ignora tabelas inexistentes
+          
         }
 
         materialRepository.deleteAll();
         topicosRepository.deleteAll();
         turmaRepository.deleteAll();
-        // ---------------------------------------
+ 
 
         Curso curso = new Curso();
         curso.setNomeCurso("Curso Mat");

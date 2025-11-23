@@ -58,8 +58,7 @@ public class AtividadeArquivosControllerIntegrationTest {
     @Autowired private DisciplinaRepository disciplinaRepository;
 
     @Autowired private EntityManager entityManager;
-    @Autowired private JdbcTemplate jdbcTemplate; // Adicionado para limpeza manual
-
+    @Autowired private JdbcTemplate jdbcTemplate; 
     private Professor professorDono;
     private Topicos topico;
     private CustomUserDetails userDetailsDono;
@@ -67,15 +66,14 @@ public class AtividadeArquivosControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // --- LIMPEZA SEGURA ---
-        // Limpa tabelas filhas que podem ter FK para Atividade
+       
         try {
             jdbcTemplate.execute("DELETE FROM tentativa_texto");
             jdbcTemplate.execute("DELETE FROM tentativa_questionario");
-            jdbcTemplate.execute("DELETE FROM tentativa_arquivo"); // Caso exista
-            // Adicione outras tabelas de tentativa se houver
+            jdbcTemplate.execute("DELETE FROM tentativa_arquivo");
+         
         } catch (Exception e) {
-            // Tabelas podem não existir ou estar vazias, segue o baile
+           
         }
 
         atividadeArquivosRepository.deleteAll();
@@ -197,8 +195,7 @@ public class AtividadeArquivosControllerIntegrationTest {
 
     @Test
     void testUpdateAtividade_Success() throws Exception {
-        // Usando String block para JSON para evitar erro de compilação se o Java for < 15
-        // Mas como seu código já usava, mantive.
+   
         String jsonUpdate = "{\n" +
                 "    \"tituloAtividade\": \"Atividade Atualizada\",\n" +
                 "    \"arquivosPermitidos\": [\".docx\"]\n" +

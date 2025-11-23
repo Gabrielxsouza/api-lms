@@ -60,7 +60,7 @@ class QuestoesControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "PROFESSOR") // Controller exige ROLE_PROFESSOR
+    @WithMockUser(roles = "PROFESSOR") 
     void testCreateQuestao_Success() throws Exception {
         QuestoesRequestDto requestDto = new QuestoesRequestDto();
         requestDto.setEnunciado("Qual a capital do Brasil?");
@@ -69,7 +69,7 @@ class QuestoesControllerTest {
             .thenReturn(responseDto);
 
         mockMvc.perform(post("/questoes")
-                .with(csrf()) // Necessário para POST
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())

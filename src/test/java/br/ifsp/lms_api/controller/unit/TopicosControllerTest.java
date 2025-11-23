@@ -59,7 +59,7 @@ class TopicosControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "PROFESSOR") // Controller exige ROLE_PROFESSOR
+    @WithMockUser(roles = "PROFESSOR") 
     void testCreateTopico_Success() throws Exception {
         TopicosRequestDto requestDto = new TopicosRequestDto();
         requestDto.setTituloTopico("Novo Tópico");
@@ -71,10 +71,10 @@ class TopicosControllerTest {
             .thenReturn(responseDto);
 
         mockMvc.perform(post("/topicos")
-                .with(csrf()) // Necessário para POST
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isCreated()) // CORREÇÃO: Controller retorna 201 Created, não 200 OK
+                .andExpect(status().isCreated()) 
                 .andExpect(jsonPath("$.idTopico").value(1L))
                 .andExpect(jsonPath("$.tituloTopico").value("Tópico de Teste"))
                 .andExpect(jsonPath("$.atividades").exists());
@@ -83,7 +83,7 @@ class TopicosControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN") // Controller exige ROLE_ADMIN
+    @WithMockUser(roles = "ADMIN") 
     void testGetAllTopicos_Success() throws Exception {
         PagedResponse<TopicosResponseDto> pagedResponse = mock(PagedResponse.class);
         List<TopicosResponseDto> content = List.of(responseDto);
@@ -104,7 +104,7 @@ class TopicosControllerTest {
     }
 
     @Test
-    @WithMockUser // É permitAll(), mas precisa de usuário simulado para evitar 401 genérico
+    @WithMockUser 
     void testGetTopicoById_Success() throws Exception {
         when(topicosService.getTopicoById(1L)).thenReturn(responseDto);
 
@@ -125,7 +125,7 @@ class TopicosControllerTest {
     }
 
     @Test
-    @WithMockUser // É permitAll(), mas boa prática manter o mock user
+    @WithMockUser 
     void testGetTopicosByTurmaId_Success() throws Exception {
         Long idTurma = 5L;
 
@@ -149,18 +149,18 @@ class TopicosControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "PROFESSOR") // Controller exige ROLE_PROFESSOR
+    @WithMockUser(roles = "PROFESSOR") 
     void testDeleteTopico_Success() throws Exception {
         when(topicosService.deleteTopico(1L)).thenReturn(responseDto);
 
         mockMvc.perform(delete("/topicos/{id}", 1L)
-                .with(csrf())) // Necessário para DELETE
+                .with(csrf())) 
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.idTopico").value(1L));
     }
 
     @Test
-    @WithMockUser(roles = "PROFESSOR") // Controller exige ROLE_PROFESSOR
+    @WithMockUser(roles = "PROFESSOR") 
     void testUpdateTopico_Success() throws Exception {
         Long id = 1L;
         TopicosUpdateDto updateDto = new TopicosUpdateDto();
@@ -171,7 +171,7 @@ class TopicosControllerTest {
             .thenReturn(responseDto);
 
         mockMvc.perform(patch("/topicos/{id}", id)
-                .with(csrf()) // Necessário para PATCH
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())

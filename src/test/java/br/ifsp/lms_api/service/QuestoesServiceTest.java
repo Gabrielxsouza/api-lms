@@ -24,7 +24,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification; // <-- 1. ADICIONE ESTE IMPORT
+import org.springframework.data.jpa.domain.Specification; 
 
 import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.dto.questoesDto.QuestoesRequestDto;
@@ -90,7 +90,7 @@ class QuestoesServiceTest {
         verify(modelMapper, times(1)).map(savedQuestaoEntity, QuestoesResponseDto.class);
     }
     
-    // --- TESTE CORRIGIDO ---
+
     @Test
     void testGetAllQuestoes_Success() {
         Pageable pageable = Pageable.unpaged(); 
@@ -99,32 +99,28 @@ class QuestoesServiceTest {
         questao.setIdQuestao(1L);
         Page<Questoes> questoesPage = new PageImpl<>(List.of(questao), pageable, 1);
         
-        // precisei do SuppressWarnings por causa do mock genérico
+  
         @SuppressWarnings("unchecked") 
         PagedResponse<QuestoesResponseDto> pagedResponseMock = mock(PagedResponse.class);
 
-        // 2. CORREÇÃO DO REPOSITÓRIO:
-        //    O service não chama mais findAll(Pageable), 
-        //    ele chama findAll(Specification, Pageable)
+
         when(questoesRepository.findAll(any(Specification.class), any(Pageable.class)))
             .thenReturn(questoesPage);
         
         when(pagedResponseMapper.toPagedResponse(questoesPage, QuestoesResponseDto.class))
             .thenReturn(pagedResponseMock);
 
-        // 3. CORREÇÃO DA CHAMADA DO SERVICE:
-        //    Passe 'null' para os novos parâmetros de filtro
+    
         PagedResponse<QuestoesResponseDto> result = questoesService.getAllQuestoes(pageable, null, null);
 
         assertNotNull(result);
         assertEquals(pagedResponseMock, result); 
         
-        // 4. CORREÇÃO DA VERIFICAÇÃO:
-        //    Verifique se o método correto do repositório foi chamado
+
         verify(questoesRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
         verify(pagedResponseMapper, times(1)).toPagedResponse(questoesPage, QuestoesResponseDto.class);
     }
-    // --- FIM DA CORREÇÃO ---
+  
 
     @Test
     void testUpdateQuestao_WhenNotFound_ShouldThrowException() {
