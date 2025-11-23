@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,16 +15,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import br.ifsp.lms_api.dto.alunoDto.AlunoRequestDto;
 import br.ifsp.lms_api.dto.alunoDto.AlunoResponseDto;
 import br.ifsp.lms_api.dto.alunoDto.AlunoUpdateDto;
-import br.ifsp.lms_api.dto.page.PagedResponse;
+
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
 import br.ifsp.lms_api.model.Aluno;
@@ -99,7 +95,7 @@ public class AlunoServiceTest {
 
         assertNotNull(result);
         assertEquals("Aluno Teste", result.getNome());
-        
+
         verify(passwordEncoder).encode(requestDto.getSenha());
         verify(alunoRepository).save(aluno);
     }
@@ -129,7 +125,7 @@ public class AlunoServiceTest {
         when(alunoRepository.findById(1L)).thenReturn(Optional.of(aluno));
         when(passwordEncoder.encode("novaSenha123")).thenReturn("novaSenhaHash");
         when(alunoRepository.save(any(Aluno.class))).thenAnswer(inv -> inv.getArgument(0));
-        
+
         // Simulando o retorno atualizado
         AlunoResponseDto updatedResponse = new AlunoResponseDto(1L, "Aluno Atualizado", "aluno@test.com", "123", "RA123");
         when(modelMapper.map(any(Aluno.class), eq(AlunoResponseDto.class))).thenReturn(updatedResponse);
@@ -138,10 +134,10 @@ public class AlunoServiceTest {
 
         assertNotNull(result);
         assertEquals("Aluno Atualizado", result.getNome());
-        
+
         ArgumentCaptor<Aluno> captor = ArgumentCaptor.forClass(Aluno.class);
         verify(alunoRepository).save(captor.capture());
-        
+
         assertEquals("Aluno Atualizado", captor.getValue().getNome());
         assertEquals("novaSenhaHash", captor.getValue().getSenha());
     }

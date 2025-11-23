@@ -76,14 +76,14 @@ class TopicosServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Configura o Professor e a Turma para passar na validação de segurança
+    
         professorDono = new Professor();
         professorDono.setIdUsuario(99L);
         professorDono.setNome("Professor Teste");
 
         turmaPadrao = new Turma();
         turmaPadrao.setIdTurma(1L);
-        turmaPadrao.setProfessor(professorDono); // Associa o professor à turma
+        turmaPadrao.setProfessor(professorDono);
 
         htmlSuja = "<p onclick='alert(1)'>Conteúdo</p><script>alert('XSS')</script>";
         htmlLimpa = "<p>Conteúdo</p>";
@@ -162,7 +162,6 @@ class TopicosServiceTest {
 
     @Test
     void testGetTopicoById_NotFound_ShouldThrowException() {
-        // O teste de NotFound não precisa de mock de Auth, pois falha antes da verificação de segurança
         when(topicosRepository.findById(99L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
@@ -207,13 +206,12 @@ class TopicosServiceTest {
 
     @Test
     void testDeleteTopico_Success() {
-        // Configura o tópico existente com a turma e professor corretos
+
         Topicos topico = new Topicos();
         topico.setTurma(turmaPadrao);
 
         when(topicosRepository.findById(1L)).thenReturn(Optional.of(topico));
 
-        // MOCK IMPORTANTE: Simula que o usuário logado é o dono da turma (Professor)
         when(autentificacaoService.getUsuarioLogado()).thenReturn(professorDono);
 
         doNothing().when(topicosRepository).delete(topico);
@@ -224,7 +222,7 @@ class TopicosServiceTest {
         assertNotNull(result);
         verify(topicosRepository).findById(1L);
         verify(topicosRepository).delete(topico);
-        // Verifica se o serviço de autenticação foi chamado
+
         verify(autentificacaoService).getUsuarioLogado();
     }
 
@@ -239,14 +237,13 @@ class TopicosServiceTest {
         topicoExistente.setIdTopico(idTopico);
         topicoExistente.setTituloTopico("Título Antigo");
         topicoExistente.setConteudoHtml("HTML Antigo");
-        topicoExistente.setTurma(turmaPadrao); // Importante para a validação de segurança
+        topicoExistente.setTurma(turmaPadrao);
 
         TopicosResponseDto responseDto = new TopicosResponseDto();
         responseDto.setIdTopico(idTopico);
 
         when(topicosRepository.findById(idTopico)).thenReturn(Optional.of(topicoExistente));
 
-        // MOCK IMPORTANTE: Simula que o usuário logado é o dono da turma
         when(autentificacaoService.getUsuarioLogado()).thenReturn(professorDono);
 
         when(topicosRepository.save(any(Topicos.class))).thenReturn(topicoExistente);
