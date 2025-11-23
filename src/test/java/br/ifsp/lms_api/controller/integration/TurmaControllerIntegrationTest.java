@@ -5,7 +5,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.when;
-// Import necessário para o .with(user(...))
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -29,12 +28,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.ifsp.lms_api.config.CustomUserDetails;
 import br.ifsp.lms_api.dto.TurmaDto.TurmaRequestDto;
-import br.ifsp.lms_api.model.Administrador; // Importar Administrador
+import br.ifsp.lms_api.model.Administrador;
 import br.ifsp.lms_api.model.Curso;
 import br.ifsp.lms_api.model.Disciplina;
 import br.ifsp.lms_api.model.Professor;
 import br.ifsp.lms_api.model.Turma;
-import br.ifsp.lms_api.repository.AdministradorRepository; // Importar Repository
+import br.ifsp.lms_api.repository.AdministradorRepository; 
 import br.ifsp.lms_api.repository.CursoRepository;
 import br.ifsp.lms_api.repository.DisciplinaRepository;
 import br.ifsp.lms_api.repository.ProfessorRepository;
@@ -56,7 +55,7 @@ public class TurmaControllerIntegrationTest {
     @Autowired private CursoRepository cursoRepository;
     @Autowired private ProfessorRepository professorRepository;
 
-    // Repositório extra para criar o Admin
+    
     @Autowired private AdministradorRepository administradorRepository;
 
     @MockBean
@@ -68,7 +67,7 @@ public class TurmaControllerIntegrationTest {
     private Disciplina disciplinaExistente;
     private Curso cursoExistente;
     private Professor professorExistente;
-    private Administrador adminExistente; // Admin para realizar as operações
+    private Administrador adminExistente; 
     private Turma turmaExistente;
 
     private CustomUserDetails professorUserDetails;
@@ -76,7 +75,7 @@ public class TurmaControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // --- 1. LIMPEZA DO BANCO (Ordem estrita para evitar Constraint Violation) ---
+       
         entityManager.createNativeQuery("DELETE FROM atividade_arquivos_permitidos").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM atividade_tags").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM topico_tags").executeUpdate();
@@ -93,14 +92,14 @@ public class TurmaControllerIntegrationTest {
         entityManager.createNativeQuery("DELETE FROM topicos").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM matricula").executeUpdate();
 
-        // Agora podemos deletar a Turma e os Usuários
+      
         turmaRepository.deleteAll();
         cursoRepository.deleteAll();
         disciplinaRepository.deleteAll();
         professorRepository.deleteAll();
         administradorRepository.deleteAll();
 
-        // --- 2. CRIAÇÃO DOS DADOS BASE ---
+        
 
         Disciplina disciplina = new Disciplina();
         disciplina.setNomeDisciplina("Disciplina Pai");
@@ -114,32 +113,32 @@ public class TurmaControllerIntegrationTest {
         curso.setDescricaoCurso("Base Curso");
         cursoExistente = cursoRepository.save(curso);
 
-        // 2.1 CRIAR PROFESSOR (Para ser o professor da turma)
+     
         Professor professor = new Professor();
         professor.setNome("Prof. Base");
         professor.setEmail("prof.base@test.com");
         professor.setCpf("12345678900");
-        professor.setSenha("123456"); // Senha válida (>6 chars)
-        professor.setTipoUsuario("PROFESSOR"); // Role correta
+        professor.setSenha("123456"); 
+        professor.setTipoUsuario("PROFESSOR"); 
         professor.setDepartamento("COMP");
         professorExistente = professorRepository.save(professor);
 
-        // UserDetails do Professor (para testar /minhas-turmas)
+       
         professorUserDetails = new CustomUserDetails(professorExistente);
 
-        // 2.2 CRIAR ADMIN (Para criar/editar/deletar a turma)
+      
         Administrador admin = new Administrador();
         admin.setNome("Admin Teste");
         admin.setEmail("admin@test.com");
         admin.setCpf("00000000000");
         admin.setSenha("123456");
-        admin.setTipoUsuario("ADMIN"); // Role correta
+        admin.setTipoUsuario("ADMIN"); 
         adminExistente = administradorRepository.save(admin);
 
-        // UserDetails do Admin (para operações de gestão)
+        
         adminUserDetails = new CustomUserDetails(adminExistente);
 
-        // 2.3 CRIAR TURMA
+       
         Turma turma = new Turma();
         turma.setNomeTurma("Turma Base");
         turma.setSemestre("2025/1");
@@ -151,15 +150,14 @@ public class TurmaControllerIntegrationTest {
         entityManager.flush();
         entityManager.clear();
 
-        // Recarregar referências
+       
         professorExistente = professorRepository.findById(professorExistente.getIdUsuario()).get();
         adminExistente = administradorRepository.findById(adminExistente.getIdUsuario()).get();
         turmaExistente = turmaRepository.findById(turmaExistente.getIdTurma()).get();
         disciplinaExistente = disciplinaRepository.findById(disciplinaExistente.getIdDisciplina()).get();
         cursoExistente = cursoRepository.findById(cursoExistente.getIdCurso()).get();
 
-        // Configurar o Mock para quando o Service pedir "quem é o usuário logado"
-        // Isso é usado principalmente no método getMinhasTurmas
+        
         when(autentificacaoService.getUsuarioLogado()).thenReturn(professorExistente);
     }
 
@@ -174,7 +172,7 @@ public class TurmaControllerIntegrationTest {
         );
 
         mockMvc.perform(post("/turmas")
-                .with(user(adminUserDetails)) // USA O ADMIN PARA CRIAR
+                .with(user(adminUserDetails)) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
@@ -189,13 +187,13 @@ public class TurmaControllerIntegrationTest {
         TurmaRequestDto requestDto = new TurmaRequestDto(
             "Turma Fantasma",
             "2025/2",
-            999L, // ID Inexistente
+            999L, 
             cursoExistente.getIdCurso(),
             professorExistente.getIdUsuario()
         );
 
         mockMvc.perform(post("/turmas")
-                .with(user(adminUserDetails)) // USA O ADMIN PARA TENTAR CRIAR
+                .with(user(adminUserDetails)) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isNotFound());
@@ -206,7 +204,7 @@ public class TurmaControllerIntegrationTest {
     @Test
     void testGetAllTurmas_Success() throws Exception {
         mockMvc.perform(get("/turmas")
-                .with(user(adminUserDetails)) // Admin pode ver tudo
+                .with(user(adminUserDetails)) 
                 .param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
@@ -217,7 +215,7 @@ public class TurmaControllerIntegrationTest {
 
     @Test
     void testGetMinhasTurmas_Success() throws Exception {
-        // ESTE TESTE USA O PROFESSOR, pois verifica as turmas DELE
+       
         mockMvc.perform(get("/turmas/minhas-turmas")
                 .with(user(professorUserDetails))
                 .param("page", "0")
@@ -238,7 +236,7 @@ public class TurmaControllerIntegrationTest {
         """;
 
         mockMvc.perform(patch("/turmas/{id}", id)
-                .with(user(adminUserDetails)) // USA O ADMIN PARA ATUALIZAR
+                .with(user(adminUserDetails)) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(updateJson))
                 .andExpect(status().isOk())

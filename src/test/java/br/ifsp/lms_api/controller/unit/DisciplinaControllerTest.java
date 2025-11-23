@@ -3,10 +3,9 @@ package br.ifsp.lms_api.controller.unit;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-// --- IMPORTS DE SEGURANÇA ADICIONADOS ---
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-// ---------------------------------------
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -96,9 +95,9 @@ public class DisciplinaControllerTest {
             .thenReturn(responseDto);
 
         mockMvc.perform(post("/disciplinas")
-                // Simula usuário ADMIN (necessário para criar disciplina)
+           
                 .with(user("admin").roles("ADMIN"))
-                // Adiciona Token CSRF (necessário para POST/PUT/DELETE em testes)
+          
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
@@ -136,7 +135,7 @@ public class DisciplinaControllerTest {
             .thenReturn(pagedResponse);
 
         mockMvc.perform(get("/disciplinas")
-                // Assume-se que ADMIN pode listar. Se for público, remova o .with(user)
+          
                 .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
@@ -183,8 +182,7 @@ public class DisciplinaControllerTest {
     void testDeleteDisciplina_Success() throws Exception {
         doNothing().when(disciplinaService).deleteDisciplina(1L);
 
-        // ATENÇÃO: Se o Controller retorna o objeto deletado (status 200), mude para isOk()
-        // Se retorna void/noContent (status 204), mantenha isNoContent()
+     
         mockMvc.perform(delete("/disciplinas/{id}", 1L)
                 .with(user("admin").roles("ADMIN"))
                 .with(csrf()))

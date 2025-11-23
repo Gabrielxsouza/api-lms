@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean; // IMPORTANTE
+import org.springframework.boot.test.mock.mockito.MockBean; 
 import org.springframework.http.MediaType;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import org.springframework.test.context.ActiveProfiles;
@@ -40,9 +40,9 @@ import br.ifsp.lms_api.repository.DisciplinaRepository;
 import br.ifsp.lms_api.repository.ProfessorRepository;
 import br.ifsp.lms_api.repository.TopicosRepository;
 import br.ifsp.lms_api.repository.TurmaRepository;
-import br.ifsp.lms_api.service.AutentificacaoService; // IMPORTANTE
+import br.ifsp.lms_api.service.AutentificacaoService; 
 import jakarta.persistence.EntityManager;
-import static org.mockito.Mockito.when; // IMPORTANTE
+import static org.mockito.Mockito.when; 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
@@ -59,8 +59,7 @@ class TopicosControllerIntegrationTest {
     @Autowired private ProfessorRepository professorRepository;
     @Autowired private EntityManager entityManager;
 
-    // MOCK DO SERVIÇO DE AUTENTICAÇÃO
-    // Isso evita o ClassCastException dentro do TopicosService
+   
     @MockBean
     private AutentificacaoService autentificacaoService;
 
@@ -70,7 +69,7 @@ class TopicosControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // --- 1. LIMPEZA VIA SQL NATIVO ---
+       
         entityManager.createNativeQuery("DELETE FROM atividade_arquivos_permitidos").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM atividade_tags").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM topico_tags").executeUpdate();
@@ -93,7 +92,7 @@ class TopicosControllerIntegrationTest {
         disciplinaRepository.deleteAll();
         professorRepository.deleteAll();
         
-        // --- 2. CRIAÇÃO DE DADOS ---
+       
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         
         professorDono = new Professor();
@@ -102,17 +101,16 @@ class TopicosControllerIntegrationTest {
         professorDono.setSenha("123456");
         professorDono.setCpf(generateFakeCpf()); 
         professorDono.setDepartamento("Dep");
-        // Define o tipo para garantir a Role correta no UserDetails
+     
         professorDono.setTipoUsuario("PROFESSOR"); 
         
         professorDono = professorRepository.save(professorDono);
         entityManager.flush();
 
-        // Cria o UserDetails para o MockMvc (Segurança do Endpoint)
+        
         userDetails = new CustomUserDetails(professorDono);
 
-        // CONFIGURA O MOCK (Segurança do Service)
-        // Quando o serviço chamar getUsuarioLogado, retorna o professor criado acima
+       
         when(autentificacaoService.getUsuarioLogado()).thenReturn(professorDono);
 
         Disciplina disciplina = new Disciplina();
@@ -131,11 +129,11 @@ class TopicosControllerIntegrationTest {
         entityManager.flush();
         entityManager.clear();
         
-        // Recarrega as entidades
+       
         turmaPadrao = turmaRepository.findById(turma.getIdTurma()).get();
         professorDono = professorRepository.findById(professorDono.getIdUsuario()).get();
         
-        // Reforça o mock após o clear/recuperação para garantir a referência correta
+        
         when(autentificacaoService.getUsuarioLogado()).thenReturn(professorDono);
     }
     
@@ -221,7 +219,7 @@ class TopicosControllerIntegrationTest {
         
         mockMvc.perform(delete("/topicos/{id}", id)
                 .with(user(userDetails)))
-                .andExpect(status().isOk()); // Seu controller retorna 200 OK com o objeto, não 204.
+                .andExpect(status().isOk()); 
     }
 
     @Test

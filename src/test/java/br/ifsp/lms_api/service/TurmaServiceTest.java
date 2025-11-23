@@ -82,7 +82,7 @@ public class TurmaServiceTest {
     private TurmaUpdateDto updateDto;
     private TurmaResponseDto responseDtoAtualizado;
     
-    // DTOs de resposta movidos para o escopo
+
     private DisciplinaParaTurmaResponseDto disciplinaParaTurmaDto;
     private CursoParaTurmaResponseDto cursoResponseDto;
     private ProfessorParaTurmaResponseDto professorResponseDto;
@@ -93,7 +93,7 @@ public class TurmaServiceTest {
         disciplina = new Disciplina();
         disciplina.setIdDisciplina(1L);
         disciplina.setNomeDisciplina("Engenharia de Software");
-        disciplina.setCodigoDisciplina("ESL708"); // Adicionado
+        disciplina.setCodigoDisciplina("ESL708");
 
         curso = new Curso();
         curso.setIdCurso(1L);
@@ -115,7 +115,7 @@ public class TurmaServiceTest {
 
         requestDto = new TurmaRequestDto("Turma A", "2025/2", 1L, 1L, 1L); 
 
-        // --- SETUP DOS DTOs DE RESPOSTA (CORRIGIDO) ---
+    
         disciplinaParaTurmaDto = new DisciplinaParaTurmaResponseDto(
             1L, "Engenharia de Software", "ESL708"
         );
@@ -134,7 +134,7 @@ public class TurmaServiceTest {
             "2025/2", 
             cursoResponseDto, 
             professorResponseDto,
-            disciplinaParaTurmaDto // <- MUDOU AQUI
+            disciplinaParaTurmaDto 
         );
         
         updateDto = new TurmaUpdateDto(
@@ -148,7 +148,7 @@ public class TurmaServiceTest {
             "Novo Semestre", 
             cursoResponseDto,
             professorResponseDto,
-            disciplinaParaTurmaDto // <- MUDOU AQUI
+            disciplinaParaTurmaDto 
         );
     }
 
@@ -158,11 +158,11 @@ public class TurmaServiceTest {
         when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
         when(professorRepository.findById(1L)).thenReturn(Optional.of(professor));
         
-        // Simular o ModelMapper criando uma turma "transiente"
+       
         Turma turmaTransient = new Turma();
         turmaTransient.setNomeTurma(requestDto.getNomeTurma());
         turmaTransient.setSemestre(requestDto.getSemestre());
-        // Não precisamos mais mockar o map, pois o service faz manualmente
+       
         
         when(turmaRepository.save(any(Turma.class))).thenReturn(turma);
         

@@ -66,7 +66,7 @@ class QuestoesControllerIntegrationTest {
         alt1Dto.setAlternativaCorreta(true);
 
         QuestoesRequestDto requestDto = new QuestoesRequestDto();
-        requestDto.setEnunciado("Este é um enunciado válido (mais de 5 chars)"); // Validado
+        requestDto.setEnunciado("Este é um enunciado válido (mais de 5 chars)"); 
         requestDto.setAlternativas(List.of(alt1Dto)); 
 
         mockMvc.perform(post("/questoes")
@@ -80,7 +80,7 @@ class QuestoesControllerIntegrationTest {
     @Test
     void testDeleteQuestao_Success() throws Exception {
         Questoes questao = new Questoes();
-        questao.setEnunciado("Enunciado válido para deletar"); // > 5 chars
+        questao.setEnunciado("Enunciado válido para deletar"); 
         
         Alternativas alt1 = new Alternativas();
         alt1.setAlternativa("Alternativa para deletar");
@@ -92,8 +92,7 @@ class QuestoesControllerIntegrationTest {
         questao = questoesRepository.save(questao);
         Long idParaDeletar = questao.getIdQuestao();
 
-        // TENTATIVA: Usar ADMIN para garantir permissão de delete
-        // Se falhar com 403, significa que sua lógica de delete é muito restritiva
+      
         mockMvc.perform(delete("/questoes/{id}", idParaDeletar)
                 .with(user("admin").roles("ADMIN"))) 
                 .andExpect(status().isNoContent());
@@ -105,7 +104,7 @@ class QuestoesControllerIntegrationTest {
     void testGetAllQuestoes_Success() throws Exception {
         // Questão 1
         Questoes q1 = new Questoes();
-        q1.setEnunciado("Questão Um"); // > 5 chars
+        q1.setEnunciado("Questão Um"); 
         Alternativas a1 = new Alternativas();
         a1.setAlternativa("Alt 1");
         a1.setAlternativaCorreta(true);
@@ -115,7 +114,7 @@ class QuestoesControllerIntegrationTest {
 
         // Questão 2
         Questoes q2 = new Questoes();
-        q2.setEnunciado("Questão Dois"); // > 5 chars
+        q2.setEnunciado("Questão Dois"); 
         Alternativas a2 = new Alternativas();
         a2.setAlternativa("Alt 2");
         a2.setAlternativaCorreta(false);
@@ -169,7 +168,7 @@ class QuestoesControllerIntegrationTest {
         updateDto.setEnunciado(Optional.of("Enunciado qualquer"));
 
         mockMvc.perform(patch("/questoes/{id}", idInexistente)
-                .with(user("professor").roles("PROFESSOR")) // Ou ADMIN se der 403
+                .with(user("professor").roles("PROFESSOR")) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isNotFound()); 

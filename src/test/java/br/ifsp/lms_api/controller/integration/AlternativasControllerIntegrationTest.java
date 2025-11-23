@@ -54,13 +54,12 @@ class AlternativasControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Limpeza manual via SQL para garantir a ordem correta das FKs e evitar DataIntegrityViolation
-        // Tenta limpar tabelas dependentes que podem ter sido populadas por outros testes ou data.sql
+
         try {
             jdbcTemplate.execute("DELETE FROM tentativa_texto");
             jdbcTemplate.execute("DELETE FROM tentativa_questionario");
         } catch (Exception e) {
-            // Ignora se as tabelas não existirem ou já estiverem vazias
+
         }
 
         alternativasRepository.deleteAll();

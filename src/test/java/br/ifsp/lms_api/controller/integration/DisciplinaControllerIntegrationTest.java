@@ -5,7 +5,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertFalse; // Importante
+import static org.junit.jupiter.api.Assertions.assertFalse; 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,11 +59,11 @@ public class DisciplinaControllerIntegrationTest {
     private Disciplina disciplinaExistente;
     private Turma turmaExistente;
     
-    // Não precisamos mais do CustomUserDetails aqui se usarmos o user("admin").roles("ADMIN")
+  
 
     @BeforeEach
     void setUp() {
-        // --- LIMPEZA ---
+      
         entityManager.createNativeQuery("DELETE FROM atividade_arquivos_permitidos").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM atividade_tags").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM topico_tags").executeUpdate();
@@ -84,9 +84,7 @@ public class DisciplinaControllerIntegrationTest {
 
         turmaRepository.deleteAll();
         disciplinaRepository.deleteAll();
-        // ----------------
 
-        // --- CRIAR DADOS DE TESTE ---
         Disciplina disciplina = new Disciplina();
         disciplina.setNomeDisciplina("Disciplina Base");
         disciplina.setCodigoDisciplina("BASE-101");
@@ -99,7 +97,7 @@ public class DisciplinaControllerIntegrationTest {
         turma.setDisciplina(disciplina);
         turma = turmaRepository.save(turma);
 
-        // Lista mutável
+     
         disciplina.setTurmas(new ArrayList<>(List.of(turma))); 
         disciplinaExistente = disciplinaRepository.save(disciplina);
         
@@ -122,8 +120,7 @@ public class DisciplinaControllerIntegrationTest {
         );
 
         mockMvc.perform(post("/disciplinas")
-                // CORREÇÃO: Usando user() com roles explícitas
-                // Isso garante que o Spring Security veja o usuário como ADMIN
+              
                 .with(user("admin").password("pass").roles("ADMIN")) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
@@ -135,7 +132,7 @@ public class DisciplinaControllerIntegrationTest {
     @Test
     void testGetAllDisciplinas_Success() throws Exception {
         mockMvc.perform(get("/disciplinas")
-                // CORREÇÃO: Usando user() com roles explícitas
+              
                 .with(user("admin").roles("ADMIN"))
                 .param("page", "0")
                 .param("size", "10"))
@@ -155,7 +152,7 @@ public class DisciplinaControllerIntegrationTest {
         """;
 
         mockMvc.perform(patch("/disciplinas/{id}", id)
-                // CORREÇÃO: Usando user() com roles explícitas
+           
                 .with(user("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(updateJson))
@@ -170,7 +167,7 @@ public class DisciplinaControllerIntegrationTest {
         Long turmaId = turmaExistente.getIdTurma();
         
         mockMvc.perform(delete("/disciplinas/{id}", disciplinaId)
-                // CORREÇÃO: Usando user() com roles explícitas
+       
                 .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNoContent());
 

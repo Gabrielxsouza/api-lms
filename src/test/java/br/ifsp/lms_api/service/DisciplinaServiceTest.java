@@ -90,14 +90,13 @@ public class DisciplinaServiceTest {
             List.of(turmaRequestDto)
         );
 
-        // --- CORREÇÃO AQUI (Tipo do último argumento mudou) ---
         turmaResponseDto = new TurmaResponseDto(
             1L, 
             "Turma A", 
             "2025/2", 
             (CursoParaTurmaResponseDto) null,
             (ProfessorParaTurmaResponseDto) null,
-            (DisciplinaParaTurmaResponseDto) null // <- MUDOU AQUI
+            (DisciplinaParaTurmaResponseDto) null 
         );
 
         responseDto = new DisciplinaResponseDto(

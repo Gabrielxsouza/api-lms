@@ -78,13 +78,13 @@ public class TurmaControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN") // Simula Admin para passar no @PreAuthorize
+    @WithMockUser(roles = "ADMIN") 
     void testCreateTurma_Success() throws Exception {
         when(turmaService.createTurma(any(TurmaRequestDto.class)))
             .thenReturn(responseDto);
 
         mockMvc.perform(post("/turmas")
-                .with(csrf()) // Necessário para métodos POST/PUT/DELETE
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
@@ -108,7 +108,7 @@ public class TurmaControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", roles = {"ALUNO", "PROFESSOR"}) // O endpoint é permitAll(), qualquer um acessa
+    @WithMockUser(username = "user", roles = {"ALUNO", "PROFESSOR"})
     void testGetAllTurmas_Success() throws Exception {
         PagedResponse<TurmaResponseDto> pagedResponse = new PagedResponse<>(
             List.of(responseDto), 0, 10, 1L, 1, true
@@ -125,7 +125,7 @@ public class TurmaControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "PROFESSOR") // Requisito do Controller
+    @WithMockUser(roles = "PROFESSOR") 
     void testGetMinhasTurmas_Success() throws Exception {
         PagedResponse<TurmaResponseDto> pagedResponse = new PagedResponse<>(
             List.of(responseDto), 0, 10, 1L, 1, true
@@ -156,7 +156,7 @@ public class TurmaControllerTest {
             .thenReturn(updatedResponse);
 
         mockMvc.perform(patch("/turmas/{id}", 1L)
-                .with(csrf()) // Necessário para PATCH
+                .with(csrf()) 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
@@ -172,7 +172,7 @@ public class TurmaControllerTest {
         doNothing().when(turmaService).deleteTurma(1L);
 
         mockMvc.perform(delete("/turmas/{id}", 1L)
-                .with(csrf())) // Necessário para DELETE
+                .with(csrf())) 
                 .andExpect(status().isNoContent());
 
         verify(turmaService, times(1)).deleteTurma(1L);
