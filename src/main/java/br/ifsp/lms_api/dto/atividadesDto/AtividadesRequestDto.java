@@ -19,11 +19,10 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 @AllArgsConstructor
 public class AtividadesRequestDto {
 
-
     @NotBlank(message = "O título da atividade é obrigatório")
     @Size(min = 5, max = 100, message = "O título da atividade deve conter entre 5 e 100 caracteres")
     private String tituloAtividade;
-  
+
     private String descricaoAtividade;
 
     @NotNull(message = "A data de início da atividade é obrigatória")
@@ -37,5 +36,10 @@ public class AtividadesRequestDto {
     @NotNull(message = "O status da atividade (aberto ou fechado) é obrigatório")
     private Boolean statusAtividade;
 
+    private Long idTopico;
+
+    private java.util.Set<String> tags;
+
+    @Deprecated
     private List<Long> tagIds = new ArrayList<>();
 }

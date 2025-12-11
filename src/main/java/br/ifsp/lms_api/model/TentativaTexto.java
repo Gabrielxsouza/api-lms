@@ -1,6 +1,12 @@
 package br.ifsp.lms_api.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,8 +28,8 @@ public class TentativaTexto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idTentativa;
 
-    @CreationTimestamp 
-    @Column(updatable = false) 
+    @CreationTimestamp
+    @Column(updatable = false)
     private LocalDateTime dataEnvio;
 
     @NotBlank(message = "O texto da resposta não pode estar vazio")
@@ -33,9 +39,8 @@ public class TentativaTexto {
 
     private Double nota;
 
-    @ManyToOne
-    @JoinColumn(name = "id_atividade_texto")
-    private AtividadeTexto atividadeTexto;
+    @Column(name = "id_atividade_texto")
+    private Long idAtividade;
 
     @ManyToOne
     @JoinColumn(name = "id_aluno")

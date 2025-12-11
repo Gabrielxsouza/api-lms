@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.Builder;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
@@ -23,5 +24,6 @@ public abstract class Atividade {
     private LocalDate dataFechamento;
     private Boolean status;
     private Long topicoId;
+    @Builder.Default
     private Set<String> tags = new HashSet<>();
 }

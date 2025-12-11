@@ -10,11 +10,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.security.access.AccessDeniedException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException exception) {
@@ -28,17 +27,16 @@ public class GlobalExceptionHandler {
         });
         return ResponseEntity.badRequest().body(errors);
     }
-    
+
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<Map<String, String>> handleGlobalValidationExceptions(ConstraintViolationException  exception) {
+    public ResponseEntity<Map<String, String>> handleGlobalValidationExceptions(
+            ConstraintViolationException exception) {
         Map<String, String> errors = new HashMap<>();
-        exception.getConstraintViolations().forEach(violation -> 
-            errors.put(violation.getPropertyPath().toString(), violation.getMessage())
-        );
+        exception.getConstraintViolations()
+                .forEach(violation -> errors.put(violation.getPropertyPath().toString(), violation.getMessage()));
         return ResponseEntity.badRequest().body(errors);
     }
-    
 
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -47,7 +45,7 @@ public class GlobalExceptionHandler {
         errorResponse.put("error", exception.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
-    
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<Map<String, String>> handleGenericException(Exception exception) {
@@ -56,10 +54,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
-
     @ExceptionHandler(LimiteTentativasException.class)
     public ResponseEntity<Object> handleLimiteTentativas(LimiteTentativasException ex) {
-        
+
         Map<String, String> body = new HashMap<>();
         body.put("erro", "Tentativa bloqueada");
         body.put("mensagem", ex.getMessage());
@@ -67,20 +64,21 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
     }
 
-    @ExceptionHandler(AccessDeniedException.class) 
+    @ExceptionHandler({
+            org.springframework.security.access.AccessDeniedException.class,
+            br.ifsp.lms_api.exception.AccessDeniedException.class
+    })
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ResponseEntity<Map<String, String>> handleAccessDeniedException(
-            AccessDeniedException exception 
-    ) {
+    public ResponseEntity<Map<String, String>> handleAccessDeniedException(Exception exception) {
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("erro", "Acesso Negado");
 
-        String mensagem = (exception.getMessage() != null) 
-                            ? exception.getMessage() 
-                            : "Você não tem permissão para executar esta ação.";
+        String mensagem = (exception.getMessage() != null)
+                ? exception.getMessage()
+                : "Você não tem permissão para executar esta ação.";
 
         errorResponse.put("mensagem", mensagem);
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
-    
+
 }

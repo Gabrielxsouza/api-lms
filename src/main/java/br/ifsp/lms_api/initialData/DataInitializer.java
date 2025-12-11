@@ -8,10 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import br.ifsp.lms_api.model.*;
 import br.ifsp.lms_api.repository.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime; // <-- IMPORTAR
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -27,9 +23,7 @@ public class DataInitializer implements CommandLineRunner {
     private final AlunoRepository alunoRepository;
     private final ProfessorRepository professorRepository;
     private final AdministradorRepository administradorRepository;
-    private final AtividadeTextoRepository atividadeTextoRepository;
-    private final AtividadeArquivosRepository atividadeArquivosRepository;
-    private final AtividadeQuestionarioRepository atividadeQuestionarioRepository;
+    // Removed Atividade repos
     private final PasswordEncoder passwordEncoder;
     private final MatriculaRepository matriculaRepository;
 
@@ -46,9 +40,7 @@ public class DataInitializer implements CommandLineRunner {
             AlunoRepository alunoRepository,
             ProfessorRepository professorRepository,
             AdministradorRepository administradorRepository,
-            AtividadeTextoRepository atividadeTextoRepository,
-            AtividadeArquivosRepository atividadeArquivosRepository,
-            AtividadeQuestionarioRepository atividadeQuestionarioRepository,
+            // Removed Atividade repos
             PasswordEncoder passwordEncoder,
             MaterialDeAulaRepository materialDeAulaRepository,
             TentativaTextoRepository tentativaTextoRepository,
@@ -64,9 +56,7 @@ public class DataInitializer implements CommandLineRunner {
         this.alunoRepository = alunoRepository;
         this.professorRepository = professorRepository;
         this.administradorRepository = administradorRepository;
-        this.atividadeTextoRepository = atividadeTextoRepository;
-        this.atividadeArquivosRepository = atividadeArquivosRepository;
-        this.atividadeQuestionarioRepository = atividadeQuestionarioRepository;
+        // Removed Atividade repos
         this.passwordEncoder = passwordEncoder;
 
         // --- ADICIONAR ESTAS ATRIBUIÇÕES ---
@@ -93,7 +83,7 @@ public class DataInitializer implements CommandLineRunner {
         tagDerivadas.setNome("Derivadas");
         Tag tagP1 = new Tag();
         tagP1.setNome("Prova P1");
-        Tag tagPOO = new Tag(); // <-- NOVA TAG
+        Tag tagPOO = new Tag();
         tagPOO.setNome("POO");
 
         tagRepository.saveAll(List.of(tagCalculo, tagDerivadas, tagP1, tagPOO));
@@ -107,7 +97,6 @@ public class DataInitializer implements CommandLineRunner {
         aluno.setRa("GU3000001");
         alunoRepository.save(aluno);
 
-        // (Aluno 2, Prof, Admin... - sem mudanças)
         Aluno aluno2 = new Aluno();
         aluno2.setNome("Gabriel Feitoza");
         aluno2.setEmail("gabrielfeitoza@aluno.ifsp.edu.br");
@@ -146,129 +135,54 @@ public class DataInitializer implements CommandLineRunner {
         disciplina.setTurmas(List.of(turma));
         disciplinaRepository.save(disciplina);
 
-        // --- TÓPICO 1 (Para Atividades) ---
+        // --- TÓPICO 1 ---
         Topicos topico1 = new Topicos();
         topico1.setTituloTopico("Tópico 1 - Prova P1");
         topico1.setConteudoHtml("<p>Este tópico contém a P1.</p>");
         topico1.setTurma(turma);
-        topico1.setTags(Set.of(tagP1)); // Tópico geral da P1
+        topico1.setTags(Set.of(tagP1));
         topicosRepository.save(topico1);
 
-        // --- ATIVIDADES (Associadas ao Tópico 1) ---
-        AtividadeTexto atividadeTexto = new AtividadeTexto();
-        atividadeTexto.setTituloAtividade("Redação P1 (Texto)");
-        // ... (datas, status, etc.)
-        atividadeTexto.setDataInicioAtividade(LocalDate.now());
-        atividadeTexto.setDataFechamentoAtividade(LocalDate.now().plusDays(7));
-        atividadeTexto.setStatusAtividade(true);
-        atividadeTexto.setNumeroMaximoCaracteres(1000L);
-        atividadeTexto.setTags(Set.of(tagPOO)); // <-- MUDANÇA: Tag "POO" para testar nota boa
-        atividadeTexto.setTopico(topico1);
-        atividadeTextoRepository.save(atividadeTexto);
-
-        // (AtividadeArquivo - não vamos criar tentativa para ela por enquanto)
-        AtividadeArquivos atividadeArquivo = new AtividadeArquivos();
-        atividadeArquivo.setTituloAtividade("Upload P1 (Arquivo)");
-        // ... (datas, status, etc.)
-        atividadeArquivo.setDataInicioAtividade(LocalDate.now());
-        atividadeArquivo.setDataFechamentoAtividade(LocalDate.now().plusDays(7));
-        atividadeArquivo.setStatusAtividade(true);
-        atividadeArquivo.setArquivosPermitidos(List.of(".pdf", ".zip"));
-        atividadeArquivo.setTags(Set.of(tagP1));
-        atividadeArquivo.setTopico(topico1);
-        atividadeArquivosRepository.save(atividadeArquivo);
-
-        // --- QUESTÃO 1 (Errada pela aluna) ---
-        Alternativas alt1 = new Alternativas(null, "2x", true, null); // Correta
-        Alternativas alt2 = new Alternativas(null, "x^2", false, null); // Errada
-        Questoes questao1 = new Questoes();
-        questao1.setEnunciado("Qual a derivada de f(x) = x^2 ?");
-        questao1.setTags(Set.of(tagCalculo, tagDerivadas)); // <-- Tags de Ponto Fraco
-        questao1.setAlternativas(List.of(alt1, alt2));
-        alt1.setQuestoes(questao1);
-        alt2.setQuestoes(questao1);
-        questoesRepository.save(questao1);
-
-        // --- QUESTÃO 2 (Certa pela aluna) ---
-        Alternativas alt3 = new Alternativas(null, "2", true, null); // Correta
-        Alternativas alt4 = new Alternativas(null, "0", false, null); // Errada
-        Questoes questao2 = new Questoes();
-        questao2.setEnunciado("Qual o limite de (x^2-1)/(x-1) com x->1?");
-        questao2.setTags(Set.of(tagCalculo)); // <-- Tag de Ponto Fraco/Misto
-        questao2.setAlternativas(List.of(alt3, alt4));
-        alt3.setQuestoes(questao2);
-        alt4.setQuestoes(questao2);
-        questoesRepository.save(questao2);
-
-        // --- QUESTIONÁRIO (com as duas questões) ---
-        AtividadeQuestionario questionario = new AtividadeQuestionario();
-        questionario.setTituloAtividade("Simulado P1 de Cálculo");
-        // ... (datas, status, etc.)
-        questionario.setDataInicioAtividade(LocalDate.now());
-        questionario.setDataFechamentoAtividade(LocalDate.now().plusDays(10));
-        questionario.setStatusAtividade(true);
-        questionario.setDuracaoQuestionario(60L);
-        questionario.setNumeroTentativas(3);
-        questionario.setTopico(topico1);
-        questionario.setTags(Set.of(tagP1, tagCalculo));
-        questionario.setQuestoes(List.of(questao1, questao2)); // <-- Contém as 2 questões
-        atividadeQuestionarioRepository.save(questionario);
-
-        Topicos topicoDerivadas = new Topicos();
-        topicoDerivadas.setTituloTopico("Tópico 2 - Revisão de Derivadas");
-        topicoDerivadas.setConteudoHtml("<p>Material de apoio.</p>");
-        topicoDerivadas.setTurma(turma);
-        topicoDerivadas.setTags(new HashSet<>(Set.of(tagDerivadas)));
-        // <-- Linkado à tag "Derivadas"
-        MaterialDeAula materialDerivadas = new MaterialDeAula();
-        materialDerivadas.setNomeArquivo("Aula 05 - Regra da Cadeia.pdf");
-        materialDerivadas.setUrlArquivo("/uploads/aula05.pdf");
-        materialDerivadas.setTipoArquivo("application/pdf");
-
-        materialDerivadas.setTopico(topicoDerivadas);
-        topicoDerivadas.setMateriaisDeAula(new ArrayList<>(List.of(materialDerivadas)));
-
-        topicosRepository.save(topicoDerivadas);
-        materialDeAulaRepository.save(materialDerivadas);
-
-        // 2. ADICIONAR TENTATIVA DE TEXTO (Nota Boa)
-        TentativaTexto tentTexto = new TentativaTexto();
-        tentTexto.setAluno(aluno); // Maria
-        tentTexto.setAtividadeTexto(atividadeTexto); // Atividade de "POO"
-        tentTexto.setTextoResposta("Polimorfismo é a capacidade...");
-        tentTexto.setNota(9.0); // <-- NOTA BOA (9.0)
-        tentTexto.setFeedBack("Excelente!");
-        tentativaTextoRepository.save(tentTexto);
-
-        // 3. ADICIONAR TENTATIVA DE QUESTIONÁRIO (Nota Ruim/Mista)
-        // IDs das respostas que a Maria vai escolher:
-        // Questão 1 (Derivada): Ela escolhe 'alt2' (ERRADA)
-        // Questão 2 (Limite): Ela escolhe 'alt3' (CORRETA)
-        List<Long> respostasMaria = List.of(alt2.getIdAlternativa(), alt3.getIdAlternativa());
-
-        TentativaQuestionario tentQuest = new TentativaQuestionario();
-        tentQuest.setAluno(aluno); // Maria
-        tentQuest.setAtividadeQuestionario(questionario);
-        tentQuest.setRespostas(respostasMaria); // <-- Respostas (1 errada, 1 certa)
-        tentQuest.setNumeroDaTentativa(1);
-        tentQuest.setDataEnvio(LocalDateTime.now());
-        // A nota total será calculada pelo service, mas a nossa análise
-        // vai recalcular por questão de qualquer forma.
-        tentativaQuestionarioRepository.save(tentQuest);
+        /*
+         * ACTIVITIES AND ATTEMPTS SEEDING DISABLED - MOVED TO MICROSERVICE
+         *
+         * AtividadeTexto atividadeTexto = new AtividadeTexto();
+         * // ...
+         * atividadeTextoRepository.save(atividadeTexto);
+         * 
+         * AtividadeArquivos atividadeArquivo = new AtividadeArquivos();
+         * // ...
+         * atividadeArquivosRepository.save(atividadeArquivo);
+         * 
+         * Questoes questao1 = new Questoes();
+         * // ...
+         * questoesRepository.save(questao1);
+         * 
+         * AtividadeQuestionario questionario = new AtividadeQuestionario();
+         * // ...
+         * atividadeQuestionarioRepository.save(questionario);
+         * 
+         * TentativaTexto tentTexto = new TentativaTexto();
+         * // ...
+         * tentativaTextoRepository.save(tentTexto);
+         * 
+         * TentativaQuestionario tentQuest = new TentativaQuestionario();
+         * // ...
+         * tentativaQuestionarioRepository.save(tentQuest);
+         */
 
         System.out.println(">>> Matriculando alunos na turma...");
         Matricula matriculaMaria = new Matricula();
-        matriculaMaria.setAluno(aluno); // A 'Maria'
-        matriculaMaria.setTurma(turma); // A 'Turma A'
-        matriculaMaria.setStatusMatricula(Status.ATIVA); // <-- CORRIGIDO
+        matriculaMaria.setAluno(aluno);
+        matriculaMaria.setTurma(turma);
+        matriculaMaria.setStatusMatricula(br.ifsp.lms_api.model.Status.ATIVA);
         matriculaRepository.save(matriculaMaria);
 
         Matricula matriculaGabriel = new Matricula();
-        matriculaGabriel.setAluno(aluno2); // O 'Gabriel'
-        matriculaGabriel.setTurma(turma); // A 'Turma A'
-        matriculaGabriel.setStatusMatricula(Status.ATIVA); // <-- CORRIGIDO
+        matriculaGabriel.setAluno(aluno2);
+        matriculaGabriel.setTurma(turma);
+        matriculaGabriel.setStatusMatricula(br.ifsp.lms_api.model.Status.ATIVA);
         matriculaRepository.save(matriculaGabriel);
-        // --- FIM DAS NOVAS ADIÇÕES ---
 
         System.out.println(">>> DATA SEEDER CONCLUÍDO. APLICAÇÃO PRONTA!");
     }

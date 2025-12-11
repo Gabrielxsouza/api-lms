@@ -17,6 +17,7 @@ public class AtividadeResponse {
     private Long idAtividade;
     private String tituloAtividade;
     private String descricaoAtividade; // Monolith seems to have this in base
+    private Long idTopico;
 
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dataInicioAtividade;
@@ -32,7 +33,9 @@ public class AtividadeResponse {
 
     // Subclass fields (AtividadeQuestionarioResponseDto)
     private Long duracaoQuestionario;
-    private Integer numeroTentativas;
+    private Integer numeroTentativas; // AtividadeQuestionario
+    private Long numeroMaximoCaracteres; // AtividadeTexto
+    private java.util.List<String> arquivosPermitidos; // AtividadeArquivos
 
     // Nullable/Empty for now unless we implement Question/Tag mapping fully
     private List<Object> questoesQuestionario;

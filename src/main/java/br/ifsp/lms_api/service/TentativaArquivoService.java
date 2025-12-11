@@ -9,12 +9,12 @@ import jakarta.transaction.Transactional;
 // Importações
 import br.ifsp.lms_api.repository.TentativaArquivoRepository;
 import br.ifsp.lms_api.repository.AlunoRepository;
-import br.ifsp.lms_api.repository.AtividadeArquivosRepository; 
 import br.ifsp.lms_api.model.Aluno;
-import br.ifsp.lms_api.model.AtividadeArquivos;
 import br.ifsp.lms_api.model.TentativaArquivo;
 import br.ifsp.lms_api.dto.TentativaArquivoDto.TentativaArquivoResponseDto;
 import br.ifsp.lms_api.dto.TentativaArquivoDto.TentativaArquivoUpdateDto;
+import br.ifsp.lms_api.integration.LearningServiceClient;
+import br.ifsp.lms_api.dto.atividadesDto.AtividadesResponseDto;
 import br.ifsp.lms_api.exception.AccessDeniedException; // <-- RE-ADICIONADO (pois o controller exige)
 
 @Service
@@ -22,19 +22,19 @@ public class TentativaArquivoService {
 
     private final TentativaArquivoRepository tentativaArquivoRepository;
     private final AlunoRepository alunoRepository;
-    private final AtividadeArquivosRepository atividadeArquivosRepository;
-    private final StorageService storageService; 
+    private final LearningServiceClient learningServiceClient;
+    private final StorageService storageService;
     private final ModelMapper modelMapper;
 
     // Construtor completo
     public TentativaArquivoService(TentativaArquivoRepository tentativaArquivoRepository,
-                                 AlunoRepository alunoRepository,
-                                 AtividadeArquivosRepository atividadeArquivosRepository,
-                                 StorageService storageService,
-                                 ModelMapper modelMapper) {
+            AlunoRepository alunoRepository,
+            LearningServiceClient learningServiceClient,
+            StorageService storageService,
+            ModelMapper modelMapper) {
         this.tentativaArquivoRepository = tentativaArquivoRepository;
         this.alunoRepository = alunoRepository;
-        this.atividadeArquivosRepository = atividadeArquivosRepository;
+        this.learningServiceClient = learningServiceClient;
         this.storageService = storageService;
         this.modelMapper = modelMapper;
     }
@@ -42,23 +42,30 @@ public class TentativaArquivoService {
     // Método CREATE (não muda)
     @Transactional
     public TentativaArquivoResponseDto createTentativaArquivo(
-            MultipartFile file, 
+            MultipartFile file,
             Long idAlunoLogado,
             Long idAtividade) {
 
         Aluno aluno = alunoRepository.findById(idAlunoLogado)
                 .orElseThrow(() -> new EntityNotFoundException("Aluno não encontrado"));
-        AtividadeArquivos atividade = atividadeArquivosRepository.findById(idAtividade)
-                .orElseThrow(() -> new EntityNotFoundException("Atividade de Arquivo não encontrada"));
+
+        // Verify activity exists via Client
+        AtividadesResponseDto atividadeDto = learningServiceClient.getAtividadeById(idAtividade);
+        if (atividadeDto == null) {
+            throw new EntityNotFoundException("Atividade não encontrada");
+        }
+        // Ideally enforce type check, but assuming ID is correct from caller.
+        // We could check instanceof AtividadeArquivosResponseDto if needed.
+
         String urlArquivo = storageService.createArquivo(file);
 
         TentativaArquivo novaTentativa = new TentativaArquivo();
         novaTentativa.setAluno(aluno);
-        novaTentativa.setAtividadeArquivo(atividade);
+        novaTentativa.setIdAtividade(idAtividade);
         novaTentativa.setNomeArquivo(file.getOriginalFilename());
         novaTentativa.setTipoArquivo(file.getContentType());
         novaTentativa.setUrlArquivo(urlArquivo);
-        
+
         TentativaArquivo tentativaSalva = tentativaArquivoRepository.save(novaTentativa);
         return modelMapper.map(tentativaSalva, TentativaArquivoResponseDto.class);
     }
@@ -71,7 +78,7 @@ public class TentativaArquivoService {
                 .orElseThrow(() -> new EntityNotFoundException("Tentativa de Arquivo nao encontrada"));
 
         tentativaUpdate.getNota().ifPresent(tentativa::setNota);
-        tentativaUpdate.getFeedback().ifPresent(tentativa::setFeedBack); 
+        tentativaUpdate.getFeedback().ifPresent(tentativa::setFeedBack);
 
         TentativaArquivo tentativaSalva = tentativaArquivoRepository.save(tentativa);
         return modelMapper.map(tentativaSalva, TentativaArquivoResponseDto.class);
@@ -80,10 +87,9 @@ public class TentativaArquivoService {
     @Transactional
     public TentativaArquivoResponseDto updateTentativaArquivoAluno(
             Long idTentativa, Long idAlunoLogado, MultipartFile novoArquivo) {
-        
+
         TentativaArquivo tentativa = tentativaArquivoRepository.findById(idTentativa)
                 .orElseThrow(() -> new EntityNotFoundException("Tentativa de Arquivo nao encontrada"));
-
 
         if (!tentativa.getAluno().getIdUsuario().equals(idAlunoLogado)) {
             throw new AccessDeniedException("Você não tem permissão para editar a tentativa de outro aluno.");
@@ -99,8 +105,8 @@ public class TentativaArquivoService {
 
         tentativa.setNomeArquivo(novoArquivo.getOriginalFilename());
         tentativa.setTipoArquivo(novoArquivo.getContentType());
-        tentativa.setUrlArquivo(urlNovoArquivo); 
-        
+        tentativa.setUrlArquivo(urlNovoArquivo);
+
         TentativaArquivo tentativaSalva = tentativaArquivoRepository.save(tentativa);
 
         try {
@@ -115,12 +121,12 @@ public class TentativaArquivoService {
         return modelMapper.map(tentativaSalva, TentativaArquivoResponseDto.class);
     }
 
-
     @Transactional
-    public TentativaArquivoResponseDto deleteTentativaArquivo(Long idTentativa, Long idAlunoLogado) { // <-- ASSINATURA MUDOU
-        
+    public TentativaArquivoResponseDto deleteTentativaArquivo(Long idTentativa, Long idAlunoLogado) { // <-- ASSINATURA
+                                                                                                      // MUDOU
+
         TentativaArquivo tentativa = tentativaArquivoRepository.findById(idTentativa)
-            .orElseThrow(() -> new EntityNotFoundException("Tentativa com ID " + idTentativa + " nao encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Tentativa com ID " + idTentativa + " nao encontrada"));
 
         if (!tentativa.getAluno().getIdUsuario().equals(idAlunoLogado)) {
             throw new AccessDeniedException("Você não tem permissão para deletar a tentativa de outro aluno.");
@@ -131,7 +137,7 @@ public class TentativaArquivoService {
         }
 
         try {
-            String urlArquivo = tentativa.getUrlArquivo(); 
+            String urlArquivo = tentativa.getUrlArquivo();
             if (urlArquivo != null && !urlArquivo.isEmpty()) {
                 String nomeArquivo = urlArquivo.substring(urlArquivo.lastIndexOf('/') + 1);
                 storageService.deleteFile(nomeArquivo);

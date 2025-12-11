@@ -33,8 +33,5 @@ public class Tag {
     private Set<Topicos> topicos = new HashSet<>();
 
     @ManyToMany(mappedBy = "tags")
-    private Set<Atividade> atividades = new HashSet<>();
-    
-    @ManyToMany(mappedBy = "tags") 
     private Set<Questoes> questoes = new HashSet<>();
 }

@@ -5,22 +5,17 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Questao {
-    private Long id;
-    private String enunciado;
+public class AtividadeArquivos extends Atividade {
     @Builder.Default
-    private List<Alternativa> alternativas = new ArrayList<>();
-    @Builder.Default
-    private Set<String> tags = new HashSet<>();
+    private List<String> arquivosPermitidos = new ArrayList<>();
 }

@@ -1,4 +1,4 @@
-package br.ifsp.lms_api.model;
+package br.ifsp.lms.learning.infrastructure.persistence.entity;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -13,6 +13,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @DiscriminatorValue("TEXTO")
-public class AtividadeTexto extends Atividade {
+public class AtividadeTextoEntity extends AtividadeEntity {
     private Long numeroMaximoCaracteres;
 }

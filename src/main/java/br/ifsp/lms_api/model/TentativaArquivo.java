@@ -1,6 +1,12 @@
 package br.ifsp.lms_api.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,8 +25,8 @@ public class TentativaArquivo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idTentativa;
 
-    @CreationTimestamp 
-    @Column(updatable = false) 
+    @CreationTimestamp
+    @Column(updatable = false)
     private LocalDateTime dataEnvio;
 
     private String feedBack;
@@ -30,9 +36,8 @@ public class TentativaArquivo {
     private String urlArquivo;
     private String tipoArquivo;
 
-    @ManyToOne
-    @JoinColumn(name = "id_atividade_arquivo")
-    private AtividadeArquivos atividadeArquivo; 
+    @Column(name = "id_atividade_arquivo")
+    private Long idAtividade;
 
     @ManyToOne
     @JoinColumn(name = "id_aluno")

@@ -32,10 +32,20 @@ public class AtividadeRepositoryAdapter implements AtividadeRepositoryPort {
 
     @Override
     public List<Atividade> findAllByTurmaId(Long turmaId) {
-        // Implementation pending: need join with topics?
-        // For now return empty or implement simple find all
         return jpaRepository.findAll().stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Atividade> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
     }
 }

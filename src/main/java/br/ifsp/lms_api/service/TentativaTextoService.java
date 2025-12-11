@@ -12,13 +12,10 @@ import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.exception.AccessDeniedException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
 import br.ifsp.lms_api.model.Aluno;
-import br.ifsp.lms_api.model.AtividadeTexto;
 import br.ifsp.lms_api.model.TentativaTexto;
 import br.ifsp.lms_api.repository.AlunoRepository;
-import br.ifsp.lms_api.repository.AtividadeTextoRepository; 
 import br.ifsp.lms_api.repository.TentativaTextoRepository;
 import jakarta.persistence.EntityNotFoundException;
-
 
 import jakarta.transaction.Transactional;
 
@@ -27,23 +24,21 @@ public class TentativaTextoService {
     private final TentativaTextoRepository tentativaTextoRepository;
     private final ModelMapper mapper;
     private final PagedResponseMapper pagedResponseMapper;
-
     private final AlunoRepository alunoRepository;
-    private final AtividadeTextoRepository atividadeTextoRepository;
+    private final br.ifsp.lms_api.integration.LearningServiceClient learningServiceClient;
 
     public TentativaTextoService(TentativaTextoRepository tentativaTextoRepository,
             ModelMapper mapper, PagedResponseMapper pagedResponseMapper, AlunoRepository alunoRepository,
-            AtividadeTextoRepository atividadeTextoRepository) {
+            br.ifsp.lms_api.integration.LearningServiceClient learningServiceClient) {
         this.tentativaTextoRepository = tentativaTextoRepository;
         this.mapper = mapper;
         this.pagedResponseMapper = pagedResponseMapper;
         this.alunoRepository = alunoRepository;
-        this.atividadeTextoRepository = atividadeTextoRepository;
+        this.learningServiceClient = learningServiceClient;
     }
 
     @Transactional
     public PagedResponse<TentativaTextoResponseDto> getAllTentativasTexto(Pageable pageable) {
-
         Page<TentativaTexto> tentativaPage = tentativaTextoRepository.findAll(pageable);
         return pagedResponseMapper.toPagedResponse(tentativaPage, TentativaTextoResponseDto.class);
     }
@@ -51,32 +46,31 @@ public class TentativaTextoService {
     @Transactional
     public TentativaTextoResponseDto createTentativaTexto(
             TentativaTextoRequestDto tentativaRequest,
-            Long idAlunoLogado, 
+            Long idAlunoLogado,
             Long idAtividade) {
 
         Aluno aluno = alunoRepository.findById(idAlunoLogado)
                 .orElseThrow(() -> new EntityNotFoundException("Aluno não encontrado"));
-        
-        AtividadeTexto atividade = atividadeTextoRepository.findById(idAtividade)
-                .orElseThrow(() -> new EntityNotFoundException("Atividade de Texto não encontrada"));
 
-      
+        // Fetch activity from Microservice to validate existence
+        br.ifsp.lms_api.dto.atividadesDto.AtividadesResponseDto atividadeDto = learningServiceClient
+                .getAtividadeById(idAtividade);
+        if (!(atividadeDto instanceof br.ifsp.lms_api.dto.atividadeTextoDto.AtividadeTextoResponseDto)) {
+            throw new EntityNotFoundException("Atividade de Texto não encontrada ou tipo incorreto: " + idAtividade);
+        }
+
         TentativaTexto novaTentativa = new TentativaTexto();
-        
-        
-        novaTentativa.setAluno(aluno); 
-        novaTentativa.setAtividadeTexto(atividade); 
-        novaTentativa.setTextoResposta(tentativaRequest.getTextoResposta()); 
-
+        novaTentativa.setAluno(aluno);
+        novaTentativa.setIdAtividade(idAtividade);
+        novaTentativa.setTextoResposta(tentativaRequest.getTextoResposta());
 
         TentativaTexto tentativaSalva = tentativaTextoRepository.save(novaTentativa);
 
         return mapper.map(tentativaSalva, TentativaTextoResponseDto.class);
     }
 
-
-    public TentativaTextoResponseDto updateTentativaTextoProfessor(TentativaTextoUpdateDto tentativaUpdate, Long idTentativa) {
-
+    public TentativaTextoResponseDto updateTentativaTextoProfessor(TentativaTextoUpdateDto tentativaUpdate,
+            Long idTentativa) {
         TentativaTexto tentativa = tentativaTextoRepository.findById(idTentativa)
                 .orElseThrow(() -> new EntityNotFoundException("Tentativa de Texto nao encontrada"));
 
@@ -84,16 +78,13 @@ public class TentativaTextoService {
         tentativaUpdate.getFeedback().ifPresent(tentativa::setFeedBack);
 
         TentativaTexto tentativaSalva = tentativaTextoRepository.save(tentativa);
-
         return mapper.map(tentativaSalva, TentativaTextoResponseDto.class);
-
     }
 
-
     public TentativaTextoResponseDto updateTentativaTextoAluno(
-            TentativaTextoUpdateDto tentativaUpdate, 
-            Long idTentativa, 
-            Long idAlunoLogado) { 
+            TentativaTextoUpdateDto tentativaUpdate,
+            Long idTentativa,
+            Long idAlunoLogado) {
 
         TentativaTexto tentativa = tentativaTextoRepository.findById(idTentativa)
                 .orElseThrow(() -> new EntityNotFoundException("Tentativa de Texto nao encontrada"));
@@ -105,11 +96,10 @@ public class TentativaTextoService {
         if (tentativa.getNota() != null) {
             throw new AccessDeniedException("Não é possível editar uma tentativa que já foi avaliada.");
         }
-        
+
         tentativaUpdate.getTextoResposta().ifPresent(tentativa::setTextoResposta);
 
         TentativaTexto tentativaSalva = tentativaTextoRepository.save(tentativa);
-
         return mapper.map(tentativaSalva, TentativaTextoResponseDto.class);
     }
 

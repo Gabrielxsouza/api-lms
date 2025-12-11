@@ -30,6 +30,9 @@ public class CreateQuestionarioRequest {
     private Long duracaoQuestionario;
     private Integer numeroTentativas;
 
+    private Long idTopico;
+    private java.util.Set<String> tags;
+
     // Handling Topic/Course context might be tricky if not in DTO.
     // In Monolith, it likely associates via URL or Session?
     // Looking at Monolith Controller: create takes DTO.

@@ -33,7 +33,7 @@ import br.ifsp.lms_api.model.Curso;
 import br.ifsp.lms_api.model.Disciplina;
 import br.ifsp.lms_api.model.Professor;
 import br.ifsp.lms_api.model.Turma;
-import br.ifsp.lms_api.repository.AdministradorRepository; 
+import br.ifsp.lms_api.repository.AdministradorRepository;
 import br.ifsp.lms_api.repository.CursoRepository;
 import br.ifsp.lms_api.repository.DisciplinaRepository;
 import br.ifsp.lms_api.repository.ProfessorRepository;
@@ -47,16 +47,22 @@ import jakarta.persistence.EntityManager;
 @Transactional
 public class TurmaControllerIntegrationTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    @Autowired private DisciplinaRepository disciplinaRepository;
-    @Autowired private TurmaRepository turmaRepository;
-    @Autowired private CursoRepository cursoRepository;
-    @Autowired private ProfessorRepository professorRepository;
+    @Autowired
+    private DisciplinaRepository disciplinaRepository;
+    @Autowired
+    private TurmaRepository turmaRepository;
+    @Autowired
+    private CursoRepository cursoRepository;
+    @Autowired
+    private ProfessorRepository professorRepository;
 
-    
-    @Autowired private AdministradorRepository administradorRepository;
+    @Autowired
+    private AdministradorRepository administradorRepository;
 
     @MockBean
     private AutentificacaoService autentificacaoService;
@@ -67,7 +73,7 @@ public class TurmaControllerIntegrationTest {
     private Disciplina disciplinaExistente;
     private Curso cursoExistente;
     private Professor professorExistente;
-    private Administrador adminExistente; 
+    private Administrador adminExistente;
     private Turma turmaExistente;
 
     private CustomUserDetails professorUserDetails;
@@ -75,31 +81,22 @@ public class TurmaControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-       
-        entityManager.createNativeQuery("DELETE FROM atividade_arquivos_permitidos").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM atividade_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM topico_tags").executeUpdate();
+
         entityManager.createNativeQuery("DELETE FROM questao_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questionario_questoes").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM tentativa_texto").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM tentativa_questionario").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM tentativa_arquivo").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM material_de_aula").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM alternativas").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM questoes").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM atividade").executeUpdate();
 
-        entityManager.createNativeQuery("DELETE FROM topicos").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM matricula").executeUpdate();
 
-      
         turmaRepository.deleteAll();
         cursoRepository.deleteAll();
         disciplinaRepository.deleteAll();
         professorRepository.deleteAll();
         administradorRepository.deleteAll();
-
-        
 
         Disciplina disciplina = new Disciplina();
         disciplina.setNomeDisciplina("Disciplina Pai");
@@ -113,32 +110,27 @@ public class TurmaControllerIntegrationTest {
         curso.setDescricaoCurso("Base Curso");
         cursoExistente = cursoRepository.save(curso);
 
-     
         Professor professor = new Professor();
         professor.setNome("Prof. Base");
         professor.setEmail("prof.base@test.com");
         professor.setCpf("12345678900");
-        professor.setSenha("123456"); 
-        professor.setTipoUsuario("PROFESSOR"); 
+        professor.setSenha("123456");
+        professor.setTipoUsuario("PROFESSOR");
         professor.setDepartamento("COMP");
         professorExistente = professorRepository.save(professor);
 
-       
         professorUserDetails = new CustomUserDetails(professorExistente);
 
-      
         Administrador admin = new Administrador();
         admin.setNome("Admin Teste");
         admin.setEmail("admin@test.com");
         admin.setCpf("00000000000");
         admin.setSenha("123456");
-        admin.setTipoUsuario("ADMIN"); 
+        admin.setTipoUsuario("ADMIN");
         adminExistente = administradorRepository.save(admin);
 
-        
         adminUserDetails = new CustomUserDetails(adminExistente);
 
-       
         Turma turma = new Turma();
         turma.setNomeTurma("Turma Base");
         turma.setSemestre("2025/1");
@@ -150,29 +142,26 @@ public class TurmaControllerIntegrationTest {
         entityManager.flush();
         entityManager.clear();
 
-       
         professorExistente = professorRepository.findById(professorExistente.getIdUsuario()).get();
         adminExistente = administradorRepository.findById(adminExistente.getIdUsuario()).get();
         turmaExistente = turmaRepository.findById(turmaExistente.getIdTurma()).get();
         disciplinaExistente = disciplinaRepository.findById(disciplinaExistente.getIdDisciplina()).get();
         cursoExistente = cursoRepository.findById(cursoExistente.getIdCurso()).get();
 
-        
         when(autentificacaoService.getUsuarioLogado()).thenReturn(professorExistente);
     }
 
     @Test
     void testCreateTurma_Success() throws Exception {
         TurmaRequestDto requestDto = new TurmaRequestDto(
-            "Turma Nova Avulsa",
-            "2025/2",
-            disciplinaExistente.getIdDisciplina(),
-            cursoExistente.getIdCurso(),
-            professorExistente.getIdUsuario()
-        );
+                "Turma Nova Avulsa",
+                "2025/2",
+                disciplinaExistente.getIdDisciplina(),
+                cursoExistente.getIdCurso(),
+                professorExistente.getIdUsuario());
 
         mockMvc.perform(post("/turmas")
-                .with(user(adminUserDetails)) 
+                .with(user(adminUserDetails))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
@@ -185,15 +174,14 @@ public class TurmaControllerIntegrationTest {
     @Test
     void testCreateTurma_DisciplinaNotFound() throws Exception {
         TurmaRequestDto requestDto = new TurmaRequestDto(
-            "Turma Fantasma",
-            "2025/2",
-            999L, 
-            cursoExistente.getIdCurso(),
-            professorExistente.getIdUsuario()
-        );
+                "Turma Fantasma",
+                "2025/2",
+                999L,
+                cursoExistente.getIdCurso(),
+                professorExistente.getIdUsuario());
 
         mockMvc.perform(post("/turmas")
-                .with(user(adminUserDetails)) 
+                .with(user(adminUserDetails))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isNotFound());
@@ -204,7 +192,7 @@ public class TurmaControllerIntegrationTest {
     @Test
     void testGetAllTurmas_Success() throws Exception {
         mockMvc.perform(get("/turmas")
-                .with(user(adminUserDetails)) 
+                .with(user(adminUserDetails))
                 .param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
@@ -215,7 +203,7 @@ public class TurmaControllerIntegrationTest {
 
     @Test
     void testGetMinhasTurmas_Success() throws Exception {
-       
+
         mockMvc.perform(get("/turmas/minhas-turmas")
                 .with(user(professorUserDetails))
                 .param("page", "0")
@@ -230,13 +218,13 @@ public class TurmaControllerIntegrationTest {
     void testUpdateTurma_Success() throws Exception {
         Long id = turmaExistente.getIdTurma();
         String updateJson = """
-        {
-            "nomeTurma": "Turma Base ATUALIZADA"
-        }
-        """;
+                {
+                    "nomeTurma": "Turma Base ATUALIZADA"
+                }
+                """;
 
         mockMvc.perform(patch("/turmas/{id}", id)
-                .with(user(adminUserDetails)) 
+                .with(user(adminUserDetails))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(updateJson))
                 .andExpect(status().isOk())

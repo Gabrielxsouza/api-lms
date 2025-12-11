@@ -34,8 +34,8 @@ import br.ifsp.lms_api.repository.QuestoesRepository;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc 
-@ActiveProfiles("test") 
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 @Transactional
 class QuestoesControllerIntegrationTest {
 
@@ -46,7 +46,7 @@ class QuestoesControllerIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private QuestoesRepository questoesRepository; 
+    private QuestoesRepository questoesRepository;
 
     @Autowired
     private EntityManager entityManager;
@@ -54,7 +54,7 @@ class QuestoesControllerIntegrationTest {
     @BeforeEach
     void setUp() {
         entityManager.createNativeQuery("DELETE FROM questao_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questionario_questoes").executeUpdate();
+
         entityManager.createQuery("DELETE FROM Alternativas").executeUpdate();
         questoesRepository.deleteAll();
     }
@@ -66,45 +66,44 @@ class QuestoesControllerIntegrationTest {
         alt1Dto.setAlternativaCorreta(true);
 
         QuestoesRequestDto requestDto = new QuestoesRequestDto();
-        requestDto.setEnunciado("Este é um enunciado válido (mais de 5 chars)"); 
-        requestDto.setAlternativas(List.of(alt1Dto)); 
+        requestDto.setEnunciado("Este é um enunciado válido (mais de 5 chars)");
+        requestDto.setAlternativas(List.of(alt1Dto));
 
         mockMvc.perform(post("/questoes")
-                .with(user("professor").roles("PROFESSOR")) 
+                .with(user("professor").roles("PROFESSOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isCreated()) 
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.idQuestao").exists());
     }
 
     @Test
     void testDeleteQuestao_Success() throws Exception {
         Questoes questao = new Questoes();
-        questao.setEnunciado("Enunciado válido para deletar"); 
-        
+        questao.setEnunciado("Enunciado válido para deletar");
+
         Alternativas alt1 = new Alternativas();
         alt1.setAlternativa("Alternativa para deletar");
         alt1.setAlternativaCorreta(false);
-        alt1.setQuestoes(questao); 
-        
+        alt1.setQuestoes(questao);
+
         questao.setAlternativas(new ArrayList<>(List.of(alt1)));
-        
+
         questao = questoesRepository.save(questao);
         Long idParaDeletar = questao.getIdQuestao();
 
-      
         mockMvc.perform(delete("/questoes/{id}", idParaDeletar)
-                .with(user("admin").roles("ADMIN"))) 
+                .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNoContent());
 
         assertFalse(questoesRepository.findById(idParaDeletar).isPresent());
     }
-    
+
     @Test
     void testGetAllQuestoes_Success() throws Exception {
         // Questão 1
         Questoes q1 = new Questoes();
-        q1.setEnunciado("Questão Um"); 
+        q1.setEnunciado("Questão Um");
         Alternativas a1 = new Alternativas();
         a1.setAlternativa("Alt 1");
         a1.setAlternativaCorreta(true);
@@ -114,7 +113,7 @@ class QuestoesControllerIntegrationTest {
 
         // Questão 2
         Questoes q2 = new Questoes();
-        q2.setEnunciado("Questão Dois"); 
+        q2.setEnunciado("Questão Dois");
         Alternativas a2 = new Alternativas();
         a2.setAlternativa("Alt 2");
         a2.setAlternativaCorreta(false);
@@ -128,7 +127,7 @@ class QuestoesControllerIntegrationTest {
                 .with(user("professor").roles("PROFESSOR"))
                 .param("page", "0")
                 .param("size", "10"))
-                .andExpect(status().isOk()) 
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(2));
     }
 
@@ -141,7 +140,7 @@ class QuestoesControllerIntegrationTest {
         alt.setAlternativaCorreta(true);
         alt.setQuestoes(questao);
         questao.setAlternativas(new ArrayList<>(List.of(alt)));
-        
+
         questao = questoesRepository.save(questao);
         Long id = questao.getIdQuestao();
 
@@ -149,10 +148,10 @@ class QuestoesControllerIntegrationTest {
         updateDto.setEnunciado(Optional.of("Enunciado Novo Atualizado"));
 
         mockMvc.perform(patch("/questoes/{id}", id)
-                .with(user("professor").roles("PROFESSOR")) 
+                .with(user("professor").roles("PROFESSOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
-                .andExpect(status().isOk()); 
+                .andExpect(status().isOk());
 
         entityManager.flush();
         entityManager.clear();
@@ -168,10 +167,10 @@ class QuestoesControllerIntegrationTest {
         updateDto.setEnunciado(Optional.of("Enunciado qualquer"));
 
         mockMvc.perform(patch("/questoes/{id}", idInexistente)
-                .with(user("professor").roles("PROFESSOR")) 
+                .with(user("professor").roles("PROFESSOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
-                .andExpect(status().isNotFound()); 
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -180,8 +179,8 @@ class QuestoesControllerIntegrationTest {
 
         // Se der 403 aqui, mude para "ADMIN"
         mockMvc.perform(delete("/questoes/{id}", idInexistente)
-                .with(user("admin").roles("ADMIN"))) 
-                .andExpect(status().isNotFound()); 
+                .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -191,13 +190,13 @@ class QuestoesControllerIntegrationTest {
         altDto.setAlternativaCorreta(true);
 
         QuestoesRequestDto requestDto = new QuestoesRequestDto();
-        requestDto.setEnunciado(null); 
-        requestDto.setAlternativas(List.of(altDto)); 
+        requestDto.setEnunciado(null);
+        requestDto.setAlternativas(List.of(altDto));
 
         mockMvc.perform(post("/questoes")
-                .with(user("professor").roles("PROFESSOR")) 
+                .with(user("professor").roles("PROFESSOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isBadRequest()); 
+                .andExpect(status().isBadRequest());
     }
 }

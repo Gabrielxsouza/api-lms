@@ -25,8 +25,33 @@ public class AtividadeMapper {
                     .tentativasPermitidas(qHelper.getNumeroTentativas())
                     .questoes(qHelper.getQuestoes().stream().map(this::toDomain).collect(Collectors.toList()))
                     .build();
+        } else if (entity instanceof AtividadeTextoEntity) {
+            AtividadeTextoEntity tHelper = (AtividadeTextoEntity) entity;
+            return AtividadeTexto.builder()
+                    .id(tHelper.getIdAtividade())
+                    .titulo(tHelper.getTituloAtividade())
+                    .descricao(tHelper.getDescricaoAtividade())
+                    .dataInicio(tHelper.getDataInicioAtividade())
+                    .dataFechamento(tHelper.getDataFechamentoAtividade())
+                    .status(tHelper.getStatusAtividade())
+                    .topicoId(tHelper.getTopicoId())
+                    .tags(tHelper.getTags())
+                    .numeroMaximoCaracteres(tHelper.getNumeroMaximoCaracteres())
+                    .build();
+        } else if (entity instanceof AtividadeArquivosEntity) {
+            AtividadeArquivosEntity aHelper = (AtividadeArquivosEntity) entity;
+            return AtividadeArquivos.builder()
+                    .id(aHelper.getIdAtividade())
+                    .titulo(aHelper.getTituloAtividade())
+                    .descricao(aHelper.getDescricaoAtividade())
+                    .dataInicio(aHelper.getDataInicioAtividade())
+                    .dataFechamento(aHelper.getDataFechamentoAtividade())
+                    .status(aHelper.getStatusAtividade())
+                    .topicoId(aHelper.getTopicoId())
+                    .tags(aHelper.getTags())
+                    .arquivosPermitidos(aHelper.getArquivosPermitidos())
+                    .build();
         }
-        // Handle other types later
         return null;
     }
 
@@ -34,22 +59,38 @@ public class AtividadeMapper {
         if (domain instanceof AtividadeQuestionario) {
             AtividadeQuestionario qDomain = (AtividadeQuestionario) domain;
             AtividadeQuestionarioEntity entity = new AtividadeQuestionarioEntity();
-            entity.setIdAtividade(qDomain.getId());
-            entity.setTituloAtividade(qDomain.getTitulo());
-            entity.setDescricaoAtividade(qDomain.getDescricao());
-            entity.setDataInicioAtividade(qDomain.getDataInicio());
-            entity.setDataFechamentoAtividade(qDomain.getDataFechamento());
-            entity.setStatusAtividade(qDomain.getStatus());
-            entity.setTopicoId(qDomain.getTopicoId());
-            entity.setTags(qDomain.getTags());
+            mapCommonAttributes(domain, entity);
             entity.setDuracaoQuestionario(qDomain.getDuracaoMinutes());
             entity.setNumeroTentativas(qDomain.getTentativasPermitidas());
             if (qDomain.getQuestoes() != null) {
                 entity.setQuestoes(qDomain.getQuestoes().stream().map(this::toEntity).collect(Collectors.toList()));
             }
             return entity;
+        } else if (domain instanceof AtividadeTexto) {
+            AtividadeTexto tDomain = (AtividadeTexto) domain;
+            AtividadeTextoEntity entity = new AtividadeTextoEntity();
+            mapCommonAttributes(domain, entity);
+            entity.setNumeroMaximoCaracteres(tDomain.getNumeroMaximoCaracteres());
+            return entity;
+        } else if (domain instanceof AtividadeArquivos) {
+            AtividadeArquivos aDomain = (AtividadeArquivos) domain;
+            AtividadeArquivosEntity entity = new AtividadeArquivosEntity();
+            mapCommonAttributes(domain, entity);
+            entity.setArquivosPermitidos(aDomain.getArquivosPermitidos());
+            return entity;
         }
         return null;
+    }
+
+    private void mapCommonAttributes(Atividade domain, AtividadeEntity entity) {
+        entity.setIdAtividade(domain.getId());
+        entity.setTituloAtividade(domain.getTitulo());
+        entity.setDescricaoAtividade(domain.getDescricao());
+        entity.setDataInicioAtividade(domain.getDataInicio());
+        entity.setDataFechamentoAtividade(domain.getDataFechamento());
+        entity.setStatusAtividade(domain.getStatus());
+        entity.setTopicoId(domain.getTopicoId());
+        entity.setTags(domain.getTags());
     }
 
     private Questao toDomain(QuestaoEntity entity) {

@@ -9,7 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany; 
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -39,11 +39,7 @@ public class Questoes {
     @Size(min = 5, max = 100, message = "O enunciado da questão deve conter entre 5 e 100 caracteres")
     private String enunciado;
 
-
-    @ManyToMany(mappedBy = "questoes")
-    @JsonBackReference 
-    private List<AtividadeQuestionario> questionarios = new ArrayList<>();
-
+    // Removed AtividadeQuestionario relationship
 
     @OneToMany(mappedBy = "questoes", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
@@ -51,10 +47,6 @@ public class Questoes {
     private List<Alternativas> alternativas = new ArrayList<>();
 
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-    @JoinTable(
-        name = "questao_tags",
-        joinColumns = @JoinColumn(name = "id_questao"),
-        inverseJoinColumns = @JoinColumn(name = "id_tag")
-    )
+    @JoinTable(name = "questao_tags", joinColumns = @JoinColumn(name = "id_questao"), inverseJoinColumns = @JoinColumn(name = "id_tag"))
     private Set<Tag> tags = new HashSet<>();
 }

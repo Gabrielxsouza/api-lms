@@ -17,16 +17,11 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "tipoAtividade",
-    visible = true
-)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "tipoAtividade", visible = true)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = AtividadeTextoResponseDto.class, name = "TEXTO"),
-    @JsonSubTypes.Type(value = AtividadeArquivosResponseDto.class, name = "ARQUIVOS"),
-    @JsonSubTypes.Type(value = AtividadeQuestionarioResponseDto.class, name = "QUESTIONARIO")
+        @JsonSubTypes.Type(value = AtividadeTextoResponseDto.class, name = "TEXTO"),
+        @JsonSubTypes.Type(value = AtividadeArquivosResponseDto.class, name = "ARQUIVOS"),
+        @JsonSubTypes.Type(value = AtividadeQuestionarioResponseDto.class, name = "QUESTIONARIO")
 })
 public class AtividadesResponseDto {
 
@@ -36,15 +31,15 @@ public class AtividadesResponseDto {
 
     private String descricaoAtividade;
 
+    private Long idTopico;
 
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dataInicioAtividade;
-
 
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dataFechamentoAtividade;
 
     private Boolean statusAtividade;
 
-    private List<TagResponseDto> tags;
+    private List<String> tags;
 }

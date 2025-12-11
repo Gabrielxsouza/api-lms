@@ -1,19 +1,13 @@
-package br.ifsp.lms_api.model;
+package br.ifsp.lms.learning.infrastructure.persistence.entity;
 
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.JoinColumn;
-
 import java.util.ArrayList;
 import java.util.List;
-
 
 @Entity
 @Getter
@@ -21,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @DiscriminatorValue("ARQUIVOS")
-public class AtividadeArquivos extends Atividade {
+public class AtividadeArquivosEntity extends AtividadeEntity {
     @ElementCollection
     @CollectionTable(name = "atividade_arquivos_permitidos", joinColumns = @JoinColumn(name = "idAtividade"))
     private List<String> arquivosPermitidos = new ArrayList<>();

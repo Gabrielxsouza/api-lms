@@ -1,11 +1,9 @@
 package br.ifsp.lms_api.model;
 
-
 import java.util.HashSet;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -48,29 +46,12 @@ public class Topicos {
     @JoinColumn(name = "idTurma")
     private Turma turma;
 
-    @OneToMany(
-        mappedBy = "topico",
-        cascade = CascadeType.ALL,
-        orphanRemoval = true,
-        fetch = FetchType.LAZY
-    )
+    @OneToMany(mappedBy = "topico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MaterialDeAula> materiaisDeAula;
 
-    @JsonManagedReference
-    @OneToMany(
-        mappedBy = "topico", 
-        cascade = CascadeType.ALL,
-        orphanRemoval = true,
-        fetch = FetchType.LAZY
-    )
-    private List<Atividade> atividades;
-
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-    @JoinTable(
-        name = "topico_tags", // Nome da tabela de junção
-        joinColumns = @JoinColumn(name = "id_topico"),
-        inverseJoinColumns = @JoinColumn(name = "id_tag")
-    )
+    @JoinTable(name = "topico_tags", // Nome da tabela de junção
+            joinColumns = @JoinColumn(name = "id_topico"), inverseJoinColumns = @JoinColumn(name = "id_tag"))
     private Set<Tag> tags = new HashSet<>();
 
 }

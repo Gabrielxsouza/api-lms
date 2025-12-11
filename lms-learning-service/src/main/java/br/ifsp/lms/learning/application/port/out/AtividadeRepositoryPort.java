@@ -9,5 +9,9 @@ public interface AtividadeRepositoryPort {
 
     Optional<Atividade> findById(Long id);
 
-    List<Atividade> findAllByTurmaId(Long turmaId); // Assuming we query by Turma (from context map)
+    List<Atividade> findAllByTurmaId(Long turmaId);
+
+    List<Atividade> findAll();
+
+    void deleteById(Long id);
 }

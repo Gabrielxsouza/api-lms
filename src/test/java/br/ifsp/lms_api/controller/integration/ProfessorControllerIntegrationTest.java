@@ -44,13 +44,20 @@ import jakarta.persistence.EntityManager;
 @Transactional
 public class ProfessorControllerIntegrationTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private ProfessorRepository professorRepository;
-    @Autowired private AdministradorRepository administradorRepository;
-    @Autowired private TurmaRepository turmaRepository;
-    @Autowired private EntityManager entityManager;
-    @MockBean private AutentificacaoService autentificacaoService;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private ProfessorRepository professorRepository;
+    @Autowired
+    private AdministradorRepository administradorRepository;
+    @Autowired
+    private TurmaRepository turmaRepository;
+    @Autowired
+    private EntityManager entityManager;
+    @MockBean
+    private AutentificacaoService autentificacaoService;
 
     private Professor professorExistente;
     private CustomUserDetails adminUserDetails;
@@ -58,28 +65,21 @@ public class ProfessorControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        entityManager.createNativeQuery("DELETE FROM atividade_arquivos_permitidos").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM atividade_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM topico_tags").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM questao_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questionario_questoes").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM tentativa_texto").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM tentativa_questionario").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM tentativa_arquivo").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM material_de_aula").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM alternativas").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM questoes").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM atividade").executeUpdate();
-        
-        entityManager.createNativeQuery("DELETE FROM topicos").executeUpdate();
+
         entityManager.createNativeQuery("DELETE FROM matricula").executeUpdate();
         entityManager.createNativeQuery("DELETE FROM turma").executeUpdate();
-        
+
         turmaRepository.deleteAll();
         professorRepository.deleteAll();
         administradorRepository.deleteAll();
         entityManager.createNativeQuery("DELETE FROM usuario").executeUpdate();
-
 
         Administrador admin = new Administrador();
         admin.setNome("Admin System");
@@ -102,21 +102,20 @@ public class ProfessorControllerIntegrationTest {
 
         entityManager.flush();
         entityManager.clear();
-        
+
         professorExistente = professorRepository.findById(professorExistente.getIdUsuario()).get();
-        
+
         when(autentificacaoService.getUsuarioLogado()).thenReturn(admin);
     }
 
     @Test
     void createProfessor_Success() throws Exception {
         ProfessorRequestDto request = new ProfessorRequestDto(
-            "Novo Professor",
-            "novo.prof@sys.com",
-            "123456",
-            "33333333333",
-            "Física"
-        );
+                "Novo Professor",
+                "novo.prof@sys.com",
+                "123456",
+                "33333333333",
+                "Física");
 
         mockMvc.perform(post("/professores")
                 .with(user(adminUserDetails))
@@ -126,7 +125,7 @@ public class ProfessorControllerIntegrationTest {
                 .andExpect(jsonPath("$.nome", is("Novo Professor")))
                 .andExpect(jsonPath("$.departamento", is("Física")));
 
-        assertEquals(2, professorRepository.count()); 
+        assertEquals(2, professorRepository.count());
     }
 
     @Test
@@ -144,11 +143,10 @@ public class ProfessorControllerIntegrationTest {
     void updateProfessor_Success() throws Exception {
         Long id = professorExistente.getIdUsuario();
         ProfessorUpdateDto updateDto = new ProfessorUpdateDto(
-            Optional.of("Prof. Updated"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of("Estatística")
-        );
+                Optional.of("Prof. Updated"),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of("Estatística"));
 
         mockMvc.perform(patch("/professores/{id}", id)
                 .with(user(professorUserDetails))
@@ -156,7 +154,7 @@ public class ProfessorControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome", is("Prof. Updated")));
-                
+
         Professor profAtualizado = professorRepository.findById(id).get();
         assertEquals("Estatística", profAtualizado.getDepartamento());
     }
