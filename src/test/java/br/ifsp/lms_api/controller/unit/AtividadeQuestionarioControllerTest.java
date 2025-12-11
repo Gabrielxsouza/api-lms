@@ -14,9 +14,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Collections;
+import java.util.Optional;
+
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +43,8 @@ import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioRequest
 import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioResponseDto;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.service.AtividadeQuestionarioService;
+import br.ifsp.lms_api.dto.atividadeQuestionarioDto.AtividadeQuestionarioUpdateDto;
+import br.ifsp.lms_api.dto.page.PagedResponse;
 
 @WebMvcTest(AtividadeQuestionarioController.class)
 class AtividadeQuestionarioControllerTest {
@@ -72,7 +81,7 @@ class AtividadeQuestionarioControllerTest {
         requestDto.setNumeroTentativas(3);
 
         when(atividadeQuestionarioService.createAtividadeQuestionario(any(AtividadeQuestionarioRequestDto.class)))
-            .thenReturn(responseDto);
+                .thenReturn(responseDto);
 
         mockMvc.perform(post("/atividades-questionario")
                 .with(csrf())
@@ -82,7 +91,8 @@ class AtividadeQuestionarioControllerTest {
                 .andExpect(jsonPath("$.idAtividade").value(1L))
                 .andExpect(jsonPath("$.tituloAtividade").value("Teste de Questionário"));
 
-        verify(atividadeQuestionarioService, times(1)).createAtividadeQuestionario(any(AtividadeQuestionarioRequestDto.class));
+        verify(atividadeQuestionarioService, times(1))
+                .createAtividadeQuestionario(any(AtividadeQuestionarioRequestDto.class));
     }
 
     @Test
@@ -106,7 +116,7 @@ class AtividadeQuestionarioControllerTest {
         String errorMessage = "Atividade não encontrada";
 
         when(atividadeQuestionarioService.getAtividadeQuestionarioById(idInexistente))
-            .thenThrow(new ResourceNotFoundException(errorMessage));
+                .thenThrow(new ResourceNotFoundException(errorMessage));
 
         mockMvc.perform(get("/atividades-questionario/{id}", idInexistente))
                 .andExpect(status().isNotFound());
@@ -126,7 +136,7 @@ class AtividadeQuestionarioControllerTest {
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_PROFESSOR"))).when(userDetailsMock).getAuthorities();
 
         when(atividadeQuestionarioService.adicionarQuestoes(eq(idQuestionario), anyList(), eq(idProfessor)))
-            .thenReturn(responseDto);
+                .thenReturn(responseDto);
 
         mockMvc.perform(post("/atividades-questionario/{idQuestionario}/questoes", idQuestionario)
                 .with(csrf())
@@ -137,5 +147,95 @@ class AtividadeQuestionarioControllerTest {
                 .andExpect(jsonPath("$.idAtividade").value(1L));
 
         verify(atividadeQuestionarioService).adicionarQuestoes(idQuestionario, idsDasQuestoes, idProfessor);
+    }
+
+    @Test
+    @WithMockUser(roles = "PROFESSOR")
+    void testGetAll_Success() throws Exception {
+        PagedResponse<AtividadeQuestionarioResponseDto> pagedResponse = new PagedResponse<>(List.of(responseDto), 0, 10,
+                1, 1, true);
+
+        when(atividadeQuestionarioService.getAllAtividadesQuestionario(any(Pageable.class))).thenReturn(pagedResponse);
+
+        mockMvc.perform(get("/atividades-questionario")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].idAtividade").value(1L));
+
+        verify(atividadeQuestionarioService).getAllAtividadesQuestionario(any(Pageable.class));
+    }
+
+    @Test
+    void testUpdate_Success() throws Exception {
+        Long id = 1L;
+        Long idProfessor = 50L;
+        AtividadeQuestionarioUpdateDto updateDto = new AtividadeQuestionarioUpdateDto();
+        updateDto.setNumeroTentativas(Optional.of(5));
+
+        CustomUserDetails userDetailsMock = mock(CustomUserDetails.class);
+        when(userDetailsMock.getId()).thenReturn(idProfessor);
+        when(userDetailsMock.getUsername()).thenReturn("professor_teste");
+        doReturn(List.of(new SimpleGrantedAuthority("ROLE_PROFESSOR"))).when(userDetailsMock).getAuthorities();
+
+        when(atividadeQuestionarioService.updateAtividadeQuestionario(eq(id), any(AtividadeQuestionarioUpdateDto.class),
+                eq(idProfessor)))
+                .thenReturn(responseDto);
+
+        mockMvc.perform(patch("/atividades-questionario/{id}", id)
+                .with(csrf())
+                .with(user(userDetailsMock))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk());
+
+        verify(atividadeQuestionarioService).updateAtividadeQuestionario(eq(id),
+                any(AtividadeQuestionarioUpdateDto.class), eq(idProfessor));
+    }
+
+    @Test
+    void testRemoverQuestoesDoQuestionario_Success() throws Exception {
+        Long idQuestionario = 1L;
+        List<Long> idsDasQuestoes = List.of(10L, 11L);
+        Long idProfessor = 50L;
+
+        CustomUserDetails userDetailsMock = mock(CustomUserDetails.class);
+        when(userDetailsMock.getId()).thenReturn(idProfessor);
+        when(userDetailsMock.getUsername()).thenReturn("professor_teste");
+        doReturn(List.of(new SimpleGrantedAuthority("ROLE_PROFESSOR"))).when(userDetailsMock).getAuthorities();
+
+        when(atividadeQuestionarioService.removerQuestoes(eq(idQuestionario), anyList(), eq(idProfessor)))
+                .thenReturn(responseDto);
+
+        mockMvc.perform(patch("/atividades-questionario/{idQuestionario}/questoes", idQuestionario)
+                .with(csrf())
+                .with(user(userDetailsMock))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(idsDasQuestoes)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.idAtividade").value(1L));
+
+        verify(atividadeQuestionarioService).removerQuestoes(idQuestionario, idsDasQuestoes, idProfessor);
+    }
+
+    @Test
+    void testRemoverTodasQuestoesDoQuestionario_Success() throws Exception {
+        Long idQuestionario = 1L;
+        Long idProfessor = 50L;
+
+        CustomUserDetails userDetailsMock = mock(CustomUserDetails.class);
+        when(userDetailsMock.getId()).thenReturn(idProfessor);
+        when(userDetailsMock.getUsername()).thenReturn("professor_teste");
+        doReturn(List.of(new SimpleGrantedAuthority("ROLE_PROFESSOR"))).when(userDetailsMock).getAuthorities();
+
+        when(atividadeQuestionarioService.removerQuestoes(eq(idQuestionario), eq(idProfessor)))
+                .thenReturn(responseDto);
+
+        mockMvc.perform(delete("/atividades-questionario/{idQuestionario}/questoes/todas", idQuestionario)
+                .with(csrf())
+                .with(user(userDetailsMock)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.idAtividade").value(1L));
+
+        verify(atividadeQuestionarioService).removerQuestoes(idQuestionario, idProfessor);
     }
 }

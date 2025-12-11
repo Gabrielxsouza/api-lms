@@ -39,21 +39,21 @@ public class DataInitializer implements CommandLineRunner {
     private final TentativaQuestionarioRepository tentativaQuestionarioRepository;
 
     public DataInitializer(TagRepository tagRepository,
-                           DisciplinaRepository disciplinaRepository,
-                           TurmaRepository turmaRepository,
-                           TopicosRepository topicosRepository,
-                           QuestoesRepository questoesRepository,
-                           AlunoRepository alunoRepository,
-                           ProfessorRepository professorRepository,
-                           AdministradorRepository administradorRepository,
-                           AtividadeTextoRepository atividadeTextoRepository,
-                           AtividadeArquivosRepository atividadeArquivosRepository,
-                           AtividadeQuestionarioRepository atividadeQuestionarioRepository,
-                           PasswordEncoder passwordEncoder,
-                           MaterialDeAulaRepository materialDeAulaRepository,
-                           TentativaTextoRepository tentativaTextoRepository,
-                           TentativaQuestionarioRepository tentativaQuestionarioRepository,
-                           MatriculaRepository matriculaRepository) {
+            DisciplinaRepository disciplinaRepository,
+            TurmaRepository turmaRepository,
+            TopicosRepository topicosRepository,
+            QuestoesRepository questoesRepository,
+            AlunoRepository alunoRepository,
+            ProfessorRepository professorRepository,
+            AdministradorRepository administradorRepository,
+            AtividadeTextoRepository atividadeTextoRepository,
+            AtividadeArquivosRepository atividadeArquivosRepository,
+            AtividadeQuestionarioRepository atividadeQuestionarioRepository,
+            PasswordEncoder passwordEncoder,
+            MaterialDeAulaRepository materialDeAulaRepository,
+            TentativaTextoRepository tentativaTextoRepository,
+            TentativaQuestionarioRepository tentativaQuestionarioRepository,
+            MatriculaRepository matriculaRepository) {
 
         // (Atribuições existentes)
         this.tagRepository = tagRepository;
@@ -68,7 +68,7 @@ public class DataInitializer implements CommandLineRunner {
         this.atividadeArquivosRepository = atividadeArquivosRepository;
         this.atividadeQuestionarioRepository = atividadeQuestionarioRepository;
         this.passwordEncoder = passwordEncoder;
-        
+
         // --- ADICIONAR ESTAS ATRIBUIÇÕES ---
         this.materialDeAulaRepository = materialDeAulaRepository;
         this.tentativaTextoRepository = tentativaTextoRepository;
@@ -79,6 +79,11 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+        if (tagRepository.count() > 0) {
+            System.out.println(">>> BANCO DE DADOS JÁ POPULADO. SKIP DATA SEEDER.");
+            return;
+        }
+
         System.out.println(">>> INICIANDO O DATA SEEDER (POPULANDO BANCO DE DADOS)...");
 
         // --- TAGS ---
@@ -90,7 +95,7 @@ public class DataInitializer implements CommandLineRunner {
         tagP1.setNome("Prova P1");
         Tag tagPOO = new Tag(); // <-- NOVA TAG
         tagPOO.setNome("POO");
-        
+
         tagRepository.saveAll(List.of(tagCalculo, tagDerivadas, tagP1, tagPOO));
 
         // --- USUÁRIOS ---
@@ -101,7 +106,7 @@ public class DataInitializer implements CommandLineRunner {
         aluno.setCpf("123.456.789-00");
         aluno.setRa("GU3000001");
         alunoRepository.save(aluno);
-        
+
         // (Aluno 2, Prof, Admin... - sem mudanças)
         Aluno aluno2 = new Aluno();
         aluno2.setNome("Gabriel Feitoza");
@@ -118,7 +123,7 @@ public class DataInitializer implements CommandLineRunner {
         prof.setCpf("987.654.321-00");
         prof.setDepartamento("Engenharia da Computação");
         professorRepository.save(prof);
-        
+
         Administrador admin = new Administrador();
         admin.setNome("Admin");
         admin.setEmail("admin@lms.com");
@@ -139,15 +144,15 @@ public class DataInitializer implements CommandLineRunner {
         prof.setTurmas(List.of(turma));
         turma.setDisciplina(disciplina);
         disciplina.setTurmas(List.of(turma));
-        disciplinaRepository.save(disciplina); 
+        disciplinaRepository.save(disciplina);
 
         // --- TÓPICO 1 (Para Atividades) ---
         Topicos topico1 = new Topicos();
         topico1.setTituloTopico("Tópico 1 - Prova P1");
         topico1.setConteudoHtml("<p>Este tópico contém a P1.</p>");
-        topico1.setTurma(turma); 
+        topico1.setTurma(turma);
         topico1.setTags(Set.of(tagP1)); // Tópico geral da P1
-        topicosRepository.save(topico1); 
+        topicosRepository.save(topico1);
 
         // --- ATIVIDADES (Associadas ao Tópico 1) ---
         AtividadeTexto atividadeTexto = new AtividadeTexto();
@@ -156,9 +161,9 @@ public class DataInitializer implements CommandLineRunner {
         atividadeTexto.setDataInicioAtividade(LocalDate.now());
         atividadeTexto.setDataFechamentoAtividade(LocalDate.now().plusDays(7));
         atividadeTexto.setStatusAtividade(true);
-        atividadeTexto.setNumeroMaximoCaracteres(1000L); 
+        atividadeTexto.setNumeroMaximoCaracteres(1000L);
         atividadeTexto.setTags(Set.of(tagPOO)); // <-- MUDANÇA: Tag "POO" para testar nota boa
-        atividadeTexto.setTopico(topico1); 
+        atividadeTexto.setTopico(topico1);
         atividadeTextoRepository.save(atividadeTexto);
 
         // (AtividadeArquivo - não vamos criar tentativa para ela por enquanto)
@@ -170,7 +175,7 @@ public class DataInitializer implements CommandLineRunner {
         atividadeArquivo.setStatusAtividade(true);
         atividadeArquivo.setArquivosPermitidos(List.of(".pdf", ".zip"));
         atividadeArquivo.setTags(Set.of(tagP1));
-        atividadeArquivo.setTopico(topico1); 
+        atividadeArquivo.setTopico(topico1);
         atividadeArquivosRepository.save(atividadeArquivo);
 
         // --- QUESTÃO 1 (Errada pela aluna) ---
@@ -204,17 +209,17 @@ public class DataInitializer implements CommandLineRunner {
         questionario.setStatusAtividade(true);
         questionario.setDuracaoQuestionario(60L);
         questionario.setNumeroTentativas(3);
-        questionario.setTopico(topico1); 
-        questionario.setTags(Set.of(tagP1, tagCalculo)); 
+        questionario.setTopico(topico1);
+        questionario.setTags(Set.of(tagP1, tagCalculo));
         questionario.setQuestoes(List.of(questao1, questao2)); // <-- Contém as 2 questões
         atividadeQuestionarioRepository.save(questionario);
 
         Topicos topicoDerivadas = new Topicos();
         topicoDerivadas.setTituloTopico("Tópico 2 - Revisão de Derivadas");
         topicoDerivadas.setConteudoHtml("<p>Material de apoio.</p>");
-        topicoDerivadas.setTurma(turma); 
+        topicoDerivadas.setTurma(turma);
         topicoDerivadas.setTags(new HashSet<>(Set.of(tagDerivadas)));
-         // <-- Linkado à tag "Derivadas"
+        // <-- Linkado à tag "Derivadas"
         MaterialDeAula materialDerivadas = new MaterialDeAula();
         materialDerivadas.setNomeArquivo("Aula 05 - Regra da Cadeia.pdf");
         materialDerivadas.setUrlArquivo("/uploads/aula05.pdf");
@@ -263,7 +268,7 @@ public class DataInitializer implements CommandLineRunner {
         matriculaGabriel.setTurma(turma); // A 'Turma A'
         matriculaGabriel.setStatusMatricula(Status.ATIVA); // <-- CORRIGIDO
         matriculaRepository.save(matriculaGabriel);
-                // --- FIM DAS NOVAS ADIÇÕES ---
+        // --- FIM DAS NOVAS ADIÇÕES ---
 
         System.out.println(">>> DATA SEEDER CONCLUÍDO. APLICAÇÃO PRONTA!");
     }

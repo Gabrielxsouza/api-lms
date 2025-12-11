@@ -77,7 +77,7 @@ class AtividadeTextoControllerTest {
         requestDto.setNumeroMaximoCaracteres(500L);
 
         when(atividadeTextoService.createAtividadeTexto(any(AtividadeTextoRequestDto.class)))
-            .thenReturn(responseDto);
+                .thenReturn(responseDto);
 
         mockMvc.perform(post("/atividades-texto")
                 .with(csrf())
@@ -93,13 +93,8 @@ class AtividadeTextoControllerTest {
     @Test
     @WithMockUser(roles = "PROFESSOR")
     void testGetAll_Success() throws Exception {
-        PagedResponse<AtividadeTextoResponseDto> pagedResponse = mock(PagedResponse.class);
-        List<AtividadeTextoResponseDto> content = List.of(responseDto);
-
-        when(pagedResponse.getContent()).thenReturn(content);
-        when(pagedResponse.getPage()).thenReturn(0);
-        when(pagedResponse.getSize()).thenReturn(10);
-        when(pagedResponse.getTotalElements()).thenReturn(1L);
+        PagedResponse<AtividadeTextoResponseDto> pagedResponse = new PagedResponse<>(List.of(responseDto), 0, 10, 1, 1,
+                true);
 
         when(atividadeTextoService.getAllAtividadesTexto(any(Pageable.class))).thenReturn(pagedResponse);
 
@@ -127,7 +122,7 @@ class AtividadeTextoControllerTest {
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_PROFESSOR"))).when(userDetailsMock).getAuthorities();
 
         when(atividadeTextoService.updateAtividadeTexto(eq(id), any(AtividadeTextoUpdateDto.class), eq(idProfessor)))
-            .thenReturn(responseDto);
+                .thenReturn(responseDto);
 
         mockMvc.perform(patch("/atividades-texto/{id}", id)
                 .with(csrf())
@@ -137,7 +132,8 @@ class AtividadeTextoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.idAtividade").value(1L));
 
-        verify(atividadeTextoService, times(1)).updateAtividadeTexto(eq(id), any(AtividadeTextoUpdateDto.class), eq(idProfessor));
+        verify(atividadeTextoService, times(1)).updateAtividadeTexto(eq(id), any(AtividadeTextoUpdateDto.class),
+                eq(idProfessor));
     }
 
     @Test
@@ -155,8 +151,9 @@ class AtividadeTextoControllerTest {
         when(userDetailsMock.getUsername()).thenReturn("professor_teste");
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_PROFESSOR"))).when(userDetailsMock).getAuthorities();
 
-        when(atividadeTextoService.updateAtividadeTexto(eq(idInexistente), any(AtividadeTextoUpdateDto.class), eq(idProfessor)))
-            .thenThrow(new ResourceNotFoundException(errorMessage));
+        when(atividadeTextoService.updateAtividadeTexto(eq(idInexistente), any(AtividadeTextoUpdateDto.class),
+                eq(idProfessor)))
+                .thenThrow(new ResourceNotFoundException(errorMessage));
 
         mockMvc.perform(patch("/atividades-texto/{id}", idInexistente)
                 .with(csrf())
@@ -165,7 +162,8 @@ class AtividadeTextoControllerTest {
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isNotFound());
 
-        verify(atividadeTextoService, times(1)).updateAtividadeTexto(eq(idInexistente), any(AtividadeTextoUpdateDto.class), eq(idProfessor));
+        verify(atividadeTextoService, times(1)).updateAtividadeTexto(eq(idInexistente),
+                any(AtividadeTextoUpdateDto.class), eq(idProfessor));
     }
 
     @Test

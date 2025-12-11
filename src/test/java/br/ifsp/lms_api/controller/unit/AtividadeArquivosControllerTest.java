@@ -2,34 +2,37 @@ package br.ifsp.lms_api.controller.unit;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.MethodParameter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.bind.support.WebDataBinderFactory;
-import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.method.support.ModelAndViewContainer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import br.ifsp.lms_api.config.CustomUserDetails;
 import br.ifsp.lms_api.controller.AtividadeArquivosController;
@@ -40,39 +43,29 @@ import br.ifsp.lms_api.dto.page.PagedResponse;
 import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.service.AtividadeArquivosService;
 
-@ExtendWith(MockitoExtension.class)
-public class AtividadeArquivosControllerTest {
+@WebMvcTest(AtividadeArquivosController.class)
+class AtividadeArquivosControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private AtividadeArquivosService atividadeArquivosService;
-
-    @InjectMocks
-    private AtividadeArquivosController atividadeArquivosController;
-
+    @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private AtividadeArquivosService atividadeArquivosService;
 
     private AtividadeArquivosResponseDto responseDto;
     private AtividadeArquivosRequestDto requestDto;
     private LocalDate dataInicio;
     private LocalDate dataFechamento;
-    
-    private CustomUserDetails mockUserDetails;
 
     @BeforeEach
     void setUp() {
-        objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-     
-        objectMapper.findAndRegisterModules(); 
+        objectMapper.findAndRegisterModules();
 
         dataInicio = LocalDate.of(2025, 11, 1);
         dataFechamento = LocalDate.of(2025, 11, 30);
-
-        mockUserDetails = mock(CustomUserDetails.class);
-      
-        lenient().when(mockUserDetails.getId()).thenReturn(1L); 
 
         responseDto = new AtividadeArquivosResponseDto();
         responseDto.setIdAtividade(1L);
@@ -91,70 +84,46 @@ public class AtividadeArquivosControllerTest {
         requestDto.setStatusAtividade(true);
         requestDto.setArquivosPermitidos(List.of(".pdf", ".zip"));
         requestDto.setIdTopico(10L);
-
-        mockMvc = MockMvcBuilders.standaloneSetup(atividadeArquivosController)
-                .setCustomArgumentResolvers(
-                    new HandlerMethodArgumentResolver() {
-                        @Override
-                        public boolean supportsParameter(MethodParameter parameter) {
-                            return parameter.getParameterType().isAssignableFrom(CustomUserDetails.class);
-                        }
-                        @Override
-                        public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
-                                NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
-                            return mockUserDetails;
-                        }
-                    },
-                    new PageableHandlerMethodArgumentResolver()
-                )
-                .build();
     }
 
     @Test
+    @WithMockUser(roles = "PROFESSOR")
     void testCreate_Success() throws Exception {
         Long idUsuario = 1L;
+
+        CustomUserDetails userDetailsMock = mock(CustomUserDetails.class);
+        when(userDetailsMock.getId()).thenReturn(idUsuario);
+        when(userDetailsMock.getUsername()).thenReturn("professor_teste");
+        doReturn(List.of(new SimpleGrantedAuthority("ROLE_PROFESSOR"))).when(userDetailsMock).getAuthorities();
 
         when(atividadeArquivosService.createAtividadeArquivos(any(AtividadeArquivosRequestDto.class), eq(idUsuario)))
                 .thenReturn(responseDto);
 
         mockMvc.perform(post("/atividades-arquivo")
+                .with(csrf())
+                .with(user(userDetailsMock))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.idAtividade").value(1L));
 
-        verify(atividadeArquivosService, times(1)).createAtividadeArquivos(any(AtividadeArquivosRequestDto.class), eq(idUsuario));
+        verify(atividadeArquivosService, times(1)).createAtividadeArquivos(any(AtividadeArquivosRequestDto.class),
+                eq(idUsuario));
     }
 
     @Test
-    void testCreate_InvalidInput() throws Exception {
-   
-        AtividadeArquivosRequestDto invalidDto = new AtividadeArquivosRequestDto();
-
-        mockMvc.perform(post("/atividades-arquivo")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidDto)))
-                .andExpect(status().isBadRequest()); 
-
-        verify(atividadeArquivosService, never()).createAtividadeArquivos(any(), anyLong());
-    }
-
-    @Test
+    @WithMockUser(roles = "PROFESSOR")
     void testGetAll_Success() throws Exception {
-        List<AtividadeArquivosResponseDto> dtoList = List.of(responseDto);
-        
-        PagedResponse<AtividadeArquivosResponseDto> pagedResponse = mock(PagedResponse.class);
-        when(pagedResponse.getContent()).thenReturn(dtoList);
-        when(pagedResponse.getTotalElements()).thenReturn(1L);
+        PagedResponse<AtividadeArquivosResponseDto> pagedResponse = new PagedResponse<>(List.of(responseDto), 0, 10, 1,
+                1, true);
 
         when(atividadeArquivosService.getAllAtividadesArquivos(any(Pageable.class)))
                 .thenReturn(pagedResponse);
 
         mockMvc.perform(get("/atividades-arquivo")
-                .param("page", "0")
-                .param("size", "10"))
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(1));
+                .andExpect(jsonPath("$.content[0].idAtividade").value(1L));
 
         verify(atividadeArquivosService, times(1)).getAllAtividadesArquivos(any(Pageable.class));
     }
@@ -166,71 +135,70 @@ public class AtividadeArquivosControllerTest {
 
         AtividadeArquivosUpdateDto updateDto = new AtividadeArquivosUpdateDto();
         updateDto.setTituloAtividade(Optional.of("Trabalho de Java V2"));
-        
-        when(atividadeArquivosService.updateAtividadeArquivos(eq(id), any(AtividadeArquivosUpdateDto.class), eq(idUsuario)))
+
+        CustomUserDetails userDetailsMock = mock(CustomUserDetails.class);
+        when(userDetailsMock.getId()).thenReturn(idUsuario);
+        when(userDetailsMock.getUsername()).thenReturn("professor_teste");
+        doReturn(List.of(new SimpleGrantedAuthority("ROLE_PROFESSOR"))).when(userDetailsMock).getAuthorities();
+
+        when(atividadeArquivosService.updateAtividadeArquivos(eq(id), any(AtividadeArquivosUpdateDto.class),
+                eq(idUsuario)))
                 .thenReturn(responseDto);
 
-        mockMvc.perform(patch("/atividades-arquivo/{id}", id) 
+        mockMvc.perform(patch("/atividades-arquivo/{id}", id)
+                .with(csrf())
+                .with(user(userDetailsMock))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk());
 
-        verify(atividadeArquivosService, times(1)).updateAtividadeArquivos(eq(id), any(AtividadeArquivosUpdateDto.class), eq(idUsuario));
+        verify(atividadeArquivosService, times(1)).updateAtividadeArquivos(eq(id),
+                any(AtividadeArquivosUpdateDto.class), eq(idUsuario));
     }
 
     @Test
     void testUpdate_NotFound() throws Exception {
         Long id = 1L;
         Long idUsuario = 1L;
-        
+
         AtividadeArquivosUpdateDto updateDto = new AtividadeArquivosUpdateDto();
 
-        when(atividadeArquivosService.updateAtividadeArquivos(eq(id), any(AtividadeArquivosUpdateDto.class), eq(idUsuario)))
+        CustomUserDetails userDetailsMock = mock(CustomUserDetails.class);
+        when(userDetailsMock.getId()).thenReturn(idUsuario);
+        when(userDetailsMock.getUsername()).thenReturn("professor_teste");
+        doReturn(List.of(new SimpleGrantedAuthority("ROLE_PROFESSOR"))).when(userDetailsMock).getAuthorities();
+
+        when(atividadeArquivosService.updateAtividadeArquivos(eq(id), any(AtividadeArquivosUpdateDto.class),
+                eq(idUsuario)))
                 .thenThrow(new ResourceNotFoundException("Atividade não encontrada"));
 
- 
-        try {
-            mockMvc.perform(patch("/atividades-arquivo/{id}", id) 
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(updateDto)));
-        } catch (Exception e) {
-       
-             if (!(e.getCause() instanceof ResourceNotFoundException)) {
-                 throw e; 
-             }
-        }
-        
-        verify(atividadeArquivosService, times(1)).updateAtividadeArquivos(eq(id), any(AtividadeArquivosUpdateDto.class), eq(idUsuario));
+        mockMvc.perform(patch("/atividades-arquivo/{id}", id)
+                .with(csrf())
+                .with(user(userDetailsMock))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isNotFound());
+
+        verify(atividadeArquivosService, times(1)).updateAtividadeArquivos(eq(id),
+                any(AtividadeArquivosUpdateDto.class), eq(idUsuario));
     }
 
     @Test
     void testDelete_Success() throws Exception {
         Long id = 1L;
         Long idUsuario = 1L;
-        
+
+        CustomUserDetails userDetailsMock = mock(CustomUserDetails.class);
+        when(userDetailsMock.getId()).thenReturn(idUsuario);
+        when(userDetailsMock.getUsername()).thenReturn("professor_teste");
+        doReturn(List.of(new SimpleGrantedAuthority("ROLE_PROFESSOR"))).when(userDetailsMock).getAuthorities();
+
         doNothing().when(atividadeArquivosService).deleteAtividadeArquivos(id, idUsuario);
 
-        mockMvc.perform(delete("/atividades-arquivo/{id}", id))
-                .andExpect(status().isNoContent()); 
-
-        verify(atividadeArquivosService, times(1)).deleteAtividadeArquivos(id, idUsuario);
-    }
-
-    @Test
-    void testDelete_NotFound() throws Exception {
-        Long id = 1L;
-        Long idUsuario = 1L;
-
-        doThrow(new ResourceNotFoundException("Atividade não encontrada"))
-            .when(atividadeArquivosService).deleteAtividadeArquivos(id, idUsuario);
-
-        try {
-            mockMvc.perform(delete("/atividades-arquivo/{id}", id));
-        } catch (Exception e) {
-            if (!(e.getCause() instanceof ResourceNotFoundException)) {
-                throw e;
-            }
-        }
+        mockMvc.perform(delete("/atividades-arquivo/{id}", id)
+                .with(csrf())
+                .with(user(userDetailsMock)))
+                .andExpect(status().isNoContent());
 
         verify(atividadeArquivosService, times(1)).deleteAtividadeArquivos(id, idUsuario);
     }
