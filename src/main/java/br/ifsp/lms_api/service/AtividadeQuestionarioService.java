@@ -20,9 +20,9 @@ import br.ifsp.lms_api.exception.ResourceNotFoundException;
 import br.ifsp.lms_api.mapper.PagedResponseMapper;
 import br.ifsp.lms_api.model.AtividadeQuestionario;
 import br.ifsp.lms_api.model.Questoes;
+import br.ifsp.lms_api.integration.LearningServiceClient;
 import br.ifsp.lms_api.repository.AtividadeQuestionarioRepository;
 import br.ifsp.lms_api.repository.QuestoesRepository;
-
 
 @Service
 public class AtividadeQuestionarioService {
@@ -30,43 +30,53 @@ public class AtividadeQuestionarioService {
     private final QuestoesRepository questoesRepository;
     private final ModelMapper modelMapper;
     private final PagedResponseMapper pagedResponseMapper;
+    private final LearningServiceClient learningServiceClient;
 
     private static final String NOT_FOUND_MSG = "Atividade de Texto com ID %d não encontrada.";
 
-    public AtividadeQuestionarioService(AtividadeQuestionarioRepository atividadeQuestionarioRepository, QuestoesRepository questoesRepository, ModelMapper modelMapper, PagedResponseMapper pagedResponseMapper) {
+    public AtividadeQuestionarioService(AtividadeQuestionarioRepository atividadeQuestionarioRepository,
+            QuestoesRepository questoesRepository, ModelMapper modelMapper, PagedResponseMapper pagedResponseMapper,
+            LearningServiceClient learningServiceClient) {
         this.atividadeQuestionarioRepository = atividadeQuestionarioRepository;
         this.questoesRepository = questoesRepository;
         this.modelMapper = modelMapper;
         this.pagedResponseMapper = pagedResponseMapper;
+        this.learningServiceClient = learningServiceClient;
     }
 
     @Transactional
-    public AtividadeQuestionarioResponseDto createAtividadeQuestionario(AtividadeQuestionarioRequestDto atividadeQuestionario) {
-        AtividadeQuestionario atividadeQuestionarioEntity = modelMapper.map(atividadeQuestionario, AtividadeQuestionario.class);
-        atividadeQuestionarioEntity = atividadeQuestionarioRepository.save(atividadeQuestionarioEntity);
-        return modelMapper.map(atividadeQuestionarioEntity, AtividadeQuestionarioResponseDto.class);
+    public AtividadeQuestionarioResponseDto createAtividadeQuestionario(
+            AtividadeQuestionarioRequestDto atividadeQuestionario) {
+        // MIGRATION: Delegating to the new Microservice
+        // AtividadeQuestionario atividadeQuestionarioEntity =
+        // modelMapper.map(atividadeQuestionario, AtividadeQuestionario.class);
+        // atividadeQuestionarioEntity =
+        // atividadeQuestionarioRepository.save(atividadeQuestionarioEntity);
+        // return modelMapper.map(atividadeQuestionarioEntity,
+        // AtividadeQuestionarioResponseDto.class);
+
+        return learningServiceClient.createQuestionario(atividadeQuestionario);
     }
 
-@Transactional(readOnly = true)
-public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestionario(Pageable pageable) {
-    Page<AtividadeQuestionario> atividadesPage = atividadeQuestionarioRepository.findAll(pageable);
+    @Transactional(readOnly = true)
+    public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestionario(Pageable pageable) {
+        Page<AtividadeQuestionario> atividadesPage = atividadeQuestionarioRepository.findAll(pageable);
 
-    Page<AtividadeQuestionarioResponseDto> dtoPage = atividadesPage.map(atividade -> {
-        AtividadeQuestionarioResponseDto dto = modelMapper.map(atividade, AtividadeQuestionarioResponseDto.class);
+        Page<AtividadeQuestionarioResponseDto> dtoPage = atividadesPage.map(atividade -> {
+            AtividadeQuestionarioResponseDto dto = modelMapper.map(atividade, AtividadeQuestionarioResponseDto.class);
 
-        if (atividade.getQuestoes() != null) {
-            List<QuestoesResponseDto> questoesDto = atividade.getQuestoes().stream()
-                .map(questao -> modelMapper.map(questao, QuestoesResponseDto.class))
-                .toList();
-            dto.setQuestoesQuestionario(questoesDto);
-        }
+            if (atividade.getQuestoes() != null) {
+                List<QuestoesResponseDto> questoesDto = atividade.getQuestoes().stream()
+                        .map(questao -> modelMapper.map(questao, QuestoesResponseDto.class))
+                        .toList();
+                dto.setQuestoesQuestionario(questoesDto);
+            }
 
-        return dto;
-    });
+            return dto;
+        });
 
-    return pagedResponseMapper.toPagedResponse(dtoPage, AtividadeQuestionarioResponseDto.class);
-}
-
+        return pagedResponseMapper.toPagedResponse(dtoPage, AtividadeQuestionarioResponseDto.class);
+    }
 
     @Transactional(readOnly = true)
     public AtividadeQuestionarioResponseDto getAtividadeQuestionarioById(Long id) {
@@ -77,7 +87,8 @@ public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestiona
     }
 
     @Transactional
-    public AtividadeQuestionarioResponseDto updateAtividadeQuestionario(Long id, AtividadeQuestionarioUpdateDto atividadeQuestionarioUpdateDto, Long idProfessor) {
+    public AtividadeQuestionarioResponseDto updateAtividadeQuestionario(Long id,
+            AtividadeQuestionarioUpdateDto atividadeQuestionarioUpdateDto, Long idProfessor) {
         AtividadeQuestionario atividadeQuestionario = findEntityById(id);
 
         if (atividadeQuestionario.getTopico().getTurma().getProfessor().getIdUsuario() != idProfessor) {
@@ -86,12 +97,13 @@ public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestiona
 
         applyUpdateFromDto(atividadeQuestionario, atividadeQuestionarioUpdateDto);
 
-        return modelMapper.map(atividadeQuestionarioRepository.save(atividadeQuestionario), AtividadeQuestionarioResponseDto.class);
+        return modelMapper.map(atividadeQuestionarioRepository.save(atividadeQuestionario),
+                AtividadeQuestionarioResponseDto.class);
     }
 
-
-   @Transactional
-    public AtividadeQuestionarioResponseDto adicionarQuestoes(Long idQuestionario, List<Long> idsDasQuestoes, Long idProfessor) {
+    @Transactional
+    public AtividadeQuestionarioResponseDto adicionarQuestoes(Long idQuestionario, List<Long> idsDasQuestoes,
+            Long idProfessor) {
         AtividadeQuestionario questionario = atividadeQuestionarioRepository.findById(idQuestionario)
                 .orElseThrow(() -> new RuntimeException("Questionário não encontrado com ID: " + idQuestionario));
 
@@ -112,20 +124,17 @@ public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestiona
         AtividadeQuestionarioResponseDto dto = modelMapper.map(entidadeSalva, AtividadeQuestionarioResponseDto.class);
 
         dto.setQuestoesQuestionario(
-            entidadeSalva.getQuestoes()
-                .stream()
-                .map(q -> modelMapper.map(q, QuestoesResponseDto.class))
-                .collect(Collectors.toList())
-        );
+                entidadeSalva.getQuestoes()
+                        .stream()
+                        .map(q -> modelMapper.map(q, QuestoesResponseDto.class))
+                        .collect(Collectors.toList()));
 
         return dto;
     }
 
-
-
-
     @Transactional
-    public AtividadeQuestionarioResponseDto removerQuestoes(Long idQuestionario, List<Long> idsDasQuestoes, Long idProfessor) {
+    public AtividadeQuestionarioResponseDto removerQuestoes(Long idQuestionario, List<Long> idsDasQuestoes,
+            Long idProfessor) {
 
         AtividadeQuestionario questionario = atividadeQuestionarioRepository.findById(idQuestionario)
                 .orElseThrow(() -> new RuntimeException("Questionário não encontrado com ID: " + idQuestionario));
@@ -149,7 +158,6 @@ public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestiona
         return modelMapper.map(questionarioSalvo, AtividadeQuestionarioResponseDto.class);
     }
 
-
     public AtividadeQuestionarioResponseDto removerQuestoes(long idQuestionario, Long idProfessor) {
         AtividadeQuestionario questionario = atividadeQuestionarioRepository.findById(idQuestionario)
                 .orElseThrow(() -> new RuntimeException("Questionário nao encontrado com ID: " + idQuestionario));
@@ -159,12 +167,10 @@ public PagedResponse<AtividadeQuestionarioResponseDto> getAllAtividadesQuestiona
             throw new AccessDeniedException("Acesso negado");
         }
 
-        return modelMapper.map(atividadeQuestionarioRepository.save(questionario), AtividadeQuestionarioResponseDto.class);
-
+        return modelMapper.map(atividadeQuestionarioRepository.save(questionario),
+                AtividadeQuestionarioResponseDto.class);
 
     }
-
-
 
     private AtividadeQuestionario findEntityById(Long id) {
         return atividadeQuestionarioRepository.findById(id)
