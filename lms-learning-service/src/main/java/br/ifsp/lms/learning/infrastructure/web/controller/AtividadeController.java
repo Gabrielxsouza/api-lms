@@ -1,8 +1,14 @@
 package br.ifsp.lms.learning.infrastructure.web.controller;
 
+import br.ifsp.lms.learning.application.usecase.AtualizarAtividadeUseCase;
+import br.ifsp.lms.learning.application.usecase.BuscarAtividadeUseCase;
 import br.ifsp.lms.learning.application.usecase.CriarAtividadeUseCase;
+import br.ifsp.lms.learning.application.usecase.DeletarAtividadeUseCase;
+import br.ifsp.lms.learning.application.usecase.ListarAtividadesUseCase;
 import br.ifsp.lms.learning.domain.model.Atividade;
+import br.ifsp.lms.learning.domain.model.AtividadeArquivos;
 import br.ifsp.lms.learning.domain.model.AtividadeQuestionario;
+import br.ifsp.lms.learning.domain.model.AtividadeTexto;
 import br.ifsp.lms.learning.infrastructure.web.dto.AtividadeResponse;
 import br.ifsp.lms.learning.infrastructure.web.dto.CreateArquivosRequest;
 import br.ifsp.lms.learning.infrastructure.web.dto.CreateQuestionarioRequest;
@@ -11,16 +17,20 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/v1/atividades")
 @RequiredArgsConstructor
 public class AtividadeController {
 
         private final CriarAtividadeUseCase criarAtividadeUseCase;
-        private final br.ifsp.lms.learning.application.usecase.BuscarAtividadeUseCase buscarAtividadeUseCase;
-        private final br.ifsp.lms.learning.application.usecase.DeletarAtividadeUseCase deletarAtividadeUseCase;
-        private final br.ifsp.lms.learning.application.usecase.ListarAtividadesUseCase listarAtividadesUseCase;
-        private final br.ifsp.lms.learning.application.usecase.AtualizarAtividadeUseCase atualizarAtividadeUseCase;
+        private final BuscarAtividadeUseCase buscarAtividadeUseCase;
+        private final DeletarAtividadeUseCase deletarAtividadeUseCase;
+        private final ListarAtividadesUseCase listarAtividadesUseCase;
+        private final AtualizarAtividadeUseCase atualizarAtividadeUseCase;
 
         @PostMapping("/questionario")
         public ResponseEntity<AtividadeResponse> criarQuestionario(@RequestBody CreateQuestionarioRequest request) {
@@ -44,9 +54,6 @@ public class AtividadeController {
         @PutMapping("/questionario/{id}")
         public ResponseEntity<AtividadeResponse> atualizarQuestionario(@PathVariable Long id,
                         @RequestBody CreateQuestionarioRequest request) {
-                // Simply map and save. In real world, we'd fetch and merge, but here we
-                // overwrite or expect full data.
-                // Assuming request has all data field.
                 AtividadeQuestionario domain = AtividadeQuestionario.builder()
                                 .id(id)
                                 .titulo(request.getTituloAtividade())
@@ -66,7 +73,7 @@ public class AtividadeController {
         @PutMapping("/texto/{id}")
         public ResponseEntity<AtividadeResponse> atualizarTexto(@PathVariable Long id,
                         @RequestBody CreateTextoRequest request) {
-                br.ifsp.lms.learning.domain.model.AtividadeTexto domain = br.ifsp.lms.learning.domain.model.AtividadeTexto
+                AtividadeTexto domain = AtividadeTexto
                                 .builder()
                                 .id(id)
                                 .titulo(request.getTituloAtividade())
@@ -85,7 +92,7 @@ public class AtividadeController {
         @PutMapping("/arquivos/{id}")
         public ResponseEntity<AtividadeResponse> atualizarArquivos(@PathVariable Long id,
                         @RequestBody CreateArquivosRequest request) {
-                br.ifsp.lms.learning.domain.model.AtividadeArquivos domain = br.ifsp.lms.learning.domain.model.AtividadeArquivos
+                AtividadeArquivos domain = AtividadeArquivos
                                 .builder()
                                 .id(id)
                                 .titulo(request.getTituloAtividade())
@@ -103,7 +110,7 @@ public class AtividadeController {
 
         @PostMapping("/texto")
         public ResponseEntity<AtividadeResponse> criarTexto(@RequestBody CreateTextoRequest request) {
-                br.ifsp.lms.learning.domain.model.AtividadeTexto domain = br.ifsp.lms.learning.domain.model.AtividadeTexto
+                AtividadeTexto domain = AtividadeTexto
                                 .builder()
                                 .titulo(request.getTituloAtividade())
                                 .descricao(request.getDescricaoAtividade())
@@ -121,7 +128,7 @@ public class AtividadeController {
 
         @PostMapping("/arquivos")
         public ResponseEntity<AtividadeResponse> criarArquivos(@RequestBody CreateArquivosRequest request) {
-                br.ifsp.lms.learning.domain.model.AtividadeArquivos domain = br.ifsp.lms.learning.domain.model.AtividadeArquivos
+                AtividadeArquivos domain = AtividadeArquivos
                                 .builder()
                                 .titulo(request.getTituloAtividade())
                                 .descricao(request.getDescricaoAtividade())
@@ -139,10 +146,10 @@ public class AtividadeController {
         }
 
         @GetMapping
-        public ResponseEntity<java.util.List<AtividadeResponse>> getAllAtividades() {
-                java.util.List<AtividadeResponse> responses = listarAtividadesUseCase.execute().stream()
+        public ResponseEntity<List<AtividadeResponse>> getAllAtividades() {
+                List<AtividadeResponse> responses = listarAtividadesUseCase.execute().stream()
                                 .map(this::toResponse)
-                                .collect(java.util.stream.Collectors.toList());
+                                .collect(Collectors.toList());
                 return ResponseEntity.ok(responses);
         }
 
@@ -162,9 +169,9 @@ public class AtividadeController {
 
         private AtividadeResponse toResponse(Atividade created) {
                 String type = "QUESTIONARIO";
-                if (created instanceof br.ifsp.lms.learning.domain.model.AtividadeTexto) {
+                if (created instanceof AtividadeTexto) {
                         type = "TEXTO";
-                } else if (created instanceof br.ifsp.lms.learning.domain.model.AtividadeArquivos) {
+                } else if (created instanceof AtividadeArquivos) {
                         type = "ARQUIVOS";
                 }
 
@@ -184,17 +191,17 @@ public class AtividadeController {
                                                 ? ((AtividadeQuestionario) created).getTentativasPermitidas()
                                                 : null)
                                 .numeroMaximoCaracteres(
-                                                created instanceof br.ifsp.lms.learning.domain.model.AtividadeTexto
-                                                                ? ((br.ifsp.lms.learning.domain.model.AtividadeTexto) created)
+                                                created instanceof AtividadeTexto
+                                                                ? ((AtividadeTexto) created)
                                                                                 .getNumeroMaximoCaracteres()
                                                                 : null)
                                 .arquivosPermitidos(
-                                                created instanceof br.ifsp.lms.learning.domain.model.AtividadeArquivos
-                                                                ? ((br.ifsp.lms.learning.domain.model.AtividadeArquivos) created)
+                                                created instanceof AtividadeArquivos
+                                                                ? ((AtividadeArquivos) created)
                                                                                 .getArquivosPermitidos()
                                                                 : null)
                                 .idTopico(created.getTopicoId())
-                                .tags(created.getTags() != null ? new java.util.ArrayList<>(created.getTags()) : null)
+                                .tags(created.getTags() != null ? new ArrayList<>(created.getTags()) : null)
                                 .build();
         }
 }

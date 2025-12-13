@@ -11,12 +11,9 @@ import java.util.List;
 @Builder
 public class AtividadeResponse {
 
-    // Must match Monolith AtividadesResponseDto + AtividadeQuestionarioResponseDto
-
-    // Base fields
     private Long idAtividade;
     private String tituloAtividade;
-    private String descricaoAtividade; // Monolith seems to have this in base
+    private String descricaoAtividade; 
     private Long idTopico;
 
     @JsonFormat(pattern = "dd/MM/yyyy")
@@ -27,17 +24,14 @@ public class AtividadeResponse {
 
     private Boolean statusAtividade;
 
-    // Polymorphic field discriminator
     @JsonProperty("tipoAtividade")
-    private String tipoAtividade; // "QUESTIONARIO"
+    private String tipoAtividade; 
 
-    // Subclass fields (AtividadeQuestionarioResponseDto)
     private Long duracaoQuestionario;
-    private Integer numeroTentativas; // AtividadeQuestionario
-    private Long numeroMaximoCaracteres; // AtividadeTexto
-    private java.util.List<String> arquivosPermitidos; // AtividadeArquivos
+    private Integer numeroTentativas;
+    private Long numeroMaximoCaracteres; 
+    private java.util.List<String> arquivosPermitidos; 
 
-    // Nullable/Empty for now unless we implement Question/Tag mapping fully
     private List<Object> questoesQuestionario;
     private List<Object> tags;
 }
