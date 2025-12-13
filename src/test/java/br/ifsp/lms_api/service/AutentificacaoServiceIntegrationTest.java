@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,11 +17,16 @@ import org.springframework.transaction.annotation.Transactional;
 import br.ifsp.lms_api.model.Administrador;
 import br.ifsp.lms_api.model.Aluno;
 import br.ifsp.lms_api.model.Usuario;
+import br.ifsp.lms_api.repository.AdministradorRepository;
 import br.ifsp.lms_api.repository.AlunoRepository;
+import br.ifsp.lms_api.repository.CursoRepository;
+import br.ifsp.lms_api.repository.DisciplinaRepository;
+import br.ifsp.lms_api.repository.MatriculaRepository;
+import br.ifsp.lms_api.repository.ProfessorRepository;
+import br.ifsp.lms_api.repository.TurmaRepository;
 import br.ifsp.lms_api.repository.UsuarioRepository;
-import jakarta.persistence.EntityManager;
 
-@SpringBootTest 
+@SpringBootTest
 @ActiveProfiles("test")
 @Transactional
 class AutentificacaoServiceIntegrationTest {
@@ -35,31 +39,31 @@ class AutentificacaoServiceIntegrationTest {
 
     @Autowired
     private AlunoRepository alunoRepository;
-    
+
     @Autowired
-    private EntityManager entityManager;
+    private CursoRepository cursoRepository;
+    @Autowired
+    private DisciplinaRepository disciplinaRepository;
+    @Autowired
+    private TurmaRepository turmaRepository;
+    @Autowired
+    private MatriculaRepository matriculaRepository;
+    @Autowired
+    private ProfessorRepository professorRepository;
+    @Autowired
+    private AdministradorRepository administradorRepository;
 
     @BeforeEach
     void setUp() {
-        entityManager.createNativeQuery("DELETE FROM atividade_arquivos_permitidos").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM atividade_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM topico_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questao_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questionario_questoes").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM tentativa_texto").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM tentativa_questionario").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM tentativa_arquivo").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM material_de_aula").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM alternativas").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questoes").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM atividade").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM topicos").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM matricula").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM turma").executeUpdate();
-        
+        matriculaRepository.deleteAll();
+        turmaRepository.deleteAll();
+
+        professorRepository.deleteAll();
+        administradorRepository.deleteAll();
         alunoRepository.deleteAll();
+        cursoRepository.deleteAll();
+        disciplinaRepository.deleteAll();
         usuarioRepository.deleteAll();
-        entityManager.createNativeQuery("DELETE FROM usuario").executeUpdate();
     }
 
     @Test
@@ -78,7 +82,7 @@ class AutentificacaoServiceIntegrationTest {
         assertNotNull(userDetails);
         assertEquals("admin.auth@test.com", userDetails.getUsername());
         assertTrue(userDetails.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
     }
 
     @Test
@@ -98,7 +102,7 @@ class AutentificacaoServiceIntegrationTest {
 
         assertEquals("aluno.auth@test.com", userDetails.getUsername());
         assertTrue(userDetails.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_ALUNO")));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ALUNO")));
     }
 
     @Test

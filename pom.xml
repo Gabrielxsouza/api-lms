@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.6</version> <relativePath/>
+        <version>3.4.0</version> <relativePath/>
     </parent>
     <groupId>br.ifsp</groupId>
     <artifactId>lms-api</artifactId>
@@ -28,6 +28,7 @@
     <properties>
         <java.version>17</java.version>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -112,7 +113,8 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version> </path>
+                            <version>${lombok.version}</version>
+                        </path>
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>

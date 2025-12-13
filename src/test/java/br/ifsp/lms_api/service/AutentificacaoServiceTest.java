@@ -21,7 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import br.ifsp.lms_api.model.Administrador; 
+import br.ifsp.lms_api.model.Administrador;
 import br.ifsp.lms_api.model.Aluno;
 import br.ifsp.lms_api.model.Usuario;
 import br.ifsp.lms_api.repository.AlunoRepository;
@@ -52,11 +52,11 @@ class AutentificacaoServiceTest {
     @Test
     void loadUserByUsername_DeveEncontrarUsuarioPorEmail() {
         String email = "admin@test.com";
-        
-        Usuario usuario = new Administrador(); 
+
+        Usuario usuario = new Administrador();
         usuario.setEmail(email);
         usuario.setSenha("123456");
-        usuario.setTipoUsuario("ADMIN"); 
+        usuario.setTipoUsuario("ADMIN");
 
         when(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuario));
 
@@ -69,10 +69,10 @@ class AutentificacaoServiceTest {
     @Test
     void loadUserByUsername_DeveEncontrarAlunoPorRa_QuandoNaoAcharEmail() {
         String ra = "GU300123";
-        
+
         Aluno aluno = new Aluno();
         aluno.setRa(ra);
-        aluno.setEmail("aluno@test.com"); 
+        aluno.setEmail("aluno@test.com");
         aluno.setSenha("123456");
         aluno.setTipoUsuario("ALUNO");
 
@@ -82,7 +82,7 @@ class AutentificacaoServiceTest {
         UserDetails userDetails = autentificacaoService.loadUserByUsername(ra);
 
         assertNotNull(userDetails);
-        assertEquals(aluno.getEmail(), userDetails.getUsername()); 
+        assertEquals(aluno.getEmail(), userDetails.getUsername());
     }
 
     @Test
@@ -105,8 +105,8 @@ class AutentificacaoServiceTest {
 
         Authentication authentication = mock(Authentication.class);
         when(authentication.isAuthenticated()).thenReturn(true);
-        
-        when(authentication.getPrincipal()).thenReturn(usuarioMock); 
+
+        when(authentication.getPrincipal()).thenReturn(new br.ifsp.lms_api.config.CustomUserDetails(usuarioMock));
 
         SecurityContext securityContext = mock(SecurityContext.class);
         when(securityContext.getAuthentication()).thenReturn(authentication);

@@ -5,7 +5,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertFalse; 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ import jakarta.persistence.EntityManager;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional 
+@Transactional
 public class DisciplinaControllerIntegrationTest {
 
     @Autowired
@@ -49,38 +49,18 @@ public class DisciplinaControllerIntegrationTest {
 
     @Autowired
     private TurmaRepository turmaRepository;
-    
+
     @Autowired
-    private UsuarioRepository usuarioRepository; 
-    
+    private UsuarioRepository usuarioRepository;
+
     @Autowired
     private EntityManager entityManager;
 
     private Disciplina disciplinaExistente;
     private Turma turmaExistente;
-    
-  
 
     @BeforeEach
     void setUp() {
-      
-        entityManager.createNativeQuery("DELETE FROM atividade_arquivos_permitidos").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM atividade_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM topico_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questao_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questionario_questoes").executeUpdate();
-
-        entityManager.createQuery("DELETE FROM TentativaTexto").executeUpdate();
-        entityManager.createQuery("DELETE FROM TentativaQuestionario").executeUpdate();
-        entityManager.createQuery("DELETE FROM TentativaArquivo").executeUpdate(); 
-        
-        entityManager.createQuery("DELETE FROM MaterialDeAula").executeUpdate();
-        entityManager.createQuery("DELETE FROM Alternativas").executeUpdate();
-        entityManager.createQuery("DELETE FROM Questoes").executeUpdate();
-        entityManager.createQuery("DELETE FROM Atividade").executeUpdate();
-
-        entityManager.createQuery("DELETE FROM Topicos").executeUpdate();
-        entityManager.createQuery("DELETE FROM Matricula").executeUpdate();
 
         turmaRepository.deleteAll();
         disciplinaRepository.deleteAll();
@@ -97,13 +77,12 @@ public class DisciplinaControllerIntegrationTest {
         turma.setDisciplina(disciplina);
         turma = turmaRepository.save(turma);
 
-     
-        disciplina.setTurmas(new ArrayList<>(List.of(turma))); 
+        disciplina.setTurmas(new ArrayList<>(List.of(turma)));
         disciplinaExistente = disciplinaRepository.save(disciplina);
-        
+
         entityManager.flush();
         entityManager.clear();
-        
+
         disciplinaExistente = disciplinaRepository.findById(disciplina.getIdDisciplina()).get();
         turmaExistente = turmaRepository.findById(turma.getIdTurma()).get();
     }
@@ -111,17 +90,16 @@ public class DisciplinaControllerIntegrationTest {
     @Test
     void testCreateDisciplina_Success_WithNestedTurmas() throws Exception {
         TurmaParaDisciplinaDTO novaTurmaDto = new TurmaParaDisciplinaDTO("Turma Aninhada", "2025/2");
-        
+
         DisciplinaRequestDto requestDto = new DisciplinaRequestDto(
-            "Engenharia de Software",
-            "Testes",
-            "ESL708",
-            List.of(novaTurmaDto)
-        );
+                "Engenharia de Software",
+                "Testes",
+                "ESL708",
+                List.of(novaTurmaDto));
 
         mockMvc.perform(post("/disciplinas")
-              
-                .with(user("admin").password("pass").roles("ADMIN")) 
+
+                .with(user("admin").password("pass").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
@@ -132,7 +110,7 @@ public class DisciplinaControllerIntegrationTest {
     @Test
     void testGetAllDisciplinas_Success() throws Exception {
         mockMvc.perform(get("/disciplinas")
-              
+
                 .with(user("admin").roles("ADMIN"))
                 .param("page", "0")
                 .param("size", "10"))
@@ -146,13 +124,13 @@ public class DisciplinaControllerIntegrationTest {
     void testUpdateDisciplina_Success() throws Exception {
         Long id = disciplinaExistente.getIdDisciplina();
         String updateJson = """
-        {
-            "nomeDisciplina": "Disciplina Base ATUALIZADA"
-        }
-        """;
+                {
+                    "nomeDisciplina": "Disciplina Base ATUALIZADA"
+                }
+                """;
 
         mockMvc.perform(patch("/disciplinas/{id}", id)
-           
+
                 .with(user("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(updateJson))
@@ -165,9 +143,9 @@ public class DisciplinaControllerIntegrationTest {
     void testDeleteDisciplina_Success_WithCascade() throws Exception {
         Long disciplinaId = disciplinaExistente.getIdDisciplina();
         Long turmaId = turmaExistente.getIdTurma();
-        
+
         mockMvc.perform(delete("/disciplinas/{id}", disciplinaId)
-       
+
                 .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNoContent());
 

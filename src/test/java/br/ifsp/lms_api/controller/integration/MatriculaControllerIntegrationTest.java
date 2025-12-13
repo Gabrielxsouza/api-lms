@@ -54,19 +54,30 @@ import jakarta.persistence.EntityManager;
 @Transactional
 public class MatriculaControllerIntegrationTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    
-    @Autowired private MatriculaRepository matriculaRepository;
-    @Autowired private AlunoRepository alunoRepository;
-    @Autowired private TurmaRepository turmaRepository;
-    @Autowired private DisciplinaRepository disciplinaRepository;
-    @Autowired private CursoRepository cursoRepository;
-    @Autowired private ProfessorRepository professorRepository;
-    @Autowired private AdministradorRepository administradorRepository;
-    
-    @Autowired private EntityManager entityManager;
-    @MockBean private AutentificacaoService autentificacaoService;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private MatriculaRepository matriculaRepository;
+    @Autowired
+    private AlunoRepository alunoRepository;
+    @Autowired
+    private TurmaRepository turmaRepository;
+    @Autowired
+    private DisciplinaRepository disciplinaRepository;
+    @Autowired
+    private CursoRepository cursoRepository;
+    @Autowired
+    private ProfessorRepository professorRepository;
+    @Autowired
+    private AdministradorRepository administradorRepository;
+
+    @Autowired
+    private EntityManager entityManager;
+    @MockBean
+    private AutentificacaoService autentificacaoService;
 
     private Aluno aluno;
     private Turma turma;
@@ -76,30 +87,6 @@ public class MatriculaControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-
-        entityManager.createNativeQuery("DELETE FROM atividade_arquivos_permitidos").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM atividade_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM topico_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questao_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questionario_questoes").executeUpdate();
-        
-     
-        entityManager.createNativeQuery("DELETE FROM tentativa_texto").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM tentativa_questionario").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM tentativa_arquivo").executeUpdate();
-        
-     
-        entityManager.createNativeQuery("DELETE FROM material_de_aula").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM alternativas").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questoes").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM atividade").executeUpdate(); 
-        
-       
-        entityManager.createNativeQuery("DELETE FROM topicos").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM matricula").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM turma").executeUpdate();
-        
-
         matriculaRepository.deleteAll();
         turmaRepository.deleteAll();
         alunoRepository.deleteAll();
@@ -108,7 +95,6 @@ public class MatriculaControllerIntegrationTest {
         cursoRepository.deleteAll();
         disciplinaRepository.deleteAll();
 
-   
         Administrador admin = new Administrador();
         admin.setNome("Admin");
         admin.setEmail("admin@test.com");
@@ -136,7 +122,6 @@ public class MatriculaControllerIntegrationTest {
         aluno.setTipoUsuario("ALUNO");
         aluno = alunoRepository.save(aluno);
 
-    
         Curso curso = new Curso(null, "Curso TI", "TI", "Curso Legal", null);
         curso = cursoRepository.save(curso);
 
@@ -151,7 +136,6 @@ public class MatriculaControllerIntegrationTest {
         turma.setDisciplina(disc);
         turma = turmaRepository.save(turma);
 
-
         matriculaExistente = new Matricula();
         matriculaExistente.setAluno(aluno);
         matriculaExistente.setTurma(turma);
@@ -161,7 +145,6 @@ public class MatriculaControllerIntegrationTest {
         entityManager.flush();
         entityManager.clear();
 
-  
         aluno = alunoRepository.findById(aluno.getIdUsuario()).get();
         turma = turmaRepository.findById(turma.getIdTurma()).get();
         matriculaExistente = matriculaRepository.findById(matriculaExistente.getIdMatricula()).get();
@@ -181,10 +164,9 @@ public class MatriculaControllerIntegrationTest {
         novoAluno = alunoRepository.save(novoAluno);
 
         MatriculaRequestDto request = new MatriculaRequestDto(
-            novoAluno.getIdUsuario(), 
-            turma.getIdTurma(), 
-            Status.PENDENTE
-        );
+                novoAluno.getIdUsuario(),
+                turma.getIdTurma(),
+                Status.PENDENTE);
 
         mockMvc.perform(post("/matriculas")
                 .with(user(adminUserDetails))
@@ -193,7 +175,7 @@ public class MatriculaControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nomeAluno", is("Novo Aluno")))
                 .andExpect(jsonPath("$.statusMatricula", is("PENDENTE")));
-        
+
         assertEquals(2, matriculaRepository.count());
     }
 

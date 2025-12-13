@@ -33,6 +33,7 @@ import br.ifsp.lms_api.dto.professorDto.ProfessorUpdateDto;
 import br.ifsp.lms_api.model.Administrador;
 import br.ifsp.lms_api.model.Professor;
 import br.ifsp.lms_api.repository.AdministradorRepository;
+import br.ifsp.lms_api.repository.MatriculaRepository;
 import br.ifsp.lms_api.repository.ProfessorRepository;
 import br.ifsp.lms_api.repository.TurmaRepository;
 import br.ifsp.lms_api.service.AutentificacaoService;
@@ -55,6 +56,8 @@ public class ProfessorControllerIntegrationTest {
     @Autowired
     private TurmaRepository turmaRepository;
     @Autowired
+    private MatriculaRepository matriculaRepository;
+    @Autowired
     private EntityManager entityManager;
     @MockBean
     private AutentificacaoService autentificacaoService;
@@ -65,21 +68,10 @@ public class ProfessorControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        entityManager.createNativeQuery("DELETE FROM questao_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM tentativa_texto").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM tentativa_questionario").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM tentativa_arquivo").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM material_de_aula").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM alternativas").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questoes").executeUpdate();
-
-        entityManager.createNativeQuery("DELETE FROM matricula").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM turma").executeUpdate();
-
+        matriculaRepository.deleteAll();
         turmaRepository.deleteAll();
         professorRepository.deleteAll();
         administradorRepository.deleteAll();
-        entityManager.createNativeQuery("DELETE FROM usuario").executeUpdate();
 
         Administrador admin = new Administrador();
         admin.setNome("Admin System");

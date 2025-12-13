@@ -82,14 +82,6 @@ public class TurmaControllerIntegrationTest {
     @BeforeEach
     void setUp() {
 
-        entityManager.createNativeQuery("DELETE FROM questao_tags").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM tentativa_texto").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM tentativa_questionario").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM tentativa_arquivo").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM material_de_aula").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM alternativas").executeUpdate();
-        entityManager.createNativeQuery("DELETE FROM questoes").executeUpdate();
-
         entityManager.createNativeQuery("DELETE FROM matricula").executeUpdate();
 
         turmaRepository.deleteAll();
